@@ -1,5 +1,5 @@
 # ---------- DEV IMAGE ----------
-FROM gradle:8.8-jdk21 AS dev
+FROM gradle:9.4.0-jdk25-corretto AS dev
 WORKDIR /app
 
 COPY build.gradle.kts settings.gradle.kts gradlew gradlew.bat /app/
@@ -12,13 +12,13 @@ EXPOSE 8080
 CMD ["./gradlew", "bootRun"]
 
 # ---------- BUILD IMAGE ----------
-FROM gradle:8.8-jdk21 AS build
+FROM gradle:9.4.0-jdk25-corretto AS build
 WORKDIR /app
 COPY . .
 RUN sed -i 's/\r$//' /app/gradlew && chmod +x /app/gradlew && ./gradlew clean bootJar --no-daemon
 
 # ---------- PROD RUNTIME IMAGE ----------
-FROM eclipse-temurin:21-jre AS prod
+FROM amazoncorretto:25 AS prod
 WORKDIR /app
 COPY --from=build /app/build/libs/*.jar app.jar
 EXPOSE 8080
