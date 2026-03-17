@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:16
+    container_name: turtleshop-db
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5437:5432"
+    volumes:
+      - turtleshop_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend/turtleshop-api
+      dockerfile: Dockerfile
+      target: dev
+    container_name: turtleshop-api
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/turtleshop-api:/app
+      - /app/.gradle
+      - /app/build
+
+#  frontend:
+#    build:
+#      context: ./frontend/turtleshop-web
+#      dockerfile: Dockerfile
+#    container_name: turtleshop-frontend
+#    ports:
+#      - "5173:5173"
+#    depends_on:
+#      - api
+#    volumes:
+#      - ./frontend/turtleshop-web:/app
+#      - /app/node_modules
+
+volumes:
+  turtleshop_pgdata:
