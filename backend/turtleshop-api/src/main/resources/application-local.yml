@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    # Prefer Spring’s standard env vars; compose already sets these.
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+
+app:
+  auth:
+    issuer: "turtleshop-api"
+    accessTtlSeconds: 900
+    refreshTtlSeconds: 1209600
+    secureCookies: false  # dev over http; set true when https
+    cookie-same-site: Lax
+
+server:
+  port: 8080
