@@ -9,7 +9,7 @@ COPY gradle /app/gradle
 RUN sed -i 's/\r$//' /app/gradlew && chmod +x /app/gradlew && /app/gradlew --version
 
 EXPOSE 8080
-CMD ["./gradlew", "bootRun"]
+CMD ["gradle", "bootRun"]
 
 # ---------- BUILD IMAGE ----------
 FROM gradle:9.4.0-jdk25-corretto AS build
