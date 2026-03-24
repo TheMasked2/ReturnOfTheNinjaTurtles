@@ -37,18 +37,18 @@ services:
       - /app/.gradle
       - /app/build
 
-#  frontend:
-#    build:
-#      context: ./frontend/turtleshop-web
-#      dockerfile: Dockerfile
-#    container_name: turtleshop-frontend
-#    ports:
-#      - "5173:5173"
-#    depends_on:
-#      - api
-#    volumes:
-#      - ./frontend/turtleshop-web:/app
-#      - /app/node_modules
+  frontend:
+    build:
+      context: ./frontend/turtleshop-web
+      dockerfile: Dockerfile
+    container_name: turtleshop-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    volumes:
+      - ./frontend/turtleshop-web:/app
+      - /app/node_modules
 
 volumes:
   turtleshop_pgdata:
