@@ -13,6 +13,7 @@ public class AuthService {
 
     private final CustomerAccess customerAccess;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public void register(RegisterRequest request) {
         // Hash password
@@ -37,6 +38,8 @@ public class AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
+        String realToken = jwtService.generateToken(customer.getEmail());
+
         // Mapping to Response DTO
         CustomerResponse customerDto = CustomerResponse.builder()
                 .id(customer.getCustomerId())
@@ -46,7 +49,7 @@ public class AuthService {
                 .build();
 
         return AuthResponse.builder()
-                .token("mock-jwt-token-for-" + customer.getEmail())
+                .token(realToken)
                 .type("Bearer")
                 .customer(customerDto)
                 .build();
