@@ -9,7 +9,7 @@ import org.turtleshop.api.modules.auth.service.CustomerService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/customers")
+@RequestMapping("/api/customer")
 @RequiredArgsConstructor
 public class CustomerController {
 

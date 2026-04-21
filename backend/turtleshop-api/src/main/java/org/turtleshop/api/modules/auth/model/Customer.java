@@ -3,15 +3,12 @@ package org.turtleshop.api.modules.auth.model;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.Builder;
-import lombok.NoArgsConstructor;  // Add this
-import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor  // Required for many mappers
-@AllArgsConstructor
+
 public class Customer {
     private Integer customerId;
     private String email;

@@ -1,41 +1,48 @@
 package org.turtleshop.api.modules.auth.repository;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import org.turtleshop.api.core.repository.GenericAccess;
+import org.turtleshop.api.core.repository.IGenericAccess;
 import org.turtleshop.api.modules.auth.model.Customer;
 
-@Repository
-public class CustomerAccess extends GenericAccess<Customer, Integer> {
+import java.util.List;
+import java.util.Optional;
 
-    public CustomerAccess(NamedParameterJdbcTemplate jdbc) {
-        super(jdbc);
+@Repository
+@RequiredArgsConstructor
+public class CustomerAccess implements IGenericAccess<Customer, Integer> {
+
+    private final NamedParameterJdbcTemplate jdbc;
+
+    private final RowMapper<Customer> customerMapper = (rs, rowNum) -> Customer.builder()
+            .customerId(rs.getInt("costumer_id"))
+            .email(rs.getString("email"))
+            .password(rs.getString("password"))
+            .firstName(rs.getString("first_name"))
+            .lastName(rs.getString("last_name"))
+            .phone(rs.getString("phone"))
+            .address(rs.getString("address"))
+            .city(rs.getString("city"))
+            .postalCode(rs.getString("postal_code"))
+            .country(rs.getString("country"))
+            .bank(rs.getString("bank"))
+            .createdAt(rs.getTimestamp("created_at").toLocalDateTime())
+            .build();
+
+    @Override
+    public Optional<Customer> getByIdAsync(Integer id) {
+        String sql = "SELECT * FROM CUSTOMER WHERE costumer_id = :id";
+        MapSqlParameterSource params = new MapSqlParameterSource("id", id);
+        return jdbc.query(sql, params, customerMapper).stream().findFirst();
     }
 
-    @Override protected String getTable() { return "CUSTOMER"; }
-    @Override protected String getPrimaryKey() { return "costumer_id"; }
-
-    /**
-     * The Manual Mapper using the Lombok Builder
-     */
     @Override
-    protected RowMapper<Customer> getRowMapper() {
-        return (rs, rowNum) -> Customer.builder()
-                .customerId(rs.getInt("costumer_id"))
-                .email(rs.getString("email"))
-                .password(rs.getString("password"))
-                .firstName(rs.getString("first_name"))
-                .lastName(rs.getString("last_name"))
-                .phone(rs.getString("phone"))
-                .address(rs.getString("address"))
-                .city(rs.getString("city"))
-                .postalCode(rs.getString("postal_code"))
-                .country(rs.getString("country"))
-                .bank(rs.getString("bank"))
-                .createdAt(rs.getTimestamp("created_at").toLocalDateTime())
-                .build();
+    public List<Customer> getAllAsync() {
+        String sql = "SELECT * FROM CUSTOMER";
+        return jdbc.query(sql, customerMapper);
     }
 
     @Override
@@ -44,9 +51,34 @@ public class CustomerAccess extends GenericAccess<Customer, Integer> {
             INSERT INTO CUSTOMER (email, password, first_name, last_name, phone, address, city, postal_code, country, bank, created_at)
             VALUES (:email, :password, :firstName, :lastName, :phone, :address, :city, :postalCode, :country, :bank, NOW())
         """;
+        jdbc.update(sql, getParameters(item));
+    }
 
-        // Using MapSqlParameterSource to manually map fields for the query
-        MapSqlParameterSource params = new MapSqlParameterSource()
+    @Override
+    public void updateAsync(Customer item) {
+        String sql = """
+            UPDATE CUSTOMER 
+            SET email = :email, first_name = :firstName, last_name = :lastName 
+            WHERE costumer_id = :id
+        """;
+        jdbc.update(sql, getParameters(item).addValue("id", item.getCustomerId()));
+    }
+
+    @Override
+    public void deleteAsync(Integer id) {
+        String sql = "DELETE FROM CUSTOMER WHERE costumer_id = :id";
+        jdbc.update(sql, new MapSqlParameterSource("id", id));
+    }
+
+    public Optional<Customer> findByEmail(String email) {
+        String sql = "SELECT * FROM CUSTOMER WHERE email = :email";
+        MapSqlParameterSource params = new MapSqlParameterSource("email", email);
+        return jdbc.query(sql, params, customerMapper).stream().findFirst();
+    }
+
+    // Helper to avoid repeating the mapping in Insert and Update
+    private MapSqlParameterSource getParameters(Customer item) {
+        return new MapSqlParameterSource()
                 .addValue("email", item.getEmail())
                 .addValue("password", item.getPassword())
                 .addValue("firstName", item.getFirstName())
@@ -57,24 +89,16 @@ public class CustomerAccess extends GenericAccess<Customer, Integer> {
                 .addValue("postalCode", item.getPostalCode())
                 .addValue("country", item.getCountry())
                 .addValue("bank", item.getBank());
-
-        jdbc.update(sql, params);
     }
 
     @Override
-    public void updateAsync(Customer item) {
-        String sql = """
-            UPDATE CUSTOMER 
-            SET email = :email, first_name = :firstName, last_name = :lastName 
-            WHERE costumer_id = :id
-        """;
-
-        MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("email", item.getEmail())
-                .addValue("firstName", item.getFirstName())
-                .addValue("lastName", item.getLastName())
-                .addValue("id", item.getCustomerId());
-
-        jdbc.update(sql, params);
+    public boolean testConnection() {
+        try {
+            // Simple query to verify DB connectivity
+            jdbc.getJdbcTemplate().execute("SELECT 1");
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

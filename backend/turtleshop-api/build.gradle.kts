@@ -10,7 +10,7 @@ configurations.all {
         }
     }
 }
-group = "com.turtleshop"
+group = "org.turtleshop"
 version = "0.0.1-SNAPSHOT"
 
 java {
@@ -28,10 +28,15 @@ dependencies {
     // CRITICAL: You need this for the repositories to work
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
 
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:4.0.3"))
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-database-postgresql")
 
-    // Specify the version for Lombok (currently 1.18.36 is the latest stable)
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+
+
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
     implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
