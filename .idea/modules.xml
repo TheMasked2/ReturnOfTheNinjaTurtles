@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/ReturnOfTheNinjaTurtles.iml" filepath="$PROJECT_DIR$/.idea/ReturnOfTheNinjaTurtles.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/turtleshop-api.main.iml" filepath="$PROJECT_DIR$/.idea/modules/turtleshop-api.main.iml" />
     </modules>
   </component>
 </project>
