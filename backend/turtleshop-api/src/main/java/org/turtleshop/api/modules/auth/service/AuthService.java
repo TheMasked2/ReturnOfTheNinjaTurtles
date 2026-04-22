@@ -1,8 +1,10 @@
 package org.turtleshop.api.modules.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.turtleshop.api.modules.auth.dto.*;
 import org.turtleshop.api.modules.auth.model.Customer;
 import org.turtleshop.api.modules.auth.repository.CustomerAccess;
@@ -32,10 +34,10 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
         Customer customer = customerAccess.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
 
         if (!passwordEncoder.matches(request.getPassword(), customer.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
         String realToken = jwtService.generateToken(customer.getEmail());
