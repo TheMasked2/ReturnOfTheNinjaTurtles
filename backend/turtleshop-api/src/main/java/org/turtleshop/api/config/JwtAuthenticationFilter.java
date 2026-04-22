@@ -1,5 +1,6 @@
 package org.turtleshop.api.config;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,7 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // Skip filter if no Bearer token
+        // 1. Skip filter if no Bearer token
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -38,14 +39,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-            // 2. Try to parse and validate the token
-            String email = jwtService.getEmailFromToken(token);
+            // 2. Use the service to get the full claims
+            Claims claims = jwtService.getClaimsFromToken(token);
+            String email = claims.getSubject();
 
-            // Extracting the roles list from the JWT claims
+            // 3. Safely extract roles from claims
             @SuppressWarnings("unchecked")
             List<String> roles = claims.get("roles", List.class);
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                // 4. Convert role strings to Spring authorities
                 List<SimpleGrantedAuthority> authorities = Collections.emptyList();
                 if (roles != null) {
                     authorities = roles.stream()
@@ -53,7 +57,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             .collect(Collectors.toList());
                 }
 
-                // Setting the authentication context with authorities
+                // 5. Set the security context
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         email,
                         null,
@@ -64,9 +68,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception e) {
-            // Token is expired, tampered with, or otherwise invalid
-            logger.error("Could not validate JWT token", e);
-            // LATER?: SecurityContextHolder.clearContext();
+            // If the token is invalid, we don't throw an error; we just don't authenticate the user
+            logger.error("Could not validate JWT token: " + e.getMessage());
         }
 
         filterChain.doFilter(request, response);

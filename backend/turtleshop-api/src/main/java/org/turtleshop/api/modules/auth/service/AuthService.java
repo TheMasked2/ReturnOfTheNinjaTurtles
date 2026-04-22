@@ -1,9 +1,11 @@
 package org.turtleshop.api.modules.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import org.turtleshop.api.modules.auth.dto.*;
 import org.turtleshop.api.modules.auth.model.Customer;
 import org.turtleshop.api.modules.auth.repository.CustomerAccess;
