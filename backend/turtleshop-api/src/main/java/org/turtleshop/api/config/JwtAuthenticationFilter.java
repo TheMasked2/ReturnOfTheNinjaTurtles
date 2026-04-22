@@ -1,29 +1,24 @@
 package org.turtleshop.api.config;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.turtleshop.api.modules.auth.service.JwtService;
 
-import javax.crypto.SecretKey;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
 @Component
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    // IMPORTANT: This key must be exactly the same one used in your AuthService to sign the token.
-    // It must be at least 32 characters long.
-    private final String SECRET = "your-super-secret-ninja-turtle-key-32-chars-long";
-    private final SecretKey key = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
+    private final JwtService jwtService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -41,13 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             // 2. Try to parse and validate the token
-            Claims claims = Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-
-            String email = claims.getSubject();
+            String email = jwtService.getEmailFromToken(token);
 
             // 3. If valid, tell Spring Security who this user is
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -57,7 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         } catch (Exception e) {
-            // Token is expired, tampered with, or the "mock" string you had earlier
+            // Token is expired, tampered with, or otherwise invalid
             logger.error("Could not validate JWT token", e);
         }
 

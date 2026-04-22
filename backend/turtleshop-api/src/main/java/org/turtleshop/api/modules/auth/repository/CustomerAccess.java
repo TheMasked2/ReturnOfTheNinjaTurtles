@@ -15,10 +15,12 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CustomerAccess implements IGenericAccess<Customer, Integer> {
 
+    private static final String COL_ID = "customer_id";
+
     private final NamedParameterJdbcTemplate jdbc;
 
     private final RowMapper<Customer> customerMapper = (rs, rowNum) -> Customer.builder()
-            .customerId(rs.getInt("costumer_id"))
+            .customerId(rs.getInt(COL_ID))
             .email(rs.getString("email"))
             .password(rs.getString("password"))
             .firstName(rs.getString("first_name"))
@@ -34,7 +36,7 @@ public class CustomerAccess implements IGenericAccess<Customer, Integer> {
 
     @Override
     public Optional<Customer> getById(Integer id) {
-        String sql = "SELECT * FROM CUSTOMER WHERE costumer_id = :id";
+        String sql = "SELECT * FROM CUSTOMER WHERE " + COL_ID + " = :id";
         MapSqlParameterSource params = new MapSqlParameterSource("id", id);
         return jdbc.query(sql, params, customerMapper).stream().findFirst();
     }
@@ -56,17 +58,20 @@ public class CustomerAccess implements IGenericAccess<Customer, Integer> {
 
     @Override
     public void update(Customer item) {
-        String sql = """
-            UPDATE CUSTOMER 
-            SET email = :email, first_name = :firstName, last_name = :lastName 
-            WHERE costumer_id = :id
-        """;
-        jdbc.update(sql, getParameters(item).addValue("id", item.getCustomerId()));
+        String sql = "UPDATE CUSTOMER " +
+                "SET email = :email, first_name = :firstName, last_name = :lastName " +
+                "WHERE " + COL_ID + " = :id";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("email", item.getEmail())
+                .addValue("firstName", item.getFirstName())
+                .addValue("lastName", item.getLastName())
+                .addValue("id", item.getCustomerId());
+        jdbc.update(sql, params);
     }
 
     @Override
     public void delete(Integer id) {
-        String sql = "DELETE FROM CUSTOMER WHERE costumer_id = :id";
+        String sql = "DELETE FROM CUSTOMER WHERE " + COL_ID + " = :id";
         jdbc.update(sql, new MapSqlParameterSource("id", id));
     }
 
