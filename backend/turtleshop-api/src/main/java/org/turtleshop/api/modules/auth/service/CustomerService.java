@@ -1,7 +1,9 @@
 package org.turtleshop.api.modules.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.turtleshop.api.modules.auth.dto.CustomerResponse;
 import org.turtleshop.api.modules.auth.model.Customer;
 import org.turtleshop.api.modules.auth.repository.CustomerAccess;
@@ -22,7 +24,7 @@ public class CustomerService {
     public CustomerResponse getCustomerById(Integer id) {
         return customerAccess.getByIdAsync(id)
                 .map(this::mapToResponse)
-                .orElseThrow(() -> new RuntimeException("Customer with ID " + id + " not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer with ID " + id + " not found"));
     }
 
     /**
