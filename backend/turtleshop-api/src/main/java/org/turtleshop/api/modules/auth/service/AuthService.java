@@ -27,7 +27,7 @@ public class AuthService {
                 .phone(request.getPhone())
                 .build();
 
-        customerAccess.insertAsync(customer);
+        customerAccess.insert(customer);
     }
 
     public AuthResponse login(LoginRequest request) {

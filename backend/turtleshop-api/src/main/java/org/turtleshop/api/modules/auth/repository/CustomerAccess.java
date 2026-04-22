@@ -33,20 +33,20 @@ public class CustomerAccess implements IGenericAccess<Customer, Integer> {
             .build();
 
     @Override
-    public Optional<Customer> getByIdAsync(Integer id) {
+    public Optional<Customer> getById(Integer id) {
         String sql = "SELECT * FROM CUSTOMER WHERE costumer_id = :id";
         MapSqlParameterSource params = new MapSqlParameterSource("id", id);
         return jdbc.query(sql, params, customerMapper).stream().findFirst();
     }
 
     @Override
-    public List<Customer> getAllAsync() {
+    public List<Customer> getAll() {
         String sql = "SELECT * FROM CUSTOMER";
         return jdbc.query(sql, customerMapper);
     }
 
     @Override
-    public void insertAsync(Customer item) {
+    public void insert(Customer item) {
         String sql = """
             INSERT INTO CUSTOMER (email, password, first_name, last_name, phone, address, city, postal_code, country, bank, created_at)
             VALUES (:email, :password, :firstName, :lastName, :phone, :address, :city, :postalCode, :country, :bank, NOW())
@@ -55,7 +55,7 @@ public class CustomerAccess implements IGenericAccess<Customer, Integer> {
     }
 
     @Override
-    public void updateAsync(Customer item) {
+    public void update(Customer item) {
         String sql = """
             UPDATE CUSTOMER 
             SET email = :email, first_name = :firstName, last_name = :lastName 
@@ -65,7 +65,7 @@ public class CustomerAccess implements IGenericAccess<Customer, Integer> {
     }
 
     @Override
-    public void deleteAsync(Integer id) {
+    public void delete(Integer id) {
         String sql = "DELETE FROM CUSTOMER WHERE costumer_id = :id";
         jdbc.update(sql, new MapSqlParameterSource("id", id));
     }

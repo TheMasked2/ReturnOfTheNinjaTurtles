@@ -19,10 +19,10 @@ public class CustomerService {
 
     /**
      * Finds a customer and converts it to a Response DTO.
-     * Uses the getByIdAsync method from your GenericAccess.
+     * Uses the getById method from your GenericAccess.
      */
     public CustomerResponse getCustomerById(Integer id) {
-        return customerAccess.getByIdAsync(id)
+        return customerAccess.getById(id)
                 .map(this::mapToResponse)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer with ID " + id + " not found"));
     }
@@ -31,7 +31,7 @@ public class CustomerService {
      * Retrieves all customers and maps them to a list of DTOs.
      */
     public List<CustomerResponse> getAllCustomers() {
-        return customerAccess.getAllAsync().stream()
+        return customerAccess.getAll().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -41,7 +41,7 @@ public class CustomerService {
      */
     public void createCustomer(Customer customer) {
         // You can add business logic here (e.g., checking if email exists)
-        customerAccess.insertAsync(customer);
+        customerAccess.insert(customer);
     }
 
     /**

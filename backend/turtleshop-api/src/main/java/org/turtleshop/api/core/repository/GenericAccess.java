@@ -20,7 +20,7 @@ public abstract class GenericAccess<T, K> implements IGenericAccess<T, K> {
     }
 
     @Override
-    public Optional<T> getByIdAsync(K id) {
+    public Optional<T> getById(K id) {
         String query = String.format("SELECT * FROM %s WHERE %s = :id", getTable(), getPrimaryKey());
         MapSqlParameterSource params = new MapSqlParameterSource("id", id);
 
@@ -31,13 +31,13 @@ public abstract class GenericAccess<T, K> implements IGenericAccess<T, K> {
     }
 
     @Override
-    public List<T> getAllAsync() {
+    public List<T> getAll() {
         String query = "SELECT * FROM " + getTable();
         return jdbc.query(query, getRowMapper());
     }
 
     @Override
-    public void deleteAsync(K id) {
+    public void delete(K id) {
         String query = String.format("DELETE FROM %s WHERE %s = :id", getTable(), getPrimaryKey());
         jdbc.update(query, new MapSqlParameterSource("id", id));
     }
