@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY build.gradle.kts settings.gradle.kts gradlew gradlew.bat /app/
 COPY gradle /app/gradle
+COPY src /app/src
 
 # Fix Windows line endings + ensure executable, then test
 RUN sed -i 's/\r$//' /app/gradlew && chmod +x /app/gradlew && /app/gradlew --version
