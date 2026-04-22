@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface IGenericAccess<T, K> {
-    Optional<T> getByIdAsync(K id);
-    List<T> getAllAsync();
-    void deleteAsync(K id);
-    void insertAsync(T item);
-    void updateAsync(T item);
+    Optional<T> getById(K id);
+    List<T> getAll();
+    void delete(K id);
+    void insert(T item);
+    void update(T item);
     boolean testConnection();
 }
