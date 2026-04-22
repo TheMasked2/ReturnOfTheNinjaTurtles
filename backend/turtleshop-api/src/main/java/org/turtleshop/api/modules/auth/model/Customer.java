@@ -4,13 +4,14 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.Builder;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
 @Builder
-
 public class Customer {
-    private Integer customerId;
+    private UUID customerId;
     private String email;
     private String password;
     private String firstName;
@@ -22,4 +23,5 @@ public class Customer {
     private String country;
     private String bank;
     private LocalDateTime createdAt;
+    private List<String> roles;
 }

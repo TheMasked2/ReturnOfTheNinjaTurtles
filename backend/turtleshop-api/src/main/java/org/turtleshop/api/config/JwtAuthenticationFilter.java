@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -16,12 +17,12 @@ import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    // IMPORTANT: This key must be exactly the same one used in your AuthService to sign the token.
-    // It must be at least 32 characters long.
     private final String SECRET = "your-super-secret-ninja-turtle-key-32-chars-long";
     private final SecretKey key = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
 
@@ -31,7 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // 1. If there's no Bearer token, just move to the next filter (Spring will handle the 403 later if needed)
+        // Skip filter if no Bearer token
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -40,7 +41,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-            // 2. Try to parse and validate the token
             Claims claims = Jwts.parser()
                     .verifyWith(key)
                     .build()
@@ -49,16 +49,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String email = claims.getSubject();
 
-            // 3. If valid, tell Spring Security who this user is
+            // Extracting the roles list from the JWT claims
+            @SuppressWarnings("unchecked")
+            List<String> roles = claims.get("roles", List.class);
+
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                List<SimpleGrantedAuthority> authorities = Collections.emptyList();
+                if (roles != null) {
+                    authorities = roles.stream()
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList());
+                }
+
+                // Setting the authentication context with authorities
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        email, null, Collections.emptyList());
+                        email,
+                        null,
+                        authorities
+                );
 
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
+
         } catch (Exception e) {
-            // Token is expired, tampered with, or the "mock" string you had earlier
             logger.error("Could not validate JWT token", e);
+            // LATER?: SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);

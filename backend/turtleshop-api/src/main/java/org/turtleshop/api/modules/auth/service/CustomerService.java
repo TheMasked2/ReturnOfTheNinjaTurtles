@@ -7,48 +7,38 @@ import org.springframework.web.server.ResponseStatusException;
 import org.turtleshop.api.modules.auth.dto.CustomerResponse;
 import org.turtleshop.api.modules.auth.model.Customer;
 import org.turtleshop.api.modules.auth.repository.CustomerAccess;
+import org.turtleshop.api.modules.auth.repository.SystemRoleAccess;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor // Automatically creates constructor for the final CustomerAccess
+@RequiredArgsConstructor
 public class CustomerService {
 
     private final CustomerAccess customerAccess;
+    private final SystemRoleAccess roleAccess;
 
-    /**
-     * Finds a customer and converts it to a Response DTO.
-     * Uses the getById method from your GenericAccess.
-     */
-    public CustomerResponse getCustomerById(Integer id) {
-        return customerAccess.getById(id)
-                .map(this::mapToResponse)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer with ID " + id + " not found"));
+    // Get Customer by ID
+    public CustomerResponse getCustomerById(UUID id) {
+        Customer customer = customerAccess.getById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+
+        return mapToResponse(customer);
     }
 
-    /**
-     * Retrieves all customers and maps them to a list of DTOs.
-     */
+    // Get all Customers
     public List<CustomerResponse> getAllCustomers() {
         return customerAccess.getAll().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Handles the creation of a new customer.
-     */
-    public void createCustomer(Customer customer) {
-        // You can add business logic here (e.g., checking if email exists)
-        customerAccess.insert(customer);
-    }
-
-    /**
-     * Helper method to map our Database Model to our API Response DTO.
-     * This ensures we don't expose sensitive data like passwords to the frontend.
-     */
+    // HELPER: Maps the Model to the Response DTO
     private CustomerResponse mapToResponse(Customer customer) {
+        List<String> roles = roleAccess.findRoleNamesByCustomerEmail(customer.getEmail());
+
         return CustomerResponse.builder()
                 .id(customer.getCustomerId())
                 .email(customer.getEmail())
@@ -56,6 +46,7 @@ public class CustomerService {
                 .lastName(customer.getLastName())
                 .phone(customer.getPhone())
                 .createdAt(customer.getCreatedAt())
+                .roles(roles)
                 .build();
     }
 }
