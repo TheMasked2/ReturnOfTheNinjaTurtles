@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
-    // CRITICAL: You need this for the repositories to work
+    // JDBC is Java version of Dapper. Need this for Repositories to work.
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
 
     implementation("org.flywaydb:flyway-core:10.22.0")
@@ -33,6 +33,9 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+
+    // NoSQL - MongoDB
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 
@@ -47,6 +50,7 @@ dependencies {
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
 
+    // PostgreSQL
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

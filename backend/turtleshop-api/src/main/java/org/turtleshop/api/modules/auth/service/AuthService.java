@@ -44,10 +44,10 @@ public class AuthService {
     // Login
     public AuthResponse login(LoginRequest request) {
         Customer customer = customerAccess.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
 
         if (!passwordEncoder.matches(request.getPassword(), customer.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
         List<String> roles = roleAccess.findRoleNamesByCustomerEmail(customer.getEmail());
