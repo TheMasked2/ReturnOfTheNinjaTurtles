@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS CUSTOMER (
-    customer_id INT PRIMARY KEY,
+    customer_id TEXT PRIMARY KEY,
     email VARCHAR(255) UNIQUE,
     password VARCHAR(255),
     first_name VARCHAR(255),
