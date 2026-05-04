@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS PAYMENT_METHOD (
+    payment_method_id INT PRIMARY KEY,
+    provider VARCHAR(100),
+    type VARCHAR(100)
+);

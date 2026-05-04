@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS PRODUCT (
+    product_id INT PRIMARY KEY,
+    base_price DECIMAL(12, 2)
+);
