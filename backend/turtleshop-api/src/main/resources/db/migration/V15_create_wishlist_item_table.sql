@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS WISHLIST_ITEM (
-    wishlist_item_id INT PRIMARY KEY,
+    wishlist_item_id SERIAL PRIMARY KEY,
     wishlist_id INT,
     product_id INT,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
