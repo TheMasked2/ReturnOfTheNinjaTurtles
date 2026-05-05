@@ -10,7 +10,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Builder
-public class WishList {
+public class Wishlist {
     private Integer wishlistId; // PK
     private UUID customerId; // FK
     // private List<WishListItem> items; // Potential future use

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Builder
-public class WishListItem {
+public class WishlistItem {
     private Integer wishlistItemId; // PK
     private Integer wishlistId; // FK
     private Integer productId; // FK
