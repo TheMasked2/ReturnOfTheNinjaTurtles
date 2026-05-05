@@ -6,9 +6,9 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import org.turtleshop.api.modules.auth.model.Customer;
 import org.turtleshop.api.modules.wishlist.model.Wishlist;
 
+import java.sql.ResultSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,10 +18,12 @@ import java.util.UUID;
 public class WishlistRepositoryImpl implements WishlistRepository {
     private final NamedParameterJdbcTemplate jdbc;
 
-    private final RowMapper<Wishlist> wishlistMapper = ( rs, rowNum) -> WishList.builder()
-            .wishlistId(rs.getInt("wishlist_id"))
-            .customerId(rs.getObject("customer_id", java.util.UUID.class))
-            .build();
+    private final RowMapper<Wishlist> wishlistMapper = (ResultSet rs, int rowNum) -> {
+        return Wishlist.builder()
+                .wishlistId(rs.getInt("wishlist_id"))
+                .customerId(rs.getObject("customer_id", UUID.class))
+                .build();
+    };
 
     // Get
     @Override
