@@ -28,44 +28,57 @@ public class WishlistItemRepositoryImpl implements WishlistItemRepository {
     // Get
     @Override
     public List<WishlistItem> getAll() {
-        String sql = "SELECT * FROM WISHLIST_ITEM";
+        String sql = """
+            SELECT *
+            FROM WISHLIST_ITEM
+            """;
         return jdbc.query(sql, wishlistItemMapper);
     }
 
     @Override
     public List<WishlistItem> getAllByWishlistId(Integer wishlistId) {
-        String sql = "SELECT * FROM WISHLIST_ITEM WHERE wishlist_id = :wishlistId";
+        String sql = """
+            SELECT *
+            FROM WISHLIST_ITEM
+            WHERE wishlist_id = :wishlistId
+            """;
         return jdbc.query(sql, new MapSqlParameterSource("wishlistId", wishlistId), wishlistItemMapper);
     }
 
     @Override
     public Optional<WishlistItem> getByWishlistItemId(Integer wishlistItemId) {
-        String sql = "SELECT * FROM WISHLIST_ITEM WHERE wishlist_item_id = :wishlistItemId";
+        String sql = """
+            SELECT *
+            FROM WISHLIST_ITEM
+            WHERE wishlist_item_id = :wishlistItemId
+            """;
         return jdbc.query(sql, new MapSqlParameterSource("wishlistItemId", wishlistItemId), wishlistItemMapper)
                 .stream().findFirst();
     }
 
     @Override
-    public Optional<WishlistItem> getByWishlistId(Integer wishlistId) {
-        String sql = "SELECT * FROM WISHLIST_ITEM WHERE wishlist_id = :wishlistId";
-        return jdbc.query(sql, new MapSqlParameterSource("wishlistId", wishlistId), wishlistItemMapper)
-                .stream().findFirst();
-    }
-
-    @Override
     public Optional<WishlistItem> getByProductId(Integer productId) {
-        String sql = "SELECT * FROM WISHLIST_ITEM WHERE product_id = :productId";
+        String sql = """
+            SELECT *
+            FROM WISHLIST_ITEM
+            WHERE product_id = :productId
+            """;
         return jdbc.query(sql, new MapSqlParameterSource("productId", productId), wishlistItemMapper)
                 .stream().findFirst();
     }
 
     @Override
     public boolean existsByWishlistIdAndProductId(Integer wishlistId, Integer productId) {
-        String sql = "SELECT COUNT(*) FROM WISHLIST_ITEM WHERE wishlist_id = :wishlistId AND product_id = :productId";
+        String sql = """
+            SELECT COUNT(*)
+            FROM WISHLIST_ITEM
+            WHERE wishlist_id = :wishlistId
+              AND product_id = :productId
+            """;
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("wishlistId", wishlistId)
                 .addValue("productId", productId);
-        
+
         Integer count = jdbc.queryForObject(sql, params, Integer.class);
         return count != null && count > 0;
     }
@@ -73,7 +86,10 @@ public class WishlistItemRepositoryImpl implements WishlistItemRepository {
     // Insert
     @Override
     public void insert(Integer wishlistId, Integer productId) {
-        String sql = "INSERT INTO WISHLIST_ITEM (wishlist_id, product_id) VALUES (:wishlistId, :productId)";
+        String sql = """
+            INSERT INTO WISHLIST_ITEM (wishlist_id, product_id)
+            VALUES (:wishlistId, :productId)
+            """;
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("wishlistId", wishlistId)
                 .addValue("productId", productId);
@@ -82,7 +98,11 @@ public class WishlistItemRepositoryImpl implements WishlistItemRepository {
 
     @Override
     public Integer insertAndReturnId(Integer wishlistId, Integer productId) {
-        String sql = "INSERT INTO WISHLIST_ITEM (wishlist_id, product_id) VALUES (:wishlistId, :productId) RETURNING wishlist_item_id";
+        String sql = """
+            INSERT INTO WISHLIST_ITEM (wishlist_id, product_id)
+            VALUES (:wishlistId, :productId)
+            RETURNING wishlist_item_id
+            """;
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("wishlistId", wishlistId)
                 .addValue("productId", productId);
@@ -92,32 +112,62 @@ public class WishlistItemRepositoryImpl implements WishlistItemRepository {
     // Update
     @Override
     public void updateProductId(Integer wishlistItemId, Integer newProductId) {
-        String sql = "UPDATE WISHLIST_ITEM SET product_id = :newProductId WHERE wishlist_item_id = :wishlistItemId";
+        String sql = """
+            UPDATE WISHLIST_ITEM
+            SET product_id = :newProductId
+            WHERE wishlist_item_id = :wishlistItemId
+            """;
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("newProductId", newProductId)
                 .addValue("wishlistItemId", wishlistItemId);
         jdbc.update(sql, params);
     }
 
+    @Override
+    public void update(WishlistItem wishlistItem) {
+        String sql = """
+            UPDATE WISHLIST_ITEM
+            SET wishlist_id = :wishlistId,
+                product_id = :productId
+            WHERE wishlist_item_id = :wishlistItemId
+            """;
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("wishlistId", wishlistItem.getWishlistId())
+                .addValue("productId", wishlistItem.getProductId())
+                .addValue("wishlistItemId", wishlistItem.getWishlistItemId());
+        jdbc.update(sql, params);
+    }
+
     // Delete
     @Override
     public void deleteById(Integer wishlistItemId) {
-        String sql = "DELETE FROM WISHLIST_ITEM WHERE wishlist_item_id = :wishlistItemId";
+        String sql = """
+            DELETE FROM WISHLIST_ITEM
+            WHERE wishlist_item_id = :wishlistItemId
+            """;
         jdbc.update(sql, new MapSqlParameterSource("wishlistItemId", wishlistItemId));
     }
 
     @Override
     public void deleteByWishlistId(Integer wishlistId) {
-        String sql = "DELETE FROM WISHLIST_ITEM WHERE wishlist_id = :wishlistId";
+        String sql = """
+            DELETE FROM WISHLIST_ITEM
+            WHERE wishlist_id = :wishlistId
+            """;
         jdbc.update(sql, new MapSqlParameterSource("wishlistId", wishlistId));
     }
 
     @Override
     public void deleteItemFromWishlist(Integer wishlistId, Integer productId) {
-        String sql = "DELETE FROM WISHLIST_ITEM WHERE wishlist_id = :wishlistId AND product_id = :productId";
+        String sql = """
+            DELETE FROM WISHLIST_ITEM
+            WHERE wishlist_id = :wishlistId
+              AND product_id = :productId
+            """;
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("wishlistId", wishlistId)
                 .addValue("productId", productId);
         jdbc.update(sql, params);
     }
+
 }

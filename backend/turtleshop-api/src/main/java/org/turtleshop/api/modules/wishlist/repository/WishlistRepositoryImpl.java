@@ -28,21 +28,32 @@ public class WishlistRepositoryImpl implements WishlistRepository {
     // Get
     @Override
     public List<Wishlist> getAll() {
-        String sql = "SELECT * FROM WISHLIST";
+        String sql = """
+            SELECT *
+            FROM WISHLIST
+            """;
         List<Wishlist> result = jdbc.query(sql, wishlistMapper);
         return result.isEmpty() ? null : result;
     }
 
     @Override
     public Optional<Wishlist> getByWishlistId(Integer id) {
-        String sql = "SELECT * FROM WISHLIST WHERE wishlist_id = :id";
+        String sql = """
+            SELECT *
+            FROM WISHLIST
+            WHERE wishlist_id = :id
+            """;
         return jdbc.query(sql, new MapSqlParameterSource("id", id), wishlistMapper)
                 .stream().findFirst();
     }
 
     @Override
     public Optional<Wishlist> getByCustomerId(UUID customerId) {
-        String sql = "SELECT * FROM WISHLIST WHERE customer_id = :customerId";
+        String sql = """
+            SELECT *
+            FROM WISHLIST
+            WHERE customer_id = :customerId
+            """;
         return jdbc.query(sql, new MapSqlParameterSource("customerId", customerId), wishlistMapper)
                 .stream().findFirst();
     }
@@ -50,20 +61,31 @@ public class WishlistRepositoryImpl implements WishlistRepository {
     // Insert
     @Override
     public void insert(UUID customerId) {
-        String sql = "INSERT INTO WISHLIST (customer_id) VALUES (:customerId)";
+        String sql = """
+            INSERT INTO WISHLIST (customer_id)
+            VALUES (:customerId)
+            """;
         jdbc.update(sql, new MapSqlParameterSource("customerId", customerId));
     }
 
     @Override
     public Integer insertAndReturnId(UUID customerId) {
-        String sql = "INSERT INTO WISHLIST (customer_id) VALUES (:customerId) RETURNING wishlist_id";
+        String sql = """
+            INSERT INTO WISHLIST (customer_id)
+            VALUES (:customerId)
+            RETURNING wishlist_id
+            """;
         return jdbc.queryForObject(sql, new MapSqlParameterSource("customerId", customerId), Integer.class);
     }
 
     // Update
     @Override
     public void updateCustomerId(Integer wishlistId, UUID newCustomerId) {
-        String sql = "UPDATE WISHLIST SET customer_id = :newCustomerId WHERE wishlist_id = :wishlistId";
+        String sql = """
+            UPDATE WISHLIST
+            SET customer_id = :newCustomerId
+            WHERE wishlist_id = :wishlistId
+            """;
         jdbc.update(sql, new MapSqlParameterSource()
                 .addValue("newCustomerId", newCustomerId)
                 .addValue("wishlistId", wishlistId));
@@ -72,13 +94,19 @@ public class WishlistRepositoryImpl implements WishlistRepository {
     // Delete
     @Override
     public void deleteById(Integer wishlistId) {
-        String sql = "DELETE FROM WISHLIST WHERE wishlist_id = :wishlistId";
+        String sql = """
+            DELETE FROM WISHLIST
+            WHERE wishlist_id = :wishlistId
+            """;
         jdbc.update(sql, new MapSqlParameterSource("wishlistId", wishlistId));
     }
 
     @Override
     public void deleteByCustomerId(UUID customerId) {
-        String sql = "DELETE FROM WISHLIST WHERE customer_id = :customerId";
+        String sql = """
+            DELETE FROM WISHLIST
+            WHERE customer_id = :customerId
+            """;
         jdbc.update(sql, new MapSqlParameterSource("customerId", customerId));
     }
 }

@@ -10,7 +10,7 @@ public interface WishlistItemRepository {
     List<WishlistItem> getAll();
     List<WishlistItem> getAllByWishlistId(Integer wishlistId);
     Optional<WishlistItem> getByWishlistItemId(Integer wishlistItemId);
-    Optional<WishlistItem> getByWishlistId(Integer wishlistId);
+    // Optional<WishlistItem> getByWishlistId(Integer wishlistId);
     Optional<WishlistItem> getByProductId(Integer productId);
     boolean existsByWishlistIdAndProductId(Integer wishlistId, Integer productId);
     // Insert
@@ -18,7 +18,7 @@ public interface WishlistItemRepository {
     Integer insertAndReturnId(Integer wishlistId, Integer productId); 
     // Update
     // should prolly be an wishlistitemdto huh?
-    // void update(WishlistItemDto dto);
+    void update(WishlistItem wishlistItem);
     void updateProductId(Integer wishlistItemId, Integer newProductId);
     // Delete
     void deleteById(Integer wishlistItemId);
