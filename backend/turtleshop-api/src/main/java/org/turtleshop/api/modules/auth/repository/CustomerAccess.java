@@ -15,8 +15,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CustomerAccess {
 
-    private static final String COL_ID = "customer_id";
-
     private final NamedParameterJdbcTemplate jdbc;
 
     // MAPPER: Maps row from db result into a Java Object
