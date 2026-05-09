@@ -1,14 +1,11 @@
-package org.turtleshop.api.modules.cart.model;
+package org.turtleshop.api.modules.cart.dto;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
-
 
 @Getter
-@Setter
 @Builder
-public class CartItem {
+public class CartItemResponse {
     private int cartItemId;
     private int cartId;
     private int productId;

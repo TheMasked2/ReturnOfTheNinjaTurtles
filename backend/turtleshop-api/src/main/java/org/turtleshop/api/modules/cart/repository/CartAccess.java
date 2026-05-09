@@ -4,9 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.stereotype.Repository;
+import org.springframework.jdbc.support.GeneratedKeyHolder;import org.springframework.jdbc.support.KeyHolder;import org.springframework.stereotype.Repository;
 import org.turtleshop.api.modules.cart.model.Cart;
-import java.util.UUID;
+import org.turtleshop.api.modules.cart.enums.CartStatus;
+import java.time.LocalDateTime;import java.util.List;import java.util.UUID;
 import java.util.Optional;
 
 
@@ -26,23 +27,26 @@ public class CartAccess {
             .build();
 
     // Insert Cart
-    public void insertCart(UUID customerId) {
+    public int insertCart(UUID customerId) {
         String sql = """
                 INSERT INTO cart (customer_id, status, created_at)
                 VALUES (:customerId, :status, :createdAt)
                 """;
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("customer_id", customerId)
+                .addValue("customerId", customerId)
                 .addValue("status", CartStatus.ACTIVE.name())
                 .addValue("createdAt", LocalDateTime.now());
-
-        jdbc.update(sql, params);
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbc.update(sql, params, keyHolder, new String[]{"cart_id"});
+        return keyHolder.getKey().intValue();
     }
 
     // Get Cart by ID
     public Optional<Cart> getCartById(int cartId) {
-        String sql = "SELECT * FROM cart WHERE cart_id = :id";
-        return jdbc.query(sql, new MapSqlParameterSource("id", cartId), cartMapper).steam().findFirst();
+        String sql = "SELECT * FROM cart WHERE cart_id = :cartId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("cartId", cartId);
+        return jdbc.query(sql, params, cartMapper).stream().findFirst();
     }
 
     // Get Active Cart by Customer ID
@@ -50,15 +54,15 @@ public class CartAccess {
         String sql = "SELECT * FROM cart WHERE customer_id = :id AND status = :status";
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("id", customerId)
-                .addValue("status", CartStatus.ACTIVE.name().toLowerCase());
+                .addValue("status", CartStatus.ACTIVE.name());
         return jdbc.query(sql, params, cartMapper).stream().findFirst();
     }
 
     // Get All Carts that are Active
-    public Optional<Cart> getAllActiveCarts() {
+    public List<Cart> getAllActiveCarts() {
         String sql = "SELECT * FROM cart WHERE status = :status";
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .newValue("status", CartStatus.Active.name());
+                .addValue("status", CartStatus.ACTIVE.name());
         return jdbc.query(sql, params, cartMapper);
     }
 
@@ -66,18 +70,16 @@ public class CartAccess {
     public void updateCartStatus(int cartId, CartStatus status) {
         String sql = "UPDATE cart SET status = :status WHERE cart_id = :cartId";
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .newValue("status", status.name())
-                .newValue("cartId", cartId);
+                .addValue("status", status.name())
+                .addValue("cartId", cartId);
         jdbc.update(sql, params);
-
     }
 
     // Delete Cart
     public void deleteCart(int cartId) {
         String sql = "DELETE FROM cart WHERE cart_id = :cartId";
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .newValue("cartId", cartId);
+                .addValue("cartId", cartId);
         jdbc.update(sql, params);
     }
-
 }

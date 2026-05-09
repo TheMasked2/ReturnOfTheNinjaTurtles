@@ -1,0 +1,15 @@
+package org.turtleshop.api.modules.cart.dto;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
+@Builder
+public class UpdateCartItemQuantityRequest {
+
+    @NotNull
+    @Min(1)
+    private int quantity;
+}
