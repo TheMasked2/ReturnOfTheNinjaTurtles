@@ -14,17 +14,38 @@ import java.util.List;
 public class InventoryService {
     private final InventoryAccess inventoryAccess;
 
-    // Delete Inventory by Product ID
-    public void deleteInventoryByProductId(int productId) {
-        inventoryAccess.deleteByProductId(productId);
+    public List<InventoryModel> listInventory(int page, int size) {
+        return inventoryAccess.findAll(page * size, size);
     }
 
-    // Update Inventory quantities
-    public void updateInventoryByProductId(int productId, int quantityAvailable, int quantityReserved) {
-        inventoryAccess.updateInventoryByProductId(productId, quantityAvailable, quantityReserved);
+    public InventoryModel getInventoryById(int inventoryId) {
+        return inventoryAccess.findById(inventoryId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Inventory record not found: " + inventoryId));
     }
 
-     // Create new Inventory record
+    public InventoryModel getInventoryByProductId(int productId) {
+        return inventoryAccess.findByProductId(productId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Inventory not found for product ID: " + productId));
+    }
+
+    public List<InventoryModel> getInventoryByQuantityAvailable(int quantity) {
+        return inventoryAccess.findByQuantityAvailableGreaterOrEqual(quantity);
+    }
+
+    public List<InventoryModel> getByProductIds(List<Integer> productIds) {
+        return inventoryAccess.findByProductIds(productIds);
+    }
+
+    public List<InventoryModel> getLowStock(int threshold) {
+        return inventoryAccess.findLowStock(threshold);
+    }
+
+    public List<InventoryModel> getLastUpdatedInventory(int limit) {
+        return inventoryAccess.findLastUpdated(limit);
+    }
+
     public int createInventory(int productId, int quantityAvailable, int quantityReserved) {
         InventoryModel inventory = InventoryModel.builder()
                 .productId(productId)
@@ -34,20 +55,56 @@ public class InventoryService {
         return inventoryAccess.insertInventory(inventory);
     }
 
-    // Get Inventory by Product ID
-    public InventoryModel getInventoryByProductId(int productId) {
-        return inventoryAccess.findByProductId(productId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Inventory not found for product ID: " + productId));
+    public void updateInventoryByProductId(int productId, int quantityAvailable, int quantityReserved) {
+        getInventoryByProductId(productId);
+        inventoryAccess.updateInventoryByProductId(productId, quantityAvailable, quantityReserved);
     }
 
-    // Get Inventory by Quantity Available
-    public InventoryModel getInventoryByProductQuantityAvailable(int quantity) {
-        return inventoryAccess.findByQuantityAvailable(quantity)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No inventory found with quantity available >= " + quantity));
+    public void deleteInventoryByProductId(int productId) {
+        inventoryAccess.deleteByProductId(productId);
     }
 
-    // Find last updated inventory record
-    public List<InventoryModel> getLastUpdatedInventory(int limit) {
-        return inventoryAccess.findLastUpdated(limit);
+    public void reserveStock(int productId, int quantity) {
+        InventoryModel inventory = getInventoryByProductId(productId);
+        if (quantity <= 0 || inventory.getQuantityAvailable() < quantity) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient available stock");
+        }
+        inventoryAccess.updateQuantitiesByProductId(
+                productId,
+                inventory.getQuantityAvailable() - quantity,
+                inventory.getQuantityReserved() + quantity);
+    }
+
+    public void consumeStock(int productId, int quantity) {
+        InventoryModel inventory = getInventoryByProductId(productId);
+        if (quantity <= 0 || inventory.getQuantityReserved() < quantity) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient reserved stock");
+        }
+        inventoryAccess.updateQuantitiesByProductId(
+                productId,
+                inventory.getQuantityAvailable(),
+                inventory.getQuantityReserved() - quantity);
+    }
+
+    public void releaseStock(int productId, int quantity) {
+        InventoryModel inventory = getInventoryByProductId(productId);
+        if (quantity <= 0 || inventory.getQuantityReserved() < quantity) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient reserved stock");
+        }
+        inventoryAccess.updateQuantitiesByProductId(
+                productId,
+                inventory.getQuantityAvailable() + quantity,
+                inventory.getQuantityReserved() - quantity);
+    }
+
+    public void restock(int productId, int quantity) {
+        if (quantity <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantity must be positive");
+        }
+        InventoryModel inventory = getInventoryByProductId(productId);
+        inventoryAccess.updateQuantitiesByProductId(
+                productId,
+                inventory.getQuantityAvailable() + quantity,
+                inventory.getQuantityReserved());
     }
 }
