@@ -18,12 +18,4 @@ public class CartResponse {
     private CartStatus status;
     private LocalDateTime createdAt;
     private List<CartItemResponse> items;
-
-    public static class PlaceOrderResponse {
-        private Integer orderId;
-        private String orderStatus;
-        private Integer transactionId;
-        private String transactionStatus;
-        private BigDecimal totalAmount;
-    }
 }

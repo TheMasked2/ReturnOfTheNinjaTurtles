@@ -1,5 +1,7 @@
 package org.turtleshop.api.modules.cart.repository;
 
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.turtleshop.api.modules.cart.model.CartItem;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
@@ -25,7 +27,7 @@ public class CartItemAccess {
             .build();
 
     // Inserts Cart Item
-    public void insertCartItem(int cartId, int productId, int quantity) {
+    public int insertCartItem(int cartId, int productId, int quantity) {
         String sql = """
                 INSERT INTO cart_item (cart_id, product_id, quantity)
                 VALUES (:cartId, :productId, :quantity)
@@ -34,7 +36,9 @@ public class CartItemAccess {
                 .addValue("cartId", cartId)
                 .addValue("productId", productId)
                 .addValue("quantity", quantity);
-        jdbc.update(sql, params);
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbc.update(sql, params, keyHolder, new String[]{"cart_item_id"});
+        return keyHolder.getKey().intValue();
     }
 
     // Get CartItem by CartItemId in a Cart
@@ -54,11 +58,17 @@ public class CartItemAccess {
     }
 
     // Update quantity of a CartItem
-    public void updateCartItemQuantity(int quantity, int cartItemId) {
-        String sql = "UPDATE cart_item SET quantity = :quantity WHERE cart_item_id = :cartItemId";
+    public void updateCartItemQuantity(int cartItemId, int quantity) {
+        String sql = """
+            UPDATE cart_item
+            SET quantity = :quantity
+            WHERE cart_item_id = :cartItemId
+            """;
+
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("quantity", quantity)
-                .addValue("cartItemId", cartItemId);
+                .addValue("cartItemId", cartItemId)
+                .addValue("quantity", quantity);
+
         jdbc.update(sql, params);
     }
 
