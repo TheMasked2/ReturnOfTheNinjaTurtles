@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.turtleshop.api.modules.auth.model.Customer;
 import org.turtleshop.api.modules.cart.dto.CartItemResponse;
 import org.turtleshop.api.modules.cart.dto.CartResponse;
+import org.turtleshop.api.modules.cart.enums.CartStatus;
 import org.turtleshop.api.modules.cart.model.Cart;
 import org.turtleshop.api.modules.cart.model.CartItem;
 import org.turtleshop.api.modules.cart.repository.CartAccess;
@@ -33,6 +35,22 @@ public class CartService {
         List<CartItem> cartItems = cartItemAccess.getAllCartItems(cartId);
         return mapToCartResponse(cart, cartItems);
     }
+
+    // Adds item to the cart
+
+    // Delete item from the cart
+
+    // Change quantity of an item in the cart
+
+    // Change status of a Cart to converted.
+    public void markCartConverted(int cartId) {
+        // change status
+        cartAccess.updateCartStatus(cartId, CartStatus.CONVERTED);
+    }
+
+    // Delete a cart
+
+    // Get Active Cart
 
     // HELPER: Maps the Model to the Response DTO
     public CartResponse mapToCartResponse(Cart cart, List<CartItem> cartItems) {
