@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS TRANSACTION (
-    transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+    transaction_id SERIAL PRIMARY KEY,
     order_id INT NOT NULL,
     payment_method_id INT NOT NULL,
     amount DECIMAL(12, 2) NOT NULL,

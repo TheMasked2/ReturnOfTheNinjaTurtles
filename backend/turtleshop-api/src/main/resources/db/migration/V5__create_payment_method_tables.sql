@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS PAYMENT_METHOD (
-    payment_method_id INT AUTO_INCREMENT PRIMARY KEY,
+    payment_method_id SERIAL PRIMARY KEY,
     provider VARCHAR(100) NOT NULL,
     type VARCHAR(100) NOT NULL
 );
