@@ -29,9 +29,11 @@ export function PublicNavbar() {
                 <NavLink to="/products" className={navClass}>
                     Products
                 </NavLink>
-                <NavLink to="/wishlist" className={navClass}>
-                    Wishlist
-                </NavLink>
+                {isAuthenticated && (
+                    <NavLink to="/wishlist" className={navClass}>
+                        Wishlist
+                    </NavLink>
+                )}
             </nav>
 
             <div className="auth-actions">

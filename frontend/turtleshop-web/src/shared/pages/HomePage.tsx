@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ProductCard } from "../components/ProductCard";
-import { productApi, Product } from "../api/productApi";
+import { productApi } from "../api/productApi";
+import type { Product } from "../api/productApi";
 
 export default function HomePage() {
     const [featured, setFeatured] = useState<Product[]>([]);
