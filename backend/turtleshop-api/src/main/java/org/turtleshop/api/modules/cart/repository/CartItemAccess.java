@@ -64,11 +64,9 @@ public class CartItemAccess {
             SET quantity = :quantity
             WHERE cart_item_id = :cartItemId
             """;
-
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("cartItemId", cartItemId)
                 .addValue("quantity", quantity);
-
         jdbc.update(sql, params);
     }
 

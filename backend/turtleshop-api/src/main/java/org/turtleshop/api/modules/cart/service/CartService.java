@@ -42,6 +42,7 @@ public class CartService {
         Cart activeCart = cartAccess.getActiveCartByCustomerId(customerId).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "No cart found for this customer"));
         int cartItemId = cartItemAccess.insertCartItem(activeCart.getCartId(), request.getProductId(), request.getQuantity());
         CartItem cartItem = cartItemAccess.getCartItemById(cartItemId).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "No cartitem found for this cartitemid given"));
+        // Item quantity per product add it to the quantity reserved.
         return mapToCartItemResponse(cartItem);
     }
 

@@ -1,13 +1,11 @@
-package org.turtleshop.api.modules.order.model;
+package org.turtleshop.api.modules.order.dto;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 @Builder
-public class OrderItem {
+public class OrderItemResponse {
     private int orderItemId;
     private int orderId;
     private int productId;

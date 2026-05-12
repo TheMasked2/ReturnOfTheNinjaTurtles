@@ -1,8 +1,7 @@
-package org.turtleshop.api.modules.order.model;
+package org.turtleshop.api.modules.order.dto;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import org.turtleshop.api.modules.order.enums.OrderStatus;
 
 import java.math.BigDecimal;
@@ -10,9 +9,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
-@Setter
 @Builder
-public class Order {
+public class OrderResponse {
     private int orderId;
     private UUID customerId;
     private LocalDateTime orderDate;
