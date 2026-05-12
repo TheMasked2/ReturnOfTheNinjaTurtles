@@ -1,14 +1,11 @@
-package org.turtleshop.api.modules.shipment.model;
+package org.turtleshop.api.modules.shipment.dto;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Builder
-public class Shipment {
-    private int shipmentId;
+public class CreateShipmentRequest {
     private int orderId;
     private String shipmentMethod;
     private String shippingAddress;

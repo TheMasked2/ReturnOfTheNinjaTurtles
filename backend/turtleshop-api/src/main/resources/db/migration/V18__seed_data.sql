@@ -1,4 +1,4 @@
--- V16__seed_data.sql
+-- V18__seed_data.sql
 -- Seed sample data for development/testing.
 
 -- 1) Ensure roles exist (V6 already seeds these too)

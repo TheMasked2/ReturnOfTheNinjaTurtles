@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import org.turtleshop.api.modules.order.enums.OrderStatus;
 import org.turtleshop.api.modules.order.model.Order;
@@ -26,6 +28,23 @@ public class OrderAccess {
             .status(OrderStatus.valueOf(rs.getString("status").toUpperCase()))
             .totalAmount(rs.getBigDecimal("total_amount"))
             .build();
+
+    public int createOrder(UUID customerId, OrderStatus status, BigDecimal totalAmount) {
+        String sql = """
+            INSERT INTO orders (customer_id, order_date, status, total_amount)
+            VALUES (:customerId, CURRENT_TIMESTAMP, :status, :totalAmount)
+            """;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("customerId", customerId)
+                .addValue("status", status.name())
+                .addValue("totalAmount", totalAmount);
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbc.update(sql, params, keyHolder, new String[]{"order_id"});
+
+        return keyHolder.getKey().intValue();
+    }
 
     // Get Order by ID
     public Optional<Order> getOrderById(int orderId) {

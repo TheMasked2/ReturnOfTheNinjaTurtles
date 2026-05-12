@@ -1,16 +1,14 @@
-package org.turtleshop.api.modules.shipment.model;
+package org.turtleshop.api.modules.shipment.dto;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import org.turtleshop.api.modules.shipment.enums.ShipmentStatus;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @Builder
-public class ShipmentStatusLog {
+public class ShipmentStatusLogResponse {
     private int logId;
     private int shipmentId;
     private ShipmentStatus status;

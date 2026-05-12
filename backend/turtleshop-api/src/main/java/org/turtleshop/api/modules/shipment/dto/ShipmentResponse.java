@@ -1,15 +1,16 @@
-package org.turtleshop.api.modules.shipment.model;
+package org.turtleshop.api.modules.shipment.dto;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
+
+import java.util.List;
 
 @Getter
-@Setter
 @Builder
-public class Shipment {
+public class ShipmentResponse {
     private int shipmentId;
     private int orderId;
     private String shipmentMethod;
     private String shippingAddress;
+    private List<ShipmentStatusLogResponse> statusLogs;
 }
