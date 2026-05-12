@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS CART (
-    cart_id INT PRIMARY KEY,
+    cart_id SERIAL PRIMARY KEY,
     customer_id UUID,
     status VARCHAR(50), -- active / converted / abandoned
     order_id INT NULL,

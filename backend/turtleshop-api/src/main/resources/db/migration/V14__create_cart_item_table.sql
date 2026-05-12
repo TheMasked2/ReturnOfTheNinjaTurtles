@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS CART_ITEM (
-    cart_item_id INT PRIMARY KEY,
+    cart_item_id SERIAL PRIMARY KEY,
     cart_id INT,
     product_id INT,
     quantity INT DEFAULT 1,
