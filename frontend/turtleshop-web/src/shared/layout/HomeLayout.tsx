@@ -1,13 +1,12 @@
 import { Outlet } from "react-router-dom";
+import { PublicNavbar } from "../components/PublicNavbar";
 
 export function HomeLayout() {
     return (
-        <div>
-            <nav style={{ padding: '10px', borderBottom: '1px solid #ccc' }}>
-                <strong>TurtleShop</strong>
-            </nav>
-            <main>
-                <Outlet /> {/* CHILD ROUTES RENDER HERE */}
+        <div className="app-shell">
+            <PublicNavbar />
+            <main className="main-content">
+                <Outlet />
             </main>
         </div>
     );
