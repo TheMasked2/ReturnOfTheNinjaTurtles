@@ -15,11 +15,13 @@ import org.turtleshop.api.modules.checkout.dto.PlaceOrderResponse;
 import org.turtleshop.api.modules.inventory.model.InventoryModel;
 import org.turtleshop.api.modules.inventory.repository.InventoryAccess;
 import org.turtleshop.api.modules.order.enums.OrderStatus;
+import org.turtleshop.api.modules.order.model.Order;
 import org.turtleshop.api.modules.order.repository.OrderAccess;
 import org.turtleshop.api.modules.order.repository.OrderItemAccess;
 import org.turtleshop.api.modules.product.model.ProductModel;
 import org.turtleshop.api.modules.product.repository.ProductAccess;
 import org.turtleshop.api.modules.shipment.enums.ShipmentStatus;
+import org.turtleshop.api.modules.shipment.model.Shipment;
 import org.turtleshop.api.modules.shipment.repository.ShipmentAccess;
 import org.turtleshop.api.modules.shipment.repository.ShipmentStatusLogAccess;
 import org.turtleshop.api.modules.transaction.model.PaymentMethodModel;
@@ -77,16 +79,16 @@ public class CheckoutService {
         }
         // 7. Update inventory
         updateInventoryAfterOrder(cartItems);
-        // 8. Create shipment
+        // 8. Create shipment, but it is not ready yet because payment is pending
         int shipmentId = shipmentAccess.createShipment(
                 orderId,
                 request.getShippingMethod(),
                 request.getShippingAddress()
         );
-        // 9. Create first shipment status log
+        // 9. Log first shipment status as AWAITING_PAYMENT
         shipmentStatusLogAccess.createShipmentStatusLog(
                 shipmentId,
-                ShipmentStatus.SHIPPED
+                ShipmentStatus.AWAITING_PAYMENT
         );
         // 10. Create transaction with pending status
         TransactionModel transaction = TransactionModel.builder()
@@ -107,6 +109,56 @@ public class CheckoutService {
                 .transactionStatus("PENDING")
                 .totalAmount(totalAmount)
                 .build();
+    }
+
+    // Confirms order after there has been paid and creates shipment
+    @Transactional
+    public void confirmOrderPayment(int orderId, int transactionId) {
+        Order order = orderAccess.getOrderById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Order does not exist"
+                ));
+
+        if (order.getStatus() != OrderStatus.AWAITING_PAYMENT) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Only orders awaiting payment can be confirmed"
+            );
+        }
+
+        TransactionModel transaction = transactionAccess.findById(transactionId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Transaction does not exist"
+                ));
+
+        if (transaction.getOrderId() != orderId) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Transaction does not belong to this order"
+            );
+        }
+
+        transactionAccess.update(
+                transactionId,
+                transaction.getAmount(),
+                "SUCCESS",
+                transaction.getPaymentMethodId()
+        );
+
+        orderAccess.updateOrderStatus(orderId, OrderStatus.CONFIRMED);
+
+        Shipment shipment = shipmentAccess.getShipmentByOrderId(orderId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "No shipment found for this order"
+                ));
+
+        shipmentStatusLogAccess.createShipmentStatusLog(
+                shipment.getShipmentId(),
+                ShipmentStatus.READY_TO_SHIP
+        );
     }
 
     // HELPER: Calculate total and validate inventory
@@ -140,7 +192,7 @@ public class CheckoutService {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Inventory does not exist for product"));
 
             int newQuantityAvailable = inventory.getQuantityAvailable() - cartItem.getQuantity();
-            int newQuantityReserved = inventory.getQuantityReserved();
+            int newQuantityReserved = inventory.getQuantityReserved() + cartItem.getQuantity();
 
             inventoryAccess.updateQuantitiesByProductId(
                     cartItem.getProductId(),
