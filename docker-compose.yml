@@ -62,7 +62,6 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
       SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/turtleshop?authSource=admin
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
     ports:
