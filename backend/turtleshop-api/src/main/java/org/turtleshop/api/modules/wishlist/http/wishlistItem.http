@@ -1,0 +1,57 @@
+@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkB0dXJ0bGVzaG9wLm9yZyIsInJvbGVzIjpbIlJPTEVfQURNSU4iLCJST0xFX1VTRVIiXSwiaWF0IjoxNzc4MDU3MjY0LCJleHAiOjE3NzgwNjA4NjR9.pZpNAlmMQc2OgIQBDi2vTQiegTgEbvue-7BNKbTv7_0
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@turtleshop.org",
+  "password": "splinter"
+}
+
+> {% client.global.set("token", response.body.token) %}
+
+### Get all wishlist items
+GET http://localhost:8080/api/wishlist-item
+Authorization: Bearer {{token}}
+
+### Get wishlist item by id
+GET http://localhost:8080/api/wishlist-item/1
+Authorization: Bearer {{token}}
+
+### Get wishlist items by wishlist id
+GET http://localhost:8080/api/wishlist-item/wishlist/4
+Authorization: Bearer {{token}}
+
+### Get wishlist item by product id
+GET http://localhost:8080/api/wishlist-item/product/3
+Authorization: Bearer {{token}}
+
+### Create a wishlist item
+POST http://localhost:8080/api/wishlist-item/wishlist/4/product/3
+Authorization: Bearer {{token}}
+
+### Create a wishlist item and return id
+POST http://localhost:8080/api/wishlist-item/wishlist/4/product/3/return-id
+Authorization: Bearer {{token}}
+
+### Update a wishlist item
+PUT http://localhost:8080/api/wishlist-item
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "wishlistItemId": 1,
+  "wishlistId": 4,
+  "productId": 3
+}
+
+### Delete wishlist item by id
+DELETE http://localhost:8080/api/wishlist-item/1
+Authorization: Bearer {{token}}
+
+### Delete all items by wishlist id
+DELETE http://localhost:8080/api/wishlist-item/wishlist/4
+Authorization: Bearer {{token}}
+
+### Delete item from wishlist
+DELETE http://localhost:8080/api/wishlist-item/wishlist/4/product/3
+Authorization: Bearer {{token}}

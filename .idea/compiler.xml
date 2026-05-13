@@ -17,6 +17,8 @@
       <module name="turtleshop-api" options="-parameters" />
       <module name="turtleshop-api.main" options="-parameters" />
       <module name="turtleshop-api.test" options="-parameters" />
+      <module name="turtleshop-api_main" options="-parameters" />
+      <module name="turtleshop-api_test" options="-parameters" />
     </option>
   </component>
 </project>

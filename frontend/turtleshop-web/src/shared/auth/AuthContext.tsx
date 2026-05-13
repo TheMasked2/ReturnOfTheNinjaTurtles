@@ -1,34 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-
-// --- 1. GENERIC BASE API ---
-const BASE_URL = "http://localhost:8080/api";
-
-const baseApi = {
-  // The <T,> syntax is essential in .tsx files to distinguish from JSX tags
-  request: async <T,>(endpoint: string, options: RequestInit = {}): Promise<T> => {
-    const token = localStorage.getItem("turtleshop_token");
-
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    };
-
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: "An error occurred" }));
-      throw new Error(error.message || `Error: ${response.status}`);
-    }
-
-    // Return empty object for 204 No Content, otherwise parse JSON
-    if (response.status === 204) return {} as T;
-    return response.json();
-  },
-};
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { baseApi } from "../api/base-api";
 
 // --- 2. TYPES ---
 interface User {
@@ -47,6 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: { username: string; password: string }) => Promise<void>;
+  register: (data: { username: string; password: string; email: string }) => Promise<void>;
   logout: () => void;
 }
 
@@ -72,18 +44,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (credentials: { username: string; password: string }) => {
-    try {
-      const data = await baseApi.request<AuthResponse>("/auth/login", {
-        method: "POST",
-        body: JSON.stringify(credentials),
-      });
+    const data = await baseApi.request<AuthResponse>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    });
 
-      setUser(data.user);
-      localStorage.setItem("turtleshop_token", data.token);
-      localStorage.setItem("turtleshop_user", JSON.stringify(data.user));
-    } catch (err: any) {
-      throw err;
-    }
+    setUser(data.user);
+    localStorage.setItem("turtleshop_token", data.token);
+    localStorage.setItem("turtleshop_user", JSON.stringify(data.user));
+  };
+
+  const register = async (data: { username: string; password: string; email: string }) => {
+    const response = await baseApi.request<AuthResponse>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+
+    setUser(response.user);
+    localStorage.setItem("turtleshop_token", response.token);
+    localStorage.setItem("turtleshop_user", JSON.stringify(response.user));
   };
 
   const logout = () => {
@@ -97,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: !!user,
     isLoading,
     login,
+    register,
     logout,
   };
 

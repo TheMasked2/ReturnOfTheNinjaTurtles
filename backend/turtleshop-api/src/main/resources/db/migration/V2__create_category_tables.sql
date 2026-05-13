@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS CATEGORY (
+    category_id INT PRIMARY KEY,
+    name VARCHAR(255) UNIQUE,
+    description TEXT
+);
