@@ -50,6 +50,26 @@ dependencies {
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
 
+    // Main test framework: JUnit 5, AssertJ, Mockito, Spring test tools
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+    // Testcontainers: starts temporary Docker containers for tests
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:postgresql")
+
+    // Security testing: @WithMockUser, MockMvc security support
+    testImplementation("org.springframework.security:spring-security-test")
+
+    // Mockito JUnit 5 integration
+    testImplementation("org.mockito:mockito-junit-jupiter")
+
+    // Lombok support in tests
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
+
+    // JUnit launcher
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
     // PostgreSQL
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
