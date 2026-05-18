@@ -22,7 +22,7 @@ java {
 repositories {
     mavenCentral()
 }
-
+val gatlingRuntime: Configuration by configurations.creating
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     // JDBC is Java version of Dapper. Need this for Repositories to work.
@@ -73,8 +73,34 @@ dependencies {
     // PostgreSQL
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-}
 
+    gatlingRuntime("io.gatling.highcharts:gatling-charts-highcharts:3.11.5")
+}
+sourceSets {
+    create("gatling") {
+        java.srcDir("src/gatling/java")
+        resources.srcDir("src/gatling/resources")
+        compileClasspath += configurations.getByName("testCompileClasspath") + gatlingRuntime
+        runtimeClasspath += output + configurations.getByName("testRuntimeClasspath") + gatlingRuntime
+    }
+}
 tasks.test {
     useJUnitPlatform()
+}
+// 4. DEFINE A NATIVE JVM EXECUTION TASK TO RUN GATLING FREELY
+tasks.register<JavaExec>("gatlingRun") {
+    description = "Runs Gatling simulations directly via an isolated JavaExec container"
+    group = "Load Test"
+
+    val gatlingSourceSet = sourceSets.getByName("gatling")
+    classpath = gatlingSourceSet.runtimeClasspath + gatlingRuntime
+
+    mainClass.set("io.gatling.app.Gatling")
+
+    // Feeds configuration arguments directly to the Gatling engine
+    args(
+        "-s", "org.turtleshop.api.performance.query.DatabaseOptimizationSimulation",
+        "-sf", gatlingSourceSet.output.classesDirs.asPath,
+        "-rf", "${layout.buildDirectory.get().asFile}/reports/gatling"
+    )
 }
