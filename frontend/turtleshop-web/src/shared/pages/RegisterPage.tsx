@@ -8,6 +8,8 @@ export default function RegisterPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -17,7 +19,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await register({ username, password, email });
+      await register({ email, password, firstName, lastName });
       navigate("/");
     } catch (err: any) {
       setError(err.message || "Unable to register account.");
@@ -38,13 +40,22 @@ export default function RegisterPage() {
 
         <form className="form-grid" onSubmit={handleSubmit}>
           <div className="form-field">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="firstName">First Name</label>
             <input
-              id="username"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
+              id="firstName"
+              value={firstName}
+              onChange={(event) => setFirstName(event.target.value)}
               required
-              placeholder="Choose a username"
+              placeholder="Enter your first name"
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="lastName">Last Name (Optional)</label>
+            <input
+              id="lastName"
+              value={lastName}
+              onChange={(event) => setLastName(event.target.value)}
+              placeholder="Enter your last name"
             />
           </div>
 

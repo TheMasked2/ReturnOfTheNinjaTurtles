@@ -19,7 +19,7 @@ export function PublicNavbar() {
                 <NavLink to="/" className="brand-link">
                     TurtleShop
                 </NavLink>
-                <span className="brand-subtitle">Gray, beige, and clean.</span>
+                <span className="brand-subtitle">The ninja fast way to shop!</span>
             </div>
 
             <nav className="nav-links">

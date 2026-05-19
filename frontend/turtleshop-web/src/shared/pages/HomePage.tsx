@@ -35,7 +35,7 @@ export default function HomePage() {
                 </div>
                 <div className="hero-preview">
                     <div className="hero-panel">
-                        <p>Warm beige and soft gray tones create a calm and elevated shopping experience.</p>
+                        <p>[Insert hot and trending items here]</p>
                     </div>
                 </div>
             </section>

@@ -7,6 +7,7 @@ export default function LoginPage() {
   const { login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -16,7 +17,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login({ username, password });
+      await login({ email, password });
       navigate("/");
     } catch (err: any) {
       setError(err.message || "Unable to login. Please check your credentials.");
@@ -36,16 +37,17 @@ export default function LoginPage() {
         </div>
 
         <form className="form-grid" onSubmit={handleSubmit}>
-          <div className="form-field">
-            <label htmlFor="username">Username</label>
-            <input
-              id="username"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              required
-              placeholder="Enter your username"
-            />
-          </div>
+        <div className="form-field">
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+            placeholder="Enter your email"
+          />
+        </div>
 
           <div className="form-field">
             <label htmlFor="password">Password</label>
