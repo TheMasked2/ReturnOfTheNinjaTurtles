@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.turtleshop.api.modules.checkout.service.CheckoutService;
 import org.turtleshop.api.modules.transaction.dto.TransactionCreateRequest;
 import org.turtleshop.api.modules.transaction.dto.TransactionResponse;
 import org.turtleshop.api.modules.transaction.dto.TransactionUpdateRequest;
@@ -20,6 +21,14 @@ import java.util.stream.Collectors;
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final CheckoutService checkoutService;
+
+    @PostMapping("/{transactionId}/confirm-payment")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> confirmPayment(@PathVariable int transactionId, @RequestParam int orderId) {
+        checkoutService.confirmOrderPayment(orderId, transactionId);
+        return ResponseEntity.noContent().build();
+    }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
