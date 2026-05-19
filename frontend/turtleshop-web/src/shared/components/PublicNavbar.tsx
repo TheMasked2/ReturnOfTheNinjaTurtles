@@ -39,8 +39,10 @@ export function PublicNavbar() {
             <div className="auth-actions">
                 {isAuthenticated ? (
                     <>
-                        <span className="user-badge">{user?.username}</span>
-                        <button className="button button-ghost" onClick={handleLogout}>
+                        <NavLink to="/profile" className="button button-ghost">
+                            Profile
+                        </NavLink>
+                        <button className="button button-secondary" onClick={handleLogout}>
                             Logout
                         </button>
                     </>

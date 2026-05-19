@@ -8,6 +8,7 @@ import LoginPage from "../shared/pages/LoginPage.tsx";
 import RegisterPage from "../shared/pages/RegisterPage.tsx";
 import NotFoundPage from "../shared/pages/NotFoundPage.tsx";
 import { ProtectedRoute } from "../shared/components/ProtectedRoute.tsx";
+import { ProfilePage } from "../shared/pages/ProfilePage.tsx";
 
 export const router = createBrowserRouter([
     {
@@ -22,6 +23,14 @@ export const router = createBrowserRouter([
                 element: (
                     <ProtectedRoute>
                         <WishlistPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "profile",
+                element: (
+                    <ProtectedRoute>
+                        <ProfilePage />
                     </ProtectedRoute>
                 ),
             },

@@ -25,22 +25,35 @@ public class AuthService {
 
     // Register
     @Transactional
-    public void register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request) {
         if (customerAccess.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already in use");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         }
 
         Customer customer = Customer.builder()
-                .email(request.getEmail().trim().toLowerCase())
+                .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .phone(request.getPhone())
                 .build();
 
-        UUID newId = customerAccess.insertAndReturnId(customer);
+        UUID customerId = customerAccess.insertAndReturnId(customer);
+        customerAccess.addRoleToCustomer(customerId, "ROLE_USER");
 
-        customerAccess.addRoleToCustomer(newId, "ROLE_USER");
+        List<String> roles = List.of("ROLE_USER");
+        String token = jwtService.generateToken(customer.getEmail(), roles);
+
+        return AuthResponse.builder()
+                .token(token)
+                .type("Bearer")
+                .customer(CustomerResponse.builder()
+                        .id(customerId)
+                        .email(customer.getEmail())
+                        .firstName(customer.getFirstName())
+                        .lastName(customer.getLastName())
+                        .roles(roles)
+                        .build())
+                .build();
     }
 
     // Login
