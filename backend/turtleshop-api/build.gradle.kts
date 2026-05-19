@@ -75,6 +75,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     gatlingRuntime("io.gatling.highcharts:gatling-charts-highcharts:3.11.5")
+    implementation("io.github.cdimascio:dotenv-java:3.0.2")
+    testImplementation("io.github.cdimascio:dotenv-java:3.0.2")
 }
 sourceSets {
     create("gatling") {
@@ -87,20 +89,40 @@ sourceSets {
 tasks.test {
     useJUnitPlatform()
 }
-// 4. DEFINE A NATIVE JVM EXECUTION TASK TO RUN GATLING FREELY
-tasks.register<JavaExec>("gatlingRun") {
-    description = "Runs Gatling simulations directly via an isolated JavaExec container"
+val gatlingSimulations = listOf(
+    "org.turtleshop.api.performance.query.AdminCustomerAuditSimulation",
+    "org.turtleshop.api.performance.query.CustomerRegisterAndCheckoutSimulation",
+    "org.turtleshop.api.performance.query.RaceConditionSimulation",
+    "org.turtleshop.api.performance.query.CatalogSearchAndPaginationSimulation",
+)
+
+val gatlingTaskNames = gatlingSimulations.map { simulationClass ->
+    val simpleName = simulationClass.substringAfterLast(".")
+    val taskName = "gatlingRun$simpleName"
+
+    tasks.register<JavaExec>(taskName) {
+        description = "Runs Gatling simulation $simpleName"
+        group = "Load Test"
+
+        dependsOn("compileGatlingJava", "processGatlingResources")
+
+        val gatlingSourceSet = sourceSets.getByName("gatling")
+
+        classpath = gatlingSourceSet.runtimeClasspath + gatlingRuntime
+        mainClass.set("io.gatling.app.Gatling")
+
+        args(
+            "-s", simulationClass,
+            "-rf", "${layout.buildDirectory.get().asFile}/reports/gatling/$simpleName"
+        )
+    }
+
+    taskName
+}
+
+tasks.register("gatlingRun") {
+    description = "Runs all Gatling simulations"
     group = "Load Test"
 
-    val gatlingSourceSet = sourceSets.getByName("gatling")
-    classpath = gatlingSourceSet.runtimeClasspath + gatlingRuntime
-
-    mainClass.set("io.gatling.app.Gatling")
-
-    // Feeds configuration arguments directly to the Gatling engine
-    args(
-        "-s", "org.turtleshop.api.performance.query.DatabaseOptimizationSimulation",
-        "-sf", gatlingSourceSet.output.classesDirs.asPath,
-        "-rf", "${layout.buildDirectory.get().asFile}/reports/gatling"
-    )
+    dependsOn(gatlingTaskNames)
 }

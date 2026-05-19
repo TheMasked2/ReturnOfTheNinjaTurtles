@@ -72,7 +72,6 @@ public class TransactionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> createTransaction(@RequestBody TransactionCreateRequest request) {
         TransactionModel transaction = TransactionModel.builder()
                 .orderId(request.getOrderId())

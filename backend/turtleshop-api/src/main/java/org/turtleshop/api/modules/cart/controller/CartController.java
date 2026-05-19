@@ -21,25 +21,21 @@ public class CartController {
     final CartService cartService;
 
     @PostMapping("/{customerId}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CartResponse> createCart(@PathVariable UUID customerId) {
         return ResponseEntity.ok(cartService.createCart(customerId));
     }
 
     @PostMapping("/{customerId}/items")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CartItemResponse> addItemToCart(@PathVariable UUID customerId, @RequestBody AddCartItemRequest request) {
         return ResponseEntity.ok(cartService.addItemToCart(customerId, request));
     }
 
     @GetMapping("/{customerId}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CartResponse> getActiveCart(@PathVariable UUID customerId) {
         return ResponseEntity.ok(cartService.getActiveCartForUser(customerId));
     }
 
     @GetMapping("/active")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<CartResponse>> getAllActiveCarts() {
         return ResponseEntity.ok(cartService.getAllExistingActiveCarts());
     }
