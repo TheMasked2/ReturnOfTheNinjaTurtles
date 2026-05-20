@@ -1,8 +1,10 @@
 package org.turtleshop.api.modules.wishlist.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.turtleshop.api.modules.wishlist.model.Wishlist;
 import org.turtleshop.api.modules.wishlist.repository.WishlistRepository;
@@ -13,6 +15,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class WishlistService {
 
     private final WishlistRepository wishlistRepository;
@@ -40,22 +43,33 @@ public class WishlistService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Wishlist not found"));
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void createWishlist(UUID customerId) {
         if (customerId == null) {
             throw new IllegalArgumentException("customerId is required");
         }
 
-        wishlistRepository.insert(customerId);
+        try {
+            wishlistRepository.insert(customerId);
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Failed to create wishlist due to database constraint", ex);
+        }
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public Integer createWishlistAndReturnId(UUID customerId) {
         if (customerId == null) {
             throw new IllegalArgumentException("customerId is required");
         }
 
-        return wishlistRepository.insertAndReturnId(customerId);
+        try {
+            return wishlistRepository.insertAndReturnId(customerId);
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Failed to create wishlist due to database constraint", ex);
+        }
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void updateWishlistCustomer(Integer wishlistId, UUID newCustomerId) {
         if (wishlistId == null) {
             throw new IllegalArgumentException("wishlistId is required");
@@ -64,22 +78,36 @@ public class WishlistService {
             throw new IllegalArgumentException("newCustomerId is required");
         }
 
-        wishlistRepository.updateCustomerId(wishlistId, newCustomerId);
+        try {
+            wishlistRepository.updateCustomerId(wishlistId, newCustomerId);
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Failed to update wishlist due to database constraint", ex);
+        }
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void deleteWishlistById(Integer wishlistId) {
         if (wishlistId == null) {
             throw new IllegalArgumentException("wishlistId is required");
         }
 
-        wishlistRepository.deleteById(wishlistId);
+        try {
+            wishlistRepository.deleteById(wishlistId);
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Failed to delete wishlist due to database constraint", ex);
+        }
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void deleteWishlistByCustomerId(UUID customerId) {
         if (customerId == null) {
             throw new IllegalArgumentException("customerId is required");
         }
 
-        wishlistRepository.deleteByCustomerId(customerId);
+        try {
+            wishlistRepository.deleteByCustomerId(customerId);
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Failed to delete wishlist due to database constraint", ex);
+        }
     }
 }

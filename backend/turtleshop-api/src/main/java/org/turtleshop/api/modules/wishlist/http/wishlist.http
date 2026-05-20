@@ -1,4 +1,6 @@
-@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkB0dXJ0bGVzaG9wLm9yZyIsInJvbGVzIjpbIlJPTEVfQURNSU4iLCJST0xFX1VTRVIiXSwiaWF0IjoxNzc4MDIwODc5LCJleHAiOjE3NzgwMjQ0Nzl9.AEhkOieTpmZGtQ1YsLWIWgLD_EfgU2hhxu5POCAIfTg
+@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkB0dXJ0bGVzaG9wLm9yZyIsInJvbGVzIjpbIlJPTEVfQURNSU4iLCJST0xFX1VTRVIiXSwiaWF0IjoxNzc5Mjc2NjU2LCJleHAiOjE3NzkyODAyNTZ9.5OP4zZOJ13OYhXg4tCvwZRpEYo4J6eYPNyyVgLrX-IU
+@id = b299567a-c2fb-49bc-94ad-31c9a7cfce99
+@wId = 14
 POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
@@ -14,17 +16,17 @@ GET http://localhost:8080/api/wishlist
 Authorization: Bearer {{token}}
 
 ### Get wishlist by id
-GET http://localhost:8080/api/wishlist/4
+GET http://localhost:8080/api/wishlist/{{wId}}
 Authorization: Bearer {{token}}
 
 ### Get wishlist by customer id
-GET http://localhost:8080/api/wishlist/customer/c7df4882-0078-4a3a-958e-80456e6b0903
+GET http://localhost:8080/api/wishlist/customer/{{id}}
 Authorization: Bearer {{token}}
 
 ### Create a wishlist for a customer
-POST http://localhost:8080/api/wishlist/customer/c7df4882-0078-4a3a-958e-80456e6b0903
+POST http://localhost:8080/api/wishlist/customer/{{id}}
 Authorization: Bearer {{token}}
 
 ### Delete a wishlist by id
-DELETE http://localhost:8080/api/wishlist/5
+DELETE http://localhost:8080/api/wishlist/{{wId}}
 Authorization: Bearer {{token}}

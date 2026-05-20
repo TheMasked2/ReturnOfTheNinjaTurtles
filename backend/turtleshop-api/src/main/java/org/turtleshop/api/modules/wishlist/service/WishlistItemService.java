@@ -1,9 +1,12 @@
 package org.turtleshop.api.modules.wishlist.service;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.turtleshop.api.modules.wishlist.model.WishlistItem;
 import org.turtleshop.api.modules.wishlist.model.Wishlist;
@@ -19,6 +22,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional (readOnly = true)
 public class WishlistItemService {
     private final WishlistItemRepository repository;
     private final WishlistRepository wishlistRepository;
@@ -46,7 +50,7 @@ public class WishlistItemService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "WishlistItem not found"));
     }
 
-    // Should be a list tbh? 
+    // This is highkey useless, should be get itemS by product id so like a list of all items that have that product id?
     public WishlistItem getByProductId(Integer productId) {
         if (productId == null) {
             throw new IllegalArgumentException("productId is required");
@@ -56,6 +60,7 @@ public class WishlistItemService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "WishlistItem not found"));
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void createWishlistItem(Integer wishlistId, Integer productId) {
         if (productId == null || wishlistId == null) {
             throw new IllegalArgumentException("productId and/or wishlistId is required");
@@ -76,9 +81,14 @@ public class WishlistItemService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Wishlist item already exists");
         }
 
-        repository.insert(wishlistId, productId);
+        try {
+            repository.insert(wishlistId, productId);
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Wishlist item already exists", ex);
+        }
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public Integer createWishlistItemAndReturnId(Integer wishlistId, Integer productId) {
         if (productId == null || wishlistId == null) {
             throw new IllegalArgumentException("productId and/or wishlistId is required");
@@ -99,19 +109,29 @@ public class WishlistItemService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Wishlist item already exists");
         }
 
-        return repository.insertAndReturnId(wishlistId, productId);
+        try {
+            return repository.insertAndReturnId(wishlistId, productId);
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Failed to insert wishlist item due to database constraint ", ex);
+        }
     }
 
     // Should probably be a DTO in future.
+    @Transactional(rollbackFor = Exception.class)
     public void updateWishlistItem(WishlistItem wishlistItem) {
         if (wishlistItem == null) {
             throw new IllegalArgumentException("WishlistItem is required");
         }
 
-        repository.update(wishlistItem);
+        try {
+            repository.update(wishlistItem);
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Failed to update wishlist item due to database constraint", ex);
+        }
         return;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void deleteById(Integer wishlistItemId) {
         if (wishlistItemId == null) {
             throw new IllegalArgumentException("wishlistItemId is required");
@@ -121,9 +141,14 @@ public class WishlistItemService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Wishlist item not found");
         }
     
-        repository.deleteById(wishlistItemId);
+        try {
+            repository.deleteById(wishlistItemId);
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Failed to delete wishlist item due to database constraint", ex);
+        }
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void deleteByWishlistId(Integer wishlistId) {
         if (wishlistId == null) {
             throw new IllegalArgumentException("wishlistId is required");
@@ -133,9 +158,14 @@ public class WishlistItemService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Wishlist not found");
         }
     
-        repository.deleteByWishlistId(wishlistId);
+        try {
+            repository.deleteByWishlistId(wishlistId);
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Failed to delete wishlist items due to database constraint", ex);
+        }
     }
     
+    @Transactional(rollbackFor = Exception.class)
     public void deleteItemFromWishlist(Integer wishlistId, Integer productId) {
         if (wishlistId == null || productId == null) {
             throw new IllegalArgumentException("wishlistId and productId are required");
@@ -149,6 +179,10 @@ public class WishlistItemService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Wishlist item not found");
         }
     
-        repository.deleteItemFromWishlist(wishlistId, productId);
+        try {
+            repository.deleteItemFromWishlist(wishlistId, productId);
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Failed to delete wishlist item due to database constraint", ex);
+        }
     }
 }
