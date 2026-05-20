@@ -1,4 +1,4 @@
-package org.turtleshop.api.performance.query;
+package org.turtleshop.api.performance;
 
 import static io.gatling.javaapi.core.CoreDsl.*;
 import static io.gatling.javaapi.http.HttpDsl.*;
@@ -11,24 +11,24 @@ public class AdminCustomerAuditSimulation extends Simulation {
 
     // Load the .env file from the project root
     private static final Dotenv dotenv = Dotenv.configure()
-            .directory("../../") // Back out of backend/turtleshop-api to reach absolute root
+            .directory("../../")
             .ignoreIfMissing()
             .load();
 
-    // Pull the credentials safely, falling back to a default if the file is missing
+    // Pull the credentials
     private static final String adminEmail = dotenv.get("ADMIN_EMAIL", "default-admin@turtleshop.com");
     private static final String adminPassword = dotenv.get("ADMIN_PASSWORD", "default-password");
 
-    // 1. Core Global HTTP Settings
+    // Global HTTP Configurations
     HttpProtocolBuilder httpProtocol = http
             .baseUrl("http://localhost:8080")
             .acceptHeader("application/json")
             .contentTypeHeader("application/json");
 
-    // 2. Define the User Journey
+    // Define the Journey
     ScenarioBuilder scn = scenario("Admin Customer Management Load Test")
 
-            // STEP 1: Log in securely using our dynamic variables
+            // 1. Log in securely
             .exec(http("Admin Login Request")
                     .post("/api/auth/login")
                     // Constructing the JSON body using your injected environment variables safely
@@ -38,7 +38,7 @@ public class AdminCustomerAuditSimulation extends Simulation {
 
             .pause(1)
 
-            // STEP 2: Fetch all customers using the extracted Token
+            // 2. Fetch all customers using the extracted Token
             .exec(http("Get All Customers API")
                     .get("/api/customer")
                     .header("Authorization", "Bearer #{jwtToken}")
@@ -49,13 +49,13 @@ public class AdminCustomerAuditSimulation extends Simulation {
 
             .pause(1)
 
-            // STEP 3: Fetch a single specific customer using the dynamically captured ID
+            // 3. Fetch a single specific customer using the dynamically captured ID
             .exec(http("Get Customer By ID API")
-                    .get("/api/customer/#{dynamicCustomerId}") // Safely injected here!
+                    .get("/api/customer/#{dynamicCustomerId}")
                     .header("Authorization", "Bearer #{jwtToken}")
                     .check(status().is(200)));
 
-    // 3. Traffic Load Profile
+    // Traffic Injection Profile
     {
         setUp(
                 scn.injectOpen(

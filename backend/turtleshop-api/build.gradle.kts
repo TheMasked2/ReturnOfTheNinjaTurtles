@@ -90,10 +90,10 @@ tasks.test {
     useJUnitPlatform()
 }
 val gatlingSimulations = listOf(
-    "org.turtleshop.api.performance.query.AdminCustomerAuditSimulation",
-    "org.turtleshop.api.performance.query.CustomerRegisterAndCheckoutSimulation",
-    "org.turtleshop.api.performance.query.RaceConditionSimulation",
-    "org.turtleshop.api.performance.query.CatalogSearchAndPaginationSimulation",
+    "org.turtleshop.api.performance.AdminCustomerAuditSimulation",
+    "org.turtleshop.api.performance.CustomerRegisterAndCheckoutSimulation",
+    "org.turtleshop.api.performance.RaceConditionSimulation",
+    "org.turtleshop.api.performance.CatalogSearchAndPaginationSimulation",
 )
 
 val gatlingTaskNames = gatlingSimulations.map { simulationClass ->
