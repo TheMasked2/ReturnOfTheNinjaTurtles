@@ -92,7 +92,7 @@ public class ReviewService {
 
     private void validateProductExists(Integer productId) {
         Query query = Query.query(
-                Criteria.where("productId").is(productId)
+                Criteria.where("product_id").is(productId)
         );
 
         boolean exists = mongoTemplate.exists(query, "products");
@@ -114,8 +114,8 @@ public class ReviewService {
 
     public ReviewStatsResponse getProductReviewStats(Integer productId) {
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("productId").is(productId)),
-                Aggregation.group("productId")
+                Aggregation.match(Criteria.where("product_id").is(productId)),
+                Aggregation.group("product_id")
                         .count().as("reviewCount")
                         .avg("rating").as("averageRating")
         );
