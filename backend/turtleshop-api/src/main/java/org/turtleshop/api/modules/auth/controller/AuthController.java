@@ -2,6 +2,7 @@ package org.turtleshop.api.modules.auth.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.turtleshop.api.modules.auth.dto.*;
@@ -29,6 +30,7 @@ public class AuthController {
 
     // Logout
     @PostMapping("/logout")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<String> logout() {
         return ResponseEntity.ok("Logged out successfully");
     }

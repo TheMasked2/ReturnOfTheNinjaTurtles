@@ -19,14 +19,15 @@ public class CustomerController {
 
     // Get customer by id
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('CUSTOMER_READ_ALL') or " +
+            "(hasAuthority('CUSTOMER_READ_OWN') and @authorizationService.isCurrentCustomer(#id, authentication))")
     public ResponseEntity<CustomerResponse> getCustomer(@PathVariable UUID id) {
         return ResponseEntity.ok(customerService.getCustomerById(id));
     }
 
     // Get all customers
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('CUSTOMER_READ_ALL')")
     public ResponseEntity<List<CustomerResponse>> getAll() {
         return ResponseEntity.ok(customerService.getAllCustomers());
     }
