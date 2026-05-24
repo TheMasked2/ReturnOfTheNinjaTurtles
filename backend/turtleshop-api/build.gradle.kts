@@ -15,7 +15,7 @@ version = "0.0.1-SNAPSHOT"
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(25))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
@@ -72,7 +72,6 @@ dependencies {
 
     // PostgreSQL
     runtimeOnly("org.postgresql:postgresql")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     gatlingRuntime("io.gatling.highcharts:gatling-charts-highcharts:3.11.5")
     implementation("io.github.cdimascio:dotenv-java:3.0.2")
@@ -88,6 +87,7 @@ sourceSets {
 }
 tasks.test {
     useJUnitPlatform()
+    systemProperty("api.version", "1.44")
 }
 val gatlingSimulations = listOf(
     "org.turtleshop.api.performance.AdminCustomerAuditSimulation",
