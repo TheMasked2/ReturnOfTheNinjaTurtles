@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { productApi } from "../api/productApi";
-import type { Product } from "../api/productApi";
+import { productApi } from "../../api/productApi";
+import type { Product } from "../../api/productApi";
 
 export default function ProductDetailsPage() {
   const params = useParams();

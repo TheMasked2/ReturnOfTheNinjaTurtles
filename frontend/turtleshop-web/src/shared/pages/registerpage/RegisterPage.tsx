@@ -1,11 +1,11 @@
 import { type FormEvent, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../../auth/AuthContext";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { register } = useAuth();
-  const [username, setUsername] = useState("");
+  const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -19,7 +19,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await register({ email, password, firstName, lastName });
+      await register({ firstName, lastName, userName, email, password });
       navigate("/");
     } catch (err: any) {
       setError(err.message || "Unable to register account.");
@@ -56,6 +56,16 @@ export default function RegisterPage() {
               value={lastName}
               onChange={(event) => setLastName(event.target.value)}
               placeholder="Enter your last name"
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="userName  ">Username</label>
+            <input
+              id="userName"
+              value={userName}
+              onChange={(event) => setUserName(event.target.value)}
+              required
+              placeholder="Enter your username"
             />
           </div>
 
