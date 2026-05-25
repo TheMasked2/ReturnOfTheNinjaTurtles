@@ -25,7 +25,7 @@ public class AuthService {
 
     // Register
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public void register(RegisterRequest request) {
         if (customerAccess.existsByEmail(request.getEmail())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         }
@@ -40,20 +40,20 @@ public class AuthService {
         UUID customerId = customerAccess.insertAndReturnId(customer);
         customerAccess.addRoleToCustomer(customerId, "ROLE_USER");
 
-        List<String> roles = List.of("ROLE_USER");
-        String token = jwtService.generateToken(customer.getEmail(), roles);
+        // List<String> roles = List.of("ROLE_USER");
+        // String token = jwtService.generateToken(customer.getEmail(), roles,);
 
-        return AuthResponse.builder()
-                .token(token)
-                .type("Bearer")
-                .customer(CustomerResponse.builder()
-                        .id(customerId)
-                        .email(customer.getEmail())
-                        .firstName(customer.getFirstName())
-                        .lastName(customer.getLastName())
-                        .roles(roles)
-                        .build())
-                .build();
+        // return AuthResponse.builder()
+        //         .token(token)
+        //         .type("Bearer")
+        //         .customer(CustomerResponse.builder()
+        //                 .id(customerId)
+        //                 .email(customer.getEmail())
+        //                 .firstName(customer.getFirstName())
+        //                 .lastName(customer.getLastName())
+        //                 .roles(roles)
+        //                 .build())
+        //         .build();
     }
 
     // Login
