@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from "
 import { baseApi } from "../api/base-api";
 
 // --- 2. TYPES ---
-interface User {
+export interface User {
   id: string;
   username: string;
   email: string;
@@ -18,7 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: { email: string; password: string }) => Promise<void>;
-  register: (data: { email: string; password: string; firstName: string; lastName?: string }) => Promise<void>;
+  register: (data: { email: string; password: string; firstName: string; lastName?: string; userName: string }) => Promise<void>;
   logout: () => void;
 }
 
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (credentials: { username: string; password: string }) => {
+  const login = async (credentials: { email: string; password: string }) => {
     const data = await baseApi.request<AuthResponse>("/auth/login", {
       method: "POST",
       body: JSON.stringify(credentials),
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("turtleshop_user", JSON.stringify(data.user));
   };
 
-  const register = async (data: { username: string; password: string; email: string }) => {
+  const register = async (data: { firstName: string; lastName?: string; userName: string; password: string; email: string }) => {
     const response = await baseApi.request<AuthResponse>("/auth/register", {
       method: "POST",
       body: JSON.stringify(data),
