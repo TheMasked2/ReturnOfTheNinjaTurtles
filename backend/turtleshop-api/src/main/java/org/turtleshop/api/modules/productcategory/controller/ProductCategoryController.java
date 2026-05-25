@@ -49,7 +49,6 @@ public class ProductCategoryController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PreAuthorize("hasAuthority('PRODUCT_UPDATE_ALL') and hasAuthority('CATEGORY_UPDATE_ALL')")
     // Create a new product-category mapping
     public ResponseEntity<ProductCategoryResponse> createProductCategory(
@@ -60,7 +59,6 @@ public class ProductCategoryController {
     }
 
     @PutMapping("/{productId}/{categoryId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PreAuthorize("hasAuthority('PRODUCT_UPDATE_ALL') and hasAuthority('CATEGORY_UPDATE_ALL')")
     // Update an existing product-category mapping
     public ResponseEntity<ProductCategoryResponse> updateProductCategory(
@@ -73,7 +71,6 @@ public class ProductCategoryController {
     }
 
     @DeleteMapping("/{productId}/{categoryId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PreAuthorize("hasAuthority('PRODUCT_UPDATE_ALL') and hasAuthority('CATEGORY_UPDATE_ALL')")
     // Delete a mapping by product and category ids
     public ResponseEntity<Void> deleteProductCategory(
@@ -82,5 +79,4 @@ public class ProductCategoryController {
         productCategoryService.deleteProductCategory(productId, categoryId);
         return ResponseEntity.noContent().build();
     }
-}
 }
