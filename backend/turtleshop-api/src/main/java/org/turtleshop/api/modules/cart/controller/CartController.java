@@ -21,45 +21,54 @@ public class CartController {
     final CartService cartService;
 
     @PostMapping("/{customerId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('CART_CREATE_ALL') or " +
+            "(hasAuthority('CART_CREATE_OWN') and @authorizationService.isCurrentCustomer(#customerId, authentication))")
     public ResponseEntity<CartResponse> createCart(@PathVariable UUID customerId) {
         return ResponseEntity.ok(cartService.createCart(customerId));
     }
 
     @PostMapping("/{customerId}/items")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<CartItemResponse> addItemToCart(@PathVariable UUID customerId, @RequestBody AddCartItemRequest request) {
+    @PreAuthorize("hasAuthority('CART_UPDATE_ALL') or " +
+            "(hasAuthority('CART_UPDATE_OWN') and @authorizationService.isCurrentCustomer(#customerId, authentication))")
+    public ResponseEntity<CartItemResponse> addItemToCart(
+            @PathVariable UUID customerId,
+            @RequestBody AddCartItemRequest request
+    ) {
         return ResponseEntity.ok(cartService.addItemToCart(customerId, request));
     }
 
     @GetMapping("/{customerId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('CART_READ_ALL') or " +
+            "(hasAuthority('CART_READ_OWN') and @authorizationService.isCurrentCustomer(#customerId, authentication))")
     public ResponseEntity<CartResponse> getActiveCart(@PathVariable UUID customerId) {
         return ResponseEntity.ok(cartService.getActiveCartForUser(customerId));
     }
 
     @GetMapping("/active")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('CART_READ_ALL')")
     public ResponseEntity<List<CartResponse>> getAllActiveCarts() {
         return ResponseEntity.ok(cartService.getAllExistingActiveCarts());
     }
 
     @PatchMapping("/items/{cartItemId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> updateCartItemQuantity(@PathVariable int cartItemId, @RequestBody UpdateCartItemQuantityRequest request) {
+    @PreAuthorize("hasAuthority('CART_UPDATE_ALL')")
+    public ResponseEntity<String> updateCartItemQuantity(
+            @PathVariable int cartItemId,
+            @RequestBody UpdateCartItemQuantityRequest request
+    ) {
         cartService.changeQuantityOfCartItem(cartItemId, request.getQuantity());
-        return ResponseEntity.ok("Succesfully updated the quantity of item in cart");
+        return ResponseEntity.ok("Successfully updated the quantity of item in cart");
     }
 
     @DeleteMapping("/items/{cartItemId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('CART_DELETE_ALL')")
     public ResponseEntity<String> removeItemFromCart(@PathVariable int cartItemId) {
         cartService.removeItemFromCart(cartItemId);
         return ResponseEntity.ok("Item is removed from the cart");
     }
 
     @DeleteMapping("/{cartId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('CART_DELETE_ALL')")
     public ResponseEntity<String> deleteCart(@PathVariable int cartId) {
         cartService.removeCart(cartId);
         return ResponseEntity.ok("Cart is deleted");

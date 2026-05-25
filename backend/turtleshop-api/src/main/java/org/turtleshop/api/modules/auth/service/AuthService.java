@@ -66,7 +66,9 @@ public class AuthService {
         }
 
         List<String> roles = roleAccess.findRoleNamesByCustomerEmail(customer.getEmail());
-        String token = jwtService.generateToken(customer.getEmail(), roles);
+        List<String> permissions = roleAccess.findPermissionCodesByCustomerEmail(customer.getEmail());
+
+        String token = jwtService.generateToken(customer.getEmail(), roles, permissions);
 
         return AuthResponse.builder()
                 .token(token)

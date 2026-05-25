@@ -21,18 +21,19 @@ public class JwtService {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    // Generate JWT
-    public String generateToken(String email, List<String> roles) {
+    // Generate JWT with roles and permissions
+    public String generateToken(String email, List<String> roles, List<String> permissions) {
         return Jwts.builder()
                 .subject(email)
                 .claim("roles", roles)
+                .claim("permissions", permissions)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 hour valid
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
                 .signWith(key)
                 .compact();
     }
 
-    // New helper to get all data (Claims) from the token
+    // Get all data from the token
     public Claims getClaimsFromToken(String token) {
         return Jwts.parser()
                 .verifyWith(key)
@@ -41,7 +42,7 @@ public class JwtService {
                 .getPayload();
     }
 
-    // Keeps the old method for convenience if needed elsewhere
+    // Get email from token
     public String getEmailFromToken(String token) {
         return getClaimsFromToken(token).getSubject();
     }
