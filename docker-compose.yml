@@ -49,6 +49,18 @@ services:
       mongodb:
         condition: service_healthy
 
+  graph-db:
+    image: neo4j:5.12.0-community
+    container_name: turtleshop-neo4j
+    ports:
+      - "7474:7474" # HTTP Web-GUI
+      - "7687:7687" # Bolt protocol for backend connection
+    environment:
+      - NEO4J_AUTH=neo4j/${DB_PASSWORD}
+    volumes:
+      - turtleshop_neo4j_data:/data
+      - turtleshop_neo4j_logs:/logs
+
   api:
     build:
       context: ./backend/turtleshop-api
@@ -90,3 +102,5 @@ services:
 volumes:
   turtleshop_pgdata:
   turtleshop_mongodb_data:
+  turtleshop_neo4j_data:
+  turtleshop_neo4j_logs:

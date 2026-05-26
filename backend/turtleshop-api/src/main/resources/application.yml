@@ -13,6 +13,11 @@ spring:
     baseline-on-migrate: true
     # Ensures the migration script hasn't been tampered with
     validate-on-migrate: true
+  neo4j:
+    uri: bolt://localhost:7687
+    authentication:
+      username: ${NEO4J_USERNAME:neo4j}
+      password: ${NEO4J_PASSWORD:your_secure_password}
 
 logging:
   level:
