@@ -1,4 +1,4 @@
-@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkB0dXJ0bGVzaG9wLm9yZyIsInJvbGVzIjpbIlJPTEVfQURNSU4iLCJST0xFX1VTRVIiXSwiaWF0IjoxNzc5Mjc2NjU2LCJleHAiOjE3NzkyODAyNTZ9.5OP4zZOJ13OYhXg4tCvwZRpEYo4J6eYPNyyVgLrX-IU
+@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkB0dXJ0bGVzaG9wLm9yZyIsInJvbGVzIjpbIlJPTEVfQURNSU4iLCJST0xFX1VTRVIiXSwiaWF0IjoxNzc5Nzc5MzUwLCJleHAiOjE3Nzk3ODI5NTB9.onESNNS1E9PR9RohRfxM_phfCvmPQJ55eA-jobwTU9E
 @id = b299567a-c2fb-49bc-94ad-31c9a7cfce99
 @wId = 14
 POST http://localhost:8080/api/auth/login
@@ -8,8 +8,6 @@ Content-Type: application/json
   "email": "admin@turtleshop.org",
   "password": "splinter"
 }
-
-> {% client.global.set("token", response.body.token) %}
 
 ### Get all wishlists
 GET http://localhost:8080/api/wishlist
