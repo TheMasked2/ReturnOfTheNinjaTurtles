@@ -1,18 +1,22 @@
 package org.turtleshop.api.modules.auth.service;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import org.turtleshop.api.modules.auth.dto.*;
+import org.turtleshop.api.modules.auth.dto.AuthResponse;
+import org.turtleshop.api.modules.auth.dto.CustomerResponse;
+import org.turtleshop.api.modules.auth.dto.LoginRequest;
+import org.turtleshop.api.modules.auth.dto.RegisterRequest;
 import org.turtleshop.api.modules.auth.model.Customer;
 import org.turtleshop.api.modules.auth.repository.CustomerAccess;
 import org.turtleshop.api.modules.auth.repository.SystemRoleAccess;
 
-import java.util.List;
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -25,22 +29,39 @@ public class AuthService {
 
     // Register
     @Transactional
-    public void register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request) {
         if (customerAccess.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already in use");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         }
 
         Customer customer = Customer.builder()
-                .email(request.getEmail().trim().toLowerCase())
+                .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .phone(request.getPhone())
                 .build();
 
-        UUID newId = customerAccess.insertAndReturnId(customer);
+        UUID customerId = customerAccess.insertAndReturnId(customer);
+        customerAccess.addRoleToCustomer(customerId, "ROLE_USER");
 
-        customerAccess.addRoleToCustomer(newId, "ROLE_USER");
+        List<String> roles = List.of("ROLE_USER");
+
+        // Fetch the permissions automatically assigned to the ROLE_USER
+        List<String> permissions = roleAccess.findPermissionCodesByCustomerEmail(customer.getEmail());
+
+        String token = jwtService.generateToken(customer.getEmail(), roles, permissions);
+
+        return AuthResponse.builder()
+                .token(token)
+                .type("Bearer")
+                .customer(CustomerResponse.builder()
+                        .id(customerId)
+                        .email(customer.getEmail())
+                        .firstName(customer.getFirstName())
+                        .lastName(customer.getLastName())
+                        .roles(roles)
+                        .build())
+                .build();
     }
 
     // Login
@@ -67,6 +88,24 @@ public class AuthService {
                         .lastName(customer.getLastName())
                         .roles(roles)
                         .build())
+                .build();
+    }
+
+    // Get current user info
+    public CustomerResponse getCurrentCustomer(String email) {
+        Customer customer = customerAccess.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        List<String> roles = roleAccess.findRoleNamesByCustomerEmail(customer.getEmail());
+
+        return CustomerResponse.builder()
+                .id(customer.getCustomerId())
+                .email(customer.getEmail())
+                .firstName(customer.getFirstName())
+                .lastName(customer.getLastName())
+                .phone(customer.getPhone())
+                .roles(roles)
+                .createdAt(customer.getCreatedAt())
                 .build();
     }
 }
