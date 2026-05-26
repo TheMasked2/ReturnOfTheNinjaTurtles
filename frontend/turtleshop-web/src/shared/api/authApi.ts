@@ -1,14 +1,19 @@
 import { baseApi } from "./base-api";
 
-export interface User {
+export interface Customer {
   id: string;
-  username: string;
   email: string;
+  firstName: string;
+  lastName?: string;
+  phone?: string;
+  roles: string[];
+  createdAt: string;
 }
 
 export interface AuthResponse {
   token: string;
-  user: User;
+  type: string;
+  customer: Customer;
 }
 
 export const authApi = {
@@ -16,8 +21,8 @@ export const authApi = {
     baseApi.post<AuthResponse>("/auth/login", credentials),
 
   register: (data: any) =>
-    baseApi.post<AuthResponse>("/auth/register", data),
+    baseApi.post<string>("/auth/register", data),
 
   getProfile: () =>
-    baseApi.get<User>("/auth/me"),
+    baseApi.get<Customer>("/auth/me"),
 };

@@ -28,7 +28,8 @@ export function ProfilePage() {
             <section className="hero-card">
                 <div>
                     <span className="eyebrow">My Profile</span>
-                    <h1>{user?.username}</h1>
+                    {/* Only show first letter of first name*/}
+                    <h1 className="hero-title">Welcome back, {user?.firstName ? user.firstName.charAt(0) + "." : "Turtle Lover"}!</h1>
                     <p><strong>Email:</strong> {user?.email}</p>
                 </div>
             </section>

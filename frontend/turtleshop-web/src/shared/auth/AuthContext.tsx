@@ -1,16 +1,20 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { authApi } from "../api/authApi";
 import { baseApi } from "../api/base-api";
 
 // --- 2. TYPES ---
 export interface User {
   id: string;
-  username: string;
+  firstName: string;
+  lastName?: string;
   email: string;
+  phoneNumber?: string;
 }
 
 interface AuthResponse {
   token: string;
-  user: User;
+  type: string;
+  customer: User;
 }
 
 interface AuthContextType {
@@ -18,7 +22,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: { email: string; password: string }) => Promise<void>;
-  register: (data: { email: string; password: string; firstName: string; lastName?: string; userName: string }) => Promise<void>;
+  register: (data: { email: string; password: string; firstName: string; lastName?: string; phoneNumber?: string }) => Promise<void>;
   logout: () => void;
 }
 
@@ -44,25 +48,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (credentials: { email: string; password: string }) => {
-    const data = await baseApi.request<AuthResponse>("/auth/login", {
-      method: "POST",
-      body: JSON.stringify(credentials),
-    });
+    const data = await authApi.login(credentials);
 
-    setUser(data.user);
+    setUser(data.customer);
     localStorage.setItem("turtleshop_token", data.token);
-    localStorage.setItem("turtleshop_user", JSON.stringify(data.user));
+    localStorage.setItem("turtleshop_user", JSON.stringify(data.customer));
   };
 
-  const register = async (data: { firstName: string; lastName?: string; userName: string; password: string; email: string }) => {
-    const response = await baseApi.request<AuthResponse>("/auth/register", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-
-    setUser(response.user);
-    localStorage.setItem("turtleshop_token", response.token);
-    localStorage.setItem("turtleshop_user", JSON.stringify(response.user));
+  const register = async (data: { firstName: string; lastName?: string; password: string; email: string }) => {
+    await authApi.register(data);
   };
 
   const logout = () => {

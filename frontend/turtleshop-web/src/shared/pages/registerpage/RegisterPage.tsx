@@ -5,11 +5,11 @@ import { useAuth } from "../../auth/AuthContext";
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { register } = useAuth();
-  const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +19,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await register({ firstName, lastName, userName, email, password });
+      await register({ firstName, lastName, email, phoneNumber, password });
       navigate("/");
     } catch (err: any) {
       setError(err.message || "Unable to register account.");
@@ -58,16 +58,6 @@ export default function RegisterPage() {
               placeholder="Enter your last name"
             />
           </div>
-          <div className="form-field">
-            <label htmlFor="userName  ">Username</label>
-            <input
-              id="userName"
-              value={userName}
-              onChange={(event) => setUserName(event.target.value)}
-              required
-              placeholder="Enter your username"
-            />
-          </div>
 
           <div className="form-field">
             <label htmlFor="email">Email</label>
@@ -78,6 +68,16 @@ export default function RegisterPage() {
               onChange={(event) => setEmail(event.target.value)}
               required
               placeholder="Enter your email"
+            />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="phoneNumber">Phone Number (Optional)</label>
+            <input
+              id="phoneNumber"
+              value={phoneNumber}
+              onChange={(event) => setPhoneNumber(event.target.value)}
+              placeholder="Enter your phone number"
             />
           </div>
 

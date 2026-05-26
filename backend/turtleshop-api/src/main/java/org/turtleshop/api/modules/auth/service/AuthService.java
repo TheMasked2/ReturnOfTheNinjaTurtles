@@ -82,4 +82,22 @@ public class AuthService {
                         .build())
                 .build();
     }
+
+    // Get current user info
+    public CustomerResponse getCurrentCustomer(String email) {
+        Customer customer = customerAccess.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        List<String> roles = roleAccess.findRoleNamesByCustomerEmail(customer.getEmail());
+
+        return CustomerResponse.builder()
+                .id(customer.getCustomerId())
+                .email(customer.getEmail())
+                .firstName(customer.getFirstName())
+                .lastName(customer.getLastName())
+                .phone(customer.getPhone())
+                .roles(roles)
+                .createdAt(customer.getCreatedAt())
+                .build();
+    }
 }

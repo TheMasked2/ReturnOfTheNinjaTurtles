@@ -16,7 +16,7 @@ export default function WishlistPage() {
 
         {isAuthenticated ? (
           <div className="form-panel">
-            <p>Hi {user?.username}, your wishlist is ready to grow.</p>
+            <p>Hi {user?.firstName[0]}. , your wishlist is ready to grow.</p>
             <p className="text-muted">
               Add favorite products from the products page, then come back here to view them later.
             </p>

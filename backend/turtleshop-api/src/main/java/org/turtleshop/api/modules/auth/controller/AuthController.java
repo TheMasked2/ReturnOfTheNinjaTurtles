@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 import org.turtleshop.api.modules.auth.dto.*;
 import org.turtleshop.api.modules.auth.service.AuthService;
 
@@ -33,5 +34,18 @@ public class AuthController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<String> logout() {
         return ResponseEntity.ok("Logged out successfully");
+    }
+
+    // @PostMapping("/refresh")
+    // @PreAuthorize("isAuthenticated()")
+    // public ResponseEntity<AuthResponse> refreshToken() {
+    //     return ResponseEntity.ok(authService.refreshToken());
+    // }
+
+     // Get current user info
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public CustomerResponse getCurrentUser(Authentication authentication) {
+         return authService.getCurrentCustomer(authentication.getName());
     }
 }
