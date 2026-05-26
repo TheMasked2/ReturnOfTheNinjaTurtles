@@ -21,7 +21,7 @@ export const authApi = {
     baseApi.post<AuthResponse>("/auth/login", credentials),
 
   register: (data: any) =>
-    baseApi.post<string>("/auth/register", data),
+    baseApi.post<AuthResponse>("/auth/register", data),
 
   getProfile: () =>
     baseApi.get<Customer>("/auth/me"),
