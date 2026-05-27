@@ -67,6 +67,7 @@ public class WishlistItemRepositoryImpl implements WishlistItemRepository {
                 .stream().findFirst();
     }
 
+    // Is redundant now that we have ACID compliant database
     @Override
     public boolean existsByWishlistIdAndProductId(Integer wishlistId, Integer productId) {
         String sql = """

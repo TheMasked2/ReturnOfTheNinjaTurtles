@@ -105,9 +105,9 @@ public class WishlistItemService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Wishlist not found");
         }
 
-        if (repository.existsByWishlistIdAndProductId(wishlistId, productId)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Wishlist item already exists");
-        }
+        // if (repository.existsByWishlistIdAndProductId(wishlistId, productId)) {
+        //     throw new ResponseStatusException(HttpStatus.CONFLICT, "Wishlist item already exists");
+        // }
 
         try {
             return repository.insertAndReturnId(wishlistId, productId);

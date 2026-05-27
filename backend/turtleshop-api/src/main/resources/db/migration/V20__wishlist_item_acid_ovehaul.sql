@@ -6,3 +6,21 @@ ALTER TABLE WISHLIST_ITEM
 ALTER TABLE WISHLIST_ITEM
     ADD CONSTRAINT uq_wishlist_item_wishlist_product
     UNIQUE (wishlist_id, product_id);
+
+ALTER TABLE WISHLIST_ITEM
+    DROP CONSTRAINT fk_wish_item_list;
+
+ALTER TABLE WISHLIST_ITEM
+    ADD CONSTRAINT fk_wish_item_list
+    FOREIGN KEY (wishlist_id)
+    REFERENCES WISHLIST(wishlist_id)
+    ON DELETE CASCADE;
+
+ALTER TABLE WISHLIST_ITEM
+    DROP CONSTRAINT fk_wish_item_prod;
+
+ALTER TABLE WISHLIST_ITEM
+    ADD CONSTRAINT fk_wish_item_prod
+    FOREIGN KEY (product_id)
+    REFERENCES PRODUCT(product_id)
+    ON DELETE RESTRICT;
