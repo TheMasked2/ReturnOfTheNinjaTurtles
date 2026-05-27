@@ -22,9 +22,9 @@ import org.turtleshop.api.modules.order.model.Order;
 import org.turtleshop.api.modules.order.model.OrderItem;
 import org.turtleshop.api.modules.order.repository.OrderAccess;
 import org.turtleshop.api.modules.order.repository.OrderItemAccess;
+import org.turtleshop.api.modules.order.service.OrderLiveSyncService;
 import org.turtleshop.api.modules.product.model.ProductModel;
 import org.turtleshop.api.modules.product.repository.ProductAccess;
-import org.turtleshop.api.modules.recommendation.service.RecommendationService;
 import org.turtleshop.api.modules.shipment.enums.ShipmentStatus;
 import org.turtleshop.api.modules.shipment.model.Shipment;
 import org.turtleshop.api.modules.shipment.repository.ShipmentAccess;
@@ -50,7 +50,7 @@ public class CheckoutService {
     private final ShipmentStatusLogAccess shipmentStatusLogAccess;
     private final PaymentMethodAccess paymentMethodAccess;
     private final TransactionAccess transactionAccess;
-    private final RecommendationService recommendationService;
+    private final OrderLiveSyncService orderLiveSyncService;
 
     @Transactional
     public PlaceOrderResponse placeOrder(UUID customerId, PlaceOrderRequest request) {
@@ -154,17 +154,20 @@ public class CheckoutService {
         List<OrderItem> orderItems = orderItemAccess.getAllOrderItems(orderId);
 
         for (OrderItem item : orderItems) {
-            ProductModel product = productAccess.findById(item.getProductId())
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.CONFLICT,
-                            "Product does not exist"
-                    ));
+                ProductModel product = productAccess.findById(item.getProductId())
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.CONFLICT,
+                                "Product does not exist"
+                        ));
 
-            recommendationService.processPurchaseSync(
-                    customerId,
-                    item.getProductId(),
-                    product.getProductName()
-            );
+                // Definitive wiring of Step 2
+                orderLiveSyncService.syncOrderToGraph(
+                        orderId,
+                        customerId.toString(),
+                        item.getProductId(),
+                        product.getProductName(),
+                        item.getQuantity()
+                );
         }
 
         Shipment shipment = shipmentAccess.getShipmentByOrderId(orderId)
