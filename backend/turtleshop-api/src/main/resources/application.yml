@@ -13,6 +13,10 @@ spring:
     baseline-on-migrate: true
     # Ensures the migration script hasn't been tampered with
     validate-on-migrate: true
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
 
 logging:
   level:

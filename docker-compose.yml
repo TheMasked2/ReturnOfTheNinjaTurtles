@@ -49,6 +49,21 @@ services:
       mongodb:
         condition: service_healthy
 
+  redis:
+    image: redis:7.2-alpine
+    container_name: turtleshop-redis
+    command: redis-server --maxmemory 100mb --maxmemory-policy allkeys-lfu
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "executable", "arg"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
   api:
     build:
       context: ./backend/turtleshop-api
@@ -64,11 +79,14 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/turtleshop?authSource=admin
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
     ports:
       - "8080:8080"
     depends_on:
-      db:
-        condition: service_healthy
+      - redis
+      - mongodb
+      - db
     volumes:
       - ./backend/turtleshop-api:/app
       - /app/.gradle
@@ -90,3 +108,4 @@ services:
 volumes:
   turtleshop_pgdata:
   turtleshop_mongodb_data:
+  redis_data:

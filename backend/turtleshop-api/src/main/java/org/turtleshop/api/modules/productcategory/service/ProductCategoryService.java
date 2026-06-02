@@ -3,6 +3,8 @@ package org.turtleshop.api.modules.productcategory.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.turtleshop.api.modules.productcategory.dto.CreateProductCategoryRequest;
 import org.turtleshop.api.modules.productcategory.dto.UpdateProductCategoryRequest;
@@ -18,17 +20,17 @@ public class ProductCategoryService {
         this.productCategoryAccess = productCategoryAccess;
     }
 
-    // Retrieve all product-category mappings
+    @Cacheable(value = "categories", key = "'all_mappings'")
     public List<ProductCategoryModel> getAllProductCategories() {
         return productCategoryAccess.findAll();
     }
 
-    // Retrieve a mapping by ids
+    @Cacheable(value = "categories", key = "#productId + ':' + #categoryId")
     public Optional<ProductCategoryModel> getProductCategory(int productId, int categoryId) {
         return productCategoryAccess.findById(productId, categoryId);
     }
 
-    // Create a new product-category mapping
+    @CacheEvict(value = "categories", allEntries = true)
     public ProductCategoryModel createProductCategory(CreateProductCategoryRequest request) {
         ProductCategoryModel mapping = new ProductCategoryModel();
         mapping.setProductId(request.getProductId());
@@ -37,7 +39,7 @@ public class ProductCategoryService {
         return mapping;
     }
 
-    // Update an existing mapping
+    @CacheEvict(value = "categories", allEntries = true)
     public Optional<ProductCategoryModel> updateProductCategory(int productId, int categoryId, UpdateProductCategoryRequest request) {
         return productCategoryAccess.findById(productId, categoryId)
                 .map(existing -> {
@@ -51,7 +53,7 @@ public class ProductCategoryService {
                 });
     }
 
-    // Delete a mapping by ids
+    @CacheEvict(value = "categories", allEntries = true)
     public void deleteProductCategory(int productId, int categoryId) {
         productCategoryAccess.deleteById(productId, categoryId);
     }

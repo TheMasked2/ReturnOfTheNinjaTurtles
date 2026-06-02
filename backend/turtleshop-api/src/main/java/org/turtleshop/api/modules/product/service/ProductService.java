@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.turtleshop.api.modules.product.dto.CreateProductRequest;
 import org.turtleshop.api.modules.product.dto.UpdateProductRequest;
@@ -41,11 +44,13 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "frequent_products", key = "#id", unless = "#result.isEmpty()")
     public Optional<ProductModel> getProductById(int id) {
         return productAccess.findById(id)
                 .map(base -> merge(base, productMongoAccess.findByProductId(id).orElse(null)));
     }
 
+    @CachePut(value = "frequent_products", key = "#result.productId")
     public ProductModel createProduct(CreateProductRequest request) {
         ProductModel product = buildFromRequest(request);
         int generatedId = productAccess.insert(product);
@@ -54,6 +59,7 @@ public class ProductService {
         return product;
     }
 
+    @CacheEvict(value = "frequent_products", key = "#id")
     public Optional<ProductModel> updateProduct(int id, UpdateProductRequest request) {
         return productAccess.findById(id).map(base -> {
             base.setBasePrice(request.getPrice());
@@ -70,6 +76,7 @@ public class ProductService {
         });
     }
 
+    @CacheEvict(value = "frequent_products", key = "#id")
     public void deleteProduct(int id) {
         productAccess.deleteById(id);
         productMongoAccess.deleteByProductId(id);
