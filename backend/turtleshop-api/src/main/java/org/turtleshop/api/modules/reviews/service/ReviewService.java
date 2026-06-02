@@ -18,6 +18,10 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.neo4j.core.Neo4jClient;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
@@ -25,6 +29,7 @@ public class ReviewService {
     private final ReviewAccess repository;
     private final SequenceGeneratorService sequenceGenerator;
     private final MongoTemplate mongoTemplate;
+    private final Neo4jClient neo4jClient;
 
     public ReviewResponse createReview(ReviewRequest request) {
         ReviewModel review = ReviewModel.builder()
@@ -36,7 +41,28 @@ public class ReviewService {
                 .createdAt(OffsetDateTime.now())
                 .build();
 
-        return mapToResponse(repository.save(review));
+        ReviewModel savedReview = repository.save(review);
+
+        String currentMonthId = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+
+        this.neo4jClient.query(
+                "MATCH (m:Month {id: $monthId}) " +
+                "MERGE (c:Customer {id: $customer_id}) " +
+                "MERGE (p:Product {id: $product_id}) " +
+                "MERGE (r:Review {id: $review_id}) " +
+                "ON CREATE SET r.rating = $rating " +
+                "MERGE (c)-[:WROTE]->(r) " +
+                "MERGE (r)-[:REVIEWS]->(p) " +
+                "MERGE (r)-[:WRITTEN_IN]->(m)"
+        )
+        .bind(currentMonthId).to("monthId")
+        .bind(savedReview.getCustomerId().toString()).to("customer_id")
+        .bind(savedReview.getProductId()).to("product_id")
+        .bind(savedReview.getReviewId()).to("review_id")
+        .bind(savedReview.getRating()).to("rating")
+        .run();
+
+        return mapToResponse(savedReview);
     }
 
     public ReviewResponse getReviewById(String id) {
@@ -93,8 +119,8 @@ public class ReviewService {
 
     public ReviewStatsResponse getProductReviewStats(Integer productId) {
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("productId").is(productId)),
-                Aggregation.group("productId")
+                Aggregation.match(Criteria.where("product_id").is(productId)),
+                Aggregation.group("product_id")
                         .count().as("reviewCount")
                         .avg("rating").as("averageRating")
         );

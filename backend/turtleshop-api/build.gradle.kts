@@ -36,6 +36,10 @@ dependencies {
 
     // NoSQL - MongoDB
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+    
+
+    // NoSQL - Neo4j
+    implementation("org.springframework.boot:spring-boot-starter-data-neo4j")
 
     // NoSQL - Redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
