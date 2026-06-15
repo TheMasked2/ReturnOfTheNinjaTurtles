@@ -87,6 +87,13 @@ public class WishlistStressSimulation extends Simulation {
                     .check(status().is(200)))
             .pause(1)
 
+            // Otherwise cant delete the whole wishlist cuz product item 2 is still in there
+            .exec(http("Remove Second Product From Wishlist")
+                    .delete("/api/wishlist-item/wishlist/#{wishlistId}/product/2")
+                    .header("Authorization", "Bearer #{jwtToken}")
+                    .check(status().is(204)))
+            .pause(1)
+
             .exec(http("Delete Wishlist")
                     .delete("/api/wishlist/#{wishlistId}")
                     .header("Authorization", "Bearer #{jwtToken}")
