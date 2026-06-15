@@ -34,12 +34,13 @@ public class ReviewSimulation extends Simulation {
                             + "\"lastName\":\"Tester\","
                             + "\"phone\":\"+17165550000\""
                             + "}"))
-                    .check(status().is(201)))
+                    .check(status().is(200)))
+            .exitHereIfFailed()
             .pause(1)
 
             // Login
             .exec(http("Login Review User")
-                    .post("/api/auth/authenticate")
+                    .post("/api/auth/login")
                     .body(StringBody("{"
                             + "\"email\":\"#{reviewEmail}\","
                             + "\"password\":\"#{reviewPassword}\""
@@ -47,84 +48,119 @@ public class ReviewSimulation extends Simulation {
                     .check(status().is(200))
                     .check(jsonPath("$.token").saveAs("jwtToken"))
                     .check(jsonPath("$.customer.id").saveAs("reviewCustomerId")))
+            .exitHereIfFailed()
             .pause(1)
 
             // Find Product
             .exec(http("Search Products")
                     .get("/api/products?search=Turtle")
                     .check(status().is(200))
-                    .check(jsonPath("$[?(@.id != null)].id").findRandom().optional().saveAs("targetProductId")))
+                    .check(jsonPath("$[?(@.id != null)].id").findRandom().saveAs("targetProductId")))
+            .exitHereIfFailed()
+            .pause(1)
 
-            .doIf(session -> session.contains("targetProductId")).then(
-                    exec(session -> {
-                        if (!session.contains("targetProductId")) {
-                            System.out.println("No product found for review, skipping review creation.");
-                            return session.markAsFailed();
-                        }
-                        return session;
-                    })
-                    .pause(1)
-                    // Create Review
-                    // POST /api/products/{productId}/reviews
-                    // DTO: ReviewRequest
-                    .exec(http("Create Review")
-                            .post("/api/products/#{targetProductId}/reviews")
-                            .header("Authorization", "Bearer #{jwtToken}")
-                            .body(StringBody("{"
-                                    + "\"customerId\":\"#{reviewCustomerId}\","
-                                    + "\"rating\":5,"
-                                    + "\"comment\":\"Gatling automated review test.\""
-                                    + "}"))
-                            .check(status().is(201))
-                            .check(jsonPath("$.id").saveAs("createdReviewId"))
-                            .check(jsonPath("$.productId").saveAs("createdProductId"))
-                            .check(jsonPath("$.customerId").is("#{reviewCustomerId}")))
-                    .pause(1)
-                    // Get Review By Id
-                    // GET /api/reviews/{id}
-                    .exec(http("Get Review By Id")
-                            .get("/api/reviews/#{createdReviewId}")
-                            .header("Authorization", "Bearer #{jwtToken}")
-                            .check(status().is(200))
-                            .check(jsonPath("$.id").is("#{createdReviewId}")))
-                    .pause(1)
-                    // Get Reviews By Product
-                    .exec(http("Get Product Reviews")
-                            .get("/api/products/#{createdProductId}/reviews")
-                            .header("Authorization", "Bearer #{jwtToken}")
-                            .check(status().is(200)))
-                    .pause(1)
-                    // Update Review
-                    // PUT /api/reviews/{id}
-                    // DTO: ReviewRequest
-                    .exec(http("Update Review")
-                            .put("/api/reviews/#{createdReviewId}")
-                            .header("Authorization", "Bearer #{jwtToken}")
-                            .body(StringBody("{"
-                                    + "\"customerId\":\"#{reviewCustomerId}\","
-                                    + "\"rating\":4,"
-                                    + "\"comment\":\"Updated review text from Gatling test.\""
-                                    + "}"))
-                            .check(status().is(200))
-                            .check(jsonPath("$.rating").ofInt().is(4)))
-                    .pause(1)
-                    // Delete Review
-                    // DELETE /api/reviews/{id}
-                    .exec(http("Delete Review")
-                            .delete("/api/reviews/#{createdReviewId}")
-                            .header("Authorization", "Bearer #{jwtToken}")
-                            .check(status().is(204)))
-                    .pause(1)
-                    // Verify Review Deleted
-                    .exec(http("Get Deleted Review Should 404")
-                            .get("/api/reviews/#{createdReviewId}")
-                            .header("Authorization", "Bearer #{jwtToken}")
-                            .check(status().is(404)))
-            );
+            // Create Review
+            .exec(http("Create Review")
+                    .post("/api/products/#{targetProductId}/reviews")
+                    .header("Authorization", "Bearer #{jwtToken}")
+                    .body(StringBody("{"
+                            + "\"customerId\":\"#{reviewCustomerId}\","
+                            + "\"rating\":5,"
+                            + "\"comment\":\"Gatling automated review test.\""
+                            + "}"))
+                    .check(status().is(201))
+                    .check(jsonPath("$.id").saveAs("createdReviewId"))
+                    .check(jsonPath("$.productId").saveAs("createdProductId"))
+                    .check(jsonPath("$.customerId").saveAs("createdReviewCustomerId")))
+            .exitHereIfFailed()
+            .exec(session -> {
+                String expectedCustomerId = session.getString("reviewCustomerId");
+                String actualCustomerId = session.getString("createdReviewCustomerId");
 
+                if (!expectedCustomerId.equals(actualCustomerId)) {
+                    System.out.println("Customer ID mismatch. Expected: "
+                            + expectedCustomerId
+                            + ", actual: "
+                            + actualCustomerId);
+                    return session.markAsFailed();
+                }
+
+                return session;
+            })
+            .exitHereIfFailed()
+            .pause(1)
+
+            // Get Review By Id
+            // GET /api/reviews/{id}
+            .exec(http("Get Review By Id")
+                    .get("/api/reviews/#{createdReviewId}")
+                    .header("Authorization", "Bearer #{jwtToken}")
+                    .check(status().is(200))
+                    .check(jsonPath("$.id").saveAs("fetchedReviewId")))
+            .exitHereIfFailed()
+            .exec(session -> {
+                String expectedReviewId = session.getString("createdReviewId");
+                String actualReviewId = session.getString("fetchedReviewId");
+
+                if (!expectedReviewId.equals(actualReviewId)) {
+                    System.out.println("Review ID mismatch. Expected: "
+                            + expectedReviewId
+                            + ", actual: "
+                            + actualReviewId);
+                    return session.markAsFailed();
+                }
+
+                return session;
+            })
+            .exitHereIfFailed()
+            .pause(1)
+
+            // Get Reviews By Product
+            .exec(http("Get Product Reviews")
+                    .get("/api/products/#{createdProductId}/reviews")
+                    .header("Authorization", "Bearer #{jwtToken}")
+                    .check(status().is(200)))
+            .exitHereIfFailed()
+            .pause(1)
+
+            // Update Review
+            // PUT /api/reviews/{id}
+            .exec(http("Update Review")
+                    .put("/api/reviews/#{createdReviewId}")
+                    .header("Authorization", "Bearer #{jwtToken}")
+                    .body(StringBody("{"
+                            + "\"customerId\":\"#{reviewCustomerId}\","
+                            + "\"rating\":4,"
+                            + "\"comment\":\"Updated review text from Gatling test.\""
+                            + "}"))
+                    .check(status().is(200))
+                    .check(jsonPath("$.rating").ofInt().is(4)))
+            .exitHereIfFailed()
+            .pause(1)
+
+            // Delete Review
+            // DELETE /api/reviews/{id}
+            .exec(http("Delete Review")
+                    .delete("/api/reviews/#{createdReviewId}")
+                    .header("Authorization", "Bearer #{jwtToken}")
+                    .check(status().is(204)))
+            .exitHereIfFailed()
+            .pause(1)
+
+            // Verify Review Deleted
+            .exec(http("Get Deleted Review Should 404")
+                    .get("/api/reviews/#{createdReviewId}")
+                    .header("Authorization", "Bearer #{jwtToken}")
+                    .check(status().is(404)));
+
+    // Traffic Injection Profile
     {
         setUp(
-                scn.injectOpen(atOnceUsers(1))
+                scn.injectOpen(
+                        nothingFor(2),
+                        rampUsers(5).during(5),
+                        constantUsersPerSec(10).during(15)
+                )
         ).protocols(httpProtocol);
     }
 }
