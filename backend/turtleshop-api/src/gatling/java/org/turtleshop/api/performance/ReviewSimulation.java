@@ -2,6 +2,7 @@ package org.turtleshop.api.performance;
 
 import static io.gatling.javaapi.core.CoreDsl.*;
 import static io.gatling.javaapi.http.HttpDsl.*;
+import static io.gatling.javaapi.core.CoreDsl.constantUsersPerSec;
 
 import io.gatling.javaapi.core.*;
 import io.gatling.javaapi.http.*;
@@ -91,7 +92,6 @@ public class ReviewSimulation extends Simulation {
             .pause(1)
 
             // Get Review By Id
-            // GET /api/reviews/{id}
             .exec(http("Get Review By Id")
                     .get("/api/reviews/#{createdReviewId}")
                     .header("Authorization", "Bearer #{jwtToken}")
@@ -124,7 +124,6 @@ public class ReviewSimulation extends Simulation {
             .pause(1)
 
             // Update Review
-            // PUT /api/reviews/{id}
             .exec(http("Update Review")
                     .put("/api/reviews/#{createdReviewId}")
                     .header("Authorization", "Bearer #{jwtToken}")
@@ -139,7 +138,6 @@ public class ReviewSimulation extends Simulation {
             .pause(1)
 
             // Delete Review
-            // DELETE /api/reviews/{id}
             .exec(http("Delete Review")
                     .delete("/api/reviews/#{createdReviewId}")
                     .header("Authorization", "Bearer #{jwtToken}")
@@ -157,9 +155,8 @@ public class ReviewSimulation extends Simulation {
     {
         setUp(
                 scn.injectOpen(
-                        nothingFor(2),
-                        rampUsers(5).during(5),
-                        constantUsersPerSec(10).during(15)
+                        rampUsers(50).during(20),
+                        constantUsersPerSec(15).during(30)
                 )
         ).protocols(httpProtocol);
     }

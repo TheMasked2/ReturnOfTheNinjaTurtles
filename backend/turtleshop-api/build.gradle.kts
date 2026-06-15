@@ -60,6 +60,8 @@ dependencies {
     // Testcontainers: starts temporary Docker containers for tests
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
+    testImplementation("org.testcontainers:neo4j")
+    testImplementation("org.testcontainers:mongodb")
 
     // Security testing: @WithMockUser, MockMvc security support
     testImplementation("org.springframework.security:spring-security-test")

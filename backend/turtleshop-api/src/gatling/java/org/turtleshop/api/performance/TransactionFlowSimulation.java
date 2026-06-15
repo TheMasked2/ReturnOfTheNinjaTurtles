@@ -4,6 +4,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 import io.gatling.javaapi.core.ScenarioBuilder;
 import io.gatling.javaapi.core.Simulation;
 import io.gatling.javaapi.http.HttpProtocolBuilder;
+import static io.gatling.javaapi.core.CoreDsl.constantUsersPerSec;
 
 import java.util.UUID;
 
@@ -165,7 +166,8 @@ public class TransactionFlowSimulation extends Simulation {
                 resetTransactionTestData.injectOpen(atOnceUsers(1))
                         .andThen(
                                 scn.injectOpen(
-                                        rampUsers(50).during(30)
+                                        rampUsers(50).during(20),
+                                        constantUsersPerSec(15).during(30)
                                 )
                         )
         ).protocols(httpProtocol);

@@ -3,6 +3,7 @@ package org.turtleshop.api.performance;
 import static io.gatling.javaapi.core.CoreDsl.*;
 import static io.gatling.javaapi.http.HttpDsl.*;
 import io.github.cdimascio.dotenv.Dotenv;
+import static io.gatling.javaapi.core.CoreDsl.constantUsersPerSec;
 
 import io.gatling.javaapi.core.*;
 import io.gatling.javaapi.http.*;

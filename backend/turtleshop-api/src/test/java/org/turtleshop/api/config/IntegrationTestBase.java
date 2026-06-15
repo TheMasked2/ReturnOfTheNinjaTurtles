@@ -6,6 +6,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.MongoDBContainer;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -18,8 +19,12 @@ public abstract class IntegrationTestBase {
                     .withUsername("test")
                     .withPassword("test");
 
+    private static final MongoDBContainer MONGO =
+            new MongoDBContainer("mongo:7.0");
+
     static {
         POSTGRES.start();
+        MONGO.start();
     }
 
     @DynamicPropertySource
@@ -28,5 +33,7 @@ public abstract class IntegrationTestBase {
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("spring.datasource.driver-class-name", POSTGRES::getDriverClassName);
+
+        registry.add("spring.data.mongodb.uri", MONGO::getReplicaSetUrl);
     }
 }
