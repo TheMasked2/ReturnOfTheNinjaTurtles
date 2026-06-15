@@ -13,6 +13,7 @@ import org.turtleshop.api.modules.cart.model.Cart;
 import org.turtleshop.api.modules.cart.model.CartItem;
 import org.turtleshop.api.modules.cart.repository.CartAccess;
 import org.turtleshop.api.modules.cart.repository.CartItemAccess;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,7 @@ public class CartService {
     private final CartItemAccess cartItemAccess;
 
     // Creates a Cart based on customerId
+    @Transactional
     public CartResponse createCart(UUID customerId) {
         Optional<Cart> existingCart = cartAccess.getActiveCartByCustomerId(customerId);
         if(existingCart.isPresent()) {
@@ -38,6 +40,7 @@ public class CartService {
     }
 
     // Adds item to the cart
+    @Transactional
     public CartItemResponse addItemToCart(UUID customerId, AddCartItemRequest request) {
         Cart activeCart = cartAccess.getActiveCartByCustomerId(customerId).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "No cart found for this customer"));
         int cartItemId = cartItemAccess.insertCartItem(activeCart.getCartId(), request.getProductId(), request.getQuantity());
@@ -47,12 +50,14 @@ public class CartService {
     }
 
     // Delete item from the cart
+    @Transactional
     public void removeItemFromCart(int cartItemId) {
         CartItem existingCartItem = cartItemAccess.getCartItemById(cartItemId).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT));
         cartItemAccess.deleteCartItem(existingCartItem.getCartItemId());
     }
 
     // Change quantity of an item in the cart
+    @Transactional
     public void changeQuantityOfCartItem(int cartItemId, int quantity) {
         CartItem existingCartItem = cartItemAccess.getCartItemById(cartItemId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -64,18 +69,21 @@ public class CartService {
     }
 
     // Change status of a Cart to converted.
+    @Transactional
     public void markCartConverted(int cartId) {
         Cart existingCart = cartAccess.getCartById(cartId).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Cart does not exist"));
         cartAccess.updateCartStatus(cartId, CartStatus.CONVERTED);
     }
 
     // Delete a cart
+    @Transactional
     public void removeCart(int cartId) {
         Cart existingCart = cartAccess.getCartById(cartId).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Cart does not exist"));
         cartAccess.deleteCart(cartId);
     }
 
     // Get Active Cart
+    @Transactional(readOnly = true)
     public CartResponse getActiveCartForUser (UUID customerId) {
         Cart activeCart = cartAccess.getActiveCartByCustomerId(customerId).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "There are no active carts found for this customer"));
         List<CartItem> allCartItems = cartItemAccess.getAllCartItems(activeCart.getCartId());
@@ -83,6 +91,7 @@ public class CartService {
     }
 
     // Get all Active Carts that exist.
+    @Transactional(readOnly = true)
     public List<CartResponse> getAllExistingActiveCarts () {
         List<Cart> activeCarts = cartAccess.getAllActiveCarts();
         return activeCarts.stream()

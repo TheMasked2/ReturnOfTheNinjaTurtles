@@ -1,6 +1,5 @@
 spring:
   datasource:
-    # Prefer Spring’s standard env vars; compose already sets these.
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
@@ -8,11 +7,16 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
-    # Allows Flyway to run even if the database already has tables
-    # (very useful if you created tables manually before adding Flyway)
     baseline-on-migrate: true
-    # Ensures the migration script hasn't been tampered with
     validate-on-migrate: true
+  neo4j:
+    uri: bolt://neo4j:7687
+    authentication:
+      username: ${NEO4J_USERNAME:neo4j}
+      password: ${NEO4J_PASSWORD:your_secure_password}
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI}
 
 logging:
   level:
@@ -26,9 +30,9 @@ app:
     issuer: "turtleshop-api"
     accessTtlSeconds: 900
     refreshTtlSeconds: 1209600
-    secureCookies: false  # dev over http; set true when https
+    secureCookies: false  
     cookie-same-site: Lax
-    jwt-secret: ${JWT_SECRET}
+    jwt-secret: ${JWT_SECRET:MustBeDefinedInEnvFile}
 
 server:
   port: 8080

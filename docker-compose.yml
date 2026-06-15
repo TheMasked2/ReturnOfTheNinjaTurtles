@@ -49,6 +49,25 @@ services:
       mongodb:
         condition: service_healthy
 
+  neo4j:
+    image: neo4j:5.12.0-community
+    container_name: turtleshop-neo4j
+    ports:
+      - "7474:7474" # HTTP Web-GUI
+      - "7687:7687" # Bolt protocol for backend connection
+    environment:
+      - NEO4J_AUTH=neo4j/${DB_PASSWORD}
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+    volumes:
+      - turtleshop_neo4j_data:/data
+      - turtleshop_neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   api:
     build:
       context: ./backend/turtleshop-api
@@ -64,10 +83,16 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/turtleshop?authSource=admin
+      NEO4J_USERNAME: neo4j
+      NEO4J_PASSWORD: ${DB_PASSWORD}
     ports:
       - "8080:8080"
     depends_on:
       db:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      neo4j:
         condition: service_healthy
     volumes:
       - ./backend/turtleshop-api:/app
@@ -90,3 +115,5 @@ services:
 volumes:
   turtleshop_pgdata:
   turtleshop_mongodb_data:
+  turtleshop_neo4j_data:
+  turtleshop_neo4j_logs:
