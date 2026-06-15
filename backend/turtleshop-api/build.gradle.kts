@@ -94,6 +94,7 @@ val gatlingSimulations = listOf(
     "org.turtleshop.api.performance.CustomerRegisterAndCheckoutSimulation",
     "org.turtleshop.api.performance.RaceConditionSimulation",
     "org.turtleshop.api.performance.CatalogSearchAndPaginationSimulation",
+    "org.turtleshop.api.performance.InventoryManagementSimulation",
 )
 
 val gatlingTaskNames = gatlingSimulations.map { simulationClass ->
