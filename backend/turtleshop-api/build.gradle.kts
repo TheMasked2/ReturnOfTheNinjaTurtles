@@ -36,6 +36,10 @@ dependencies {
 
     // NoSQL - MongoDB
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+    
+
+    // NoSQL - Neo4j
+    implementation("org.springframework.boot:spring-boot-starter-data-neo4j")
 
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 
@@ -72,7 +76,6 @@ dependencies {
 
     // PostgreSQL
     runtimeOnly("org.postgresql:postgresql")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     gatlingRuntime("io.gatling.highcharts:gatling-charts-highcharts:3.11.5")
     implementation("io.github.cdimascio:dotenv-java:3.0.2")
@@ -88,6 +91,7 @@ sourceSets {
 }
 tasks.test {
     useJUnitPlatform()
+    systemProperty("api.version", "1.44")
 }
 val gatlingSrcDir = file("src/gatling/java")
 val gatlingSimulations = fileTree(gatlingSrcDir)

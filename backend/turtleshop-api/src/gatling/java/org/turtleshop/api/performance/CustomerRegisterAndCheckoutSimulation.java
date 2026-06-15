@@ -57,7 +57,7 @@ public class CustomerRegisterAndCheckoutSimulation extends Simulation {
             .exec(http("Add Product to Cart")
                     .post("/api/cart/#{currentCustomerId}/items")
                     .header("Authorization", "Bearer #{jwtToken}")
-                    .body(StringBody("{\"productId\": 1, \"quantity\": 1}"))
+                    .body(StringBody("{\"productId\": 2, \"quantity\": 1}"))
                     .check(status().in(200, 201)))
             .pause(1)
 

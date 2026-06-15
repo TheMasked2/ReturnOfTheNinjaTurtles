@@ -29,6 +29,7 @@ public class CategoryController {
     }
 
     @GetMapping
+    @PreAuthorize("permitAll()")
     // Return all category records
     public List<CategoryResponse> getAllCategories() {
         return categoryService.getAllCategories().stream()
@@ -37,6 +38,7 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("permitAll()")
     // Return a category by its identifier
     public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable int id) {
         return categoryService.getCategoryById(id)
@@ -45,7 +47,7 @@ public class CategoryController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('CATEGORY_CREATE_ALL')")
     // Create a new category record
     public ResponseEntity<CategoryResponse> createCategory(@RequestBody CreateCategoryRequest request) {
         var category = categoryService.createCategory(request);
@@ -54,7 +56,7 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('CATEGORY_UPDATE_ALL')")
     // Update category fields by id
     public ResponseEntity<CategoryResponse> updateCategory(@PathVariable int id, @RequestBody UpdateCategoryRequest request) {
         return categoryService.updateCategory(id, request)
@@ -64,7 +66,7 @@ public class CategoryController {
 
     @DeleteMapping("/{id}")
     // Delete a category by id
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('CATEGORY_DELETE_ALL')")
     public ResponseEntity<Void> deleteCategory(@PathVariable int id) {
         categoryService.deleteCategory(id);
         return ResponseEntity.noContent().build();

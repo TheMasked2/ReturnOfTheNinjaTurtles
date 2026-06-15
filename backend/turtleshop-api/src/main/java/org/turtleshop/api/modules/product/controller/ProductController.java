@@ -30,6 +30,7 @@ public class ProductController {
     }
 
     @GetMapping
+    @PreAuthorize("permitAll()")
     public List<ProductResponse> getAllProducts() {
         return productService.getAllProducts().stream()
                 .map(ProductResponse::new)
@@ -37,6 +38,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable int id) {
         return productService.getProductById(id)
                 .map(product -> ResponseEntity.ok(new ProductResponse(product)))
@@ -44,6 +46,7 @@ public class ProductController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('PRODUCT_CREATE_ALL')")
     public ResponseEntity<ProductResponse> createProduct(@RequestBody CreateProductRequest request) {
         ProductModel product = productService.createProduct(request);
         return ResponseEntity.created(URI.create("/api/products/" + product.getProductId()))
@@ -51,6 +54,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('PRODUCT_UPDATE_ALL')")
     public ResponseEntity<ProductResponse> updateProduct(@PathVariable int id, @RequestBody UpdateProductRequest request) {
         return productService.updateProduct(id, request)
                 .map(product -> ResponseEntity.ok(new ProductResponse(product)))
@@ -58,6 +62,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('PRODUCT_DELETE_ALL')")
     public ResponseEntity<Void> deleteProduct(@PathVariable int id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
