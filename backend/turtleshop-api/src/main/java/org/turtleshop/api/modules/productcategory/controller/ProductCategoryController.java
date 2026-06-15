@@ -29,6 +29,7 @@ public class ProductCategoryController {
     }
 
     @GetMapping
+    @PreAuthorize("permitAll()")
     // Return all product-category mappings
     public List<ProductCategoryResponse> getAllProductCategories() {
         return productCategoryService.getAllProductCategories().stream()
@@ -37,6 +38,7 @@ public class ProductCategoryController {
     }
 
     @GetMapping("/{productId}/{categoryId}")
+    @PreAuthorize("permitAll()")
     // Return a mapping by product and category ids
     public ResponseEntity<ProductCategoryResponse> getProductCategory(
             @PathVariable int productId,
@@ -47,7 +49,7 @@ public class ProductCategoryController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('PRODUCT_UPDATE_ALL') and hasAuthority('CATEGORY_UPDATE_ALL')")
     // Create a new product-category mapping
     public ResponseEntity<ProductCategoryResponse> createProductCategory(
             @RequestBody CreateProductCategoryRequest request) {
@@ -57,7 +59,7 @@ public class ProductCategoryController {
     }
 
     @PutMapping("/{productId}/{categoryId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('PRODUCT_UPDATE_ALL') and hasAuthority('CATEGORY_UPDATE_ALL')")
     // Update an existing product-category mapping
     public ResponseEntity<ProductCategoryResponse> updateProductCategory(
             @PathVariable int productId,
@@ -69,7 +71,7 @@ public class ProductCategoryController {
     }
 
     @DeleteMapping("/{productId}/{categoryId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('PRODUCT_UPDATE_ALL') and hasAuthority('CATEGORY_UPDATE_ALL')")
     // Delete a mapping by product and category ids
     public ResponseEntity<Void> deleteProductCategory(
             @PathVariable int productId,

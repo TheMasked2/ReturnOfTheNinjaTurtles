@@ -1,6 +1,9 @@
 package org.turtleshop.api.modules.checkout.service;
 
-import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,8 +19,10 @@ import org.turtleshop.api.modules.inventory.model.InventoryModel;
 import org.turtleshop.api.modules.inventory.repository.InventoryAccess;
 import org.turtleshop.api.modules.order.enums.OrderStatus;
 import org.turtleshop.api.modules.order.model.Order;
+import org.turtleshop.api.modules.order.model.OrderItem;
 import org.turtleshop.api.modules.order.repository.OrderAccess;
 import org.turtleshop.api.modules.order.repository.OrderItemAccess;
+import org.turtleshop.api.modules.order.service.OrderLiveSyncService;
 import org.turtleshop.api.modules.product.model.ProductModel;
 import org.turtleshop.api.modules.product.repository.ProductAccess;
 import org.turtleshop.api.modules.shipment.enums.ShipmentStatus;
@@ -29,9 +34,7 @@ import org.turtleshop.api.modules.transaction.model.TransactionModel;
 import org.turtleshop.api.modules.transaction.repository.PaymentMethodAccess;
 import org.turtleshop.api.modules.transaction.repository.TransactionAccess;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -47,29 +50,27 @@ public class CheckoutService {
     private final ShipmentStatusLogAccess shipmentStatusLogAccess;
     private final PaymentMethodAccess paymentMethodAccess;
     private final TransactionAccess transactionAccess;
+    private final OrderLiveSyncService orderLiveSyncService;
 
-    // Place Order
     @Transactional
     public PlaceOrderResponse placeOrder(UUID customerId, PlaceOrderRequest request) {
-        // 1. Get active cart
         Cart cart = cartAccess.getActiveCartByCustomerId(customerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "No active cart exists for this customer"));
-        // 2. Get all cart items
+
         List<CartItem> cartItems = cartItemAccess.getAllCartItems(cart.getCartId());
         if (cartItems.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Cart is empty");
         }
-        // 3. Find payment method
+
         PaymentMethodModel paymentMethod = getPaymentMethodByName(request.getPaymentMethod());
-        // 4. Validate inventory and calculate total amount
         BigDecimal totalAmount = calculateTotalAmountAndValidateInventory(cartItems);
-        // 5. Create order with PENDING status
+
         int orderId = orderAccess.createOrder(
                 customerId,
                 OrderStatus.AWAITING_PAYMENT,
                 totalAmount
         );
-        // 6. Create order items from cart items
+
         for (CartItem cartItem : cartItems) {
             orderItemAccess.addOrderItemToOrder(
                     orderId,
@@ -77,30 +78,31 @@ public class CheckoutService {
                     cartItem.getQuantity()
             );
         }
-        // 7. Update inventory
+
         updateInventoryAfterOrder(cartItems);
-        // 8. Create shipment, but it is not ready yet because payment is pending
+
         int shipmentId = shipmentAccess.createShipment(
                 orderId,
                 request.getShippingMethod(),
                 request.getShippingAddress()
         );
-        // 9. Log first shipment status as AWAITING_PAYMENT
+
         shipmentStatusLogAccess.createShipmentStatusLog(
                 shipmentId,
                 ShipmentStatus.AWAITING_PAYMENT
         );
-        // 10. Create transaction with pending status
+
         TransactionModel transaction = TransactionModel.builder()
                 .orderId(orderId)
                 .paymentMethodId(paymentMethod.getPaymentMethodId())
                 .amount(totalAmount)
                 .status("PENDING")
                 .build();
+
         int transactionId = transactionAccess.insert(transaction);
-        // 11. Mark cart as converted
+
         cartAccess.updateCartStatus(cart.getCartId(), CartStatus.CONVERTED);
-        // 12. Return response
+
         return PlaceOrderResponse.builder()
                 .orderId(orderId)
                 .orderStatus(OrderStatus.AWAITING_PAYMENT.name())
@@ -111,7 +113,6 @@ public class CheckoutService {
                 .build();
     }
 
-    // Confirms order after there has been paid and creates shipment
     @Transactional
     public void confirmOrderPayment(int orderId, int transactionId) {
         Order order = orderAccess.getOrderById(orderId)
@@ -149,6 +150,26 @@ public class CheckoutService {
 
         orderAccess.updateOrderStatus(orderId, OrderStatus.CONFIRMED);
 
+        UUID customerId = order.getCustomerId();
+        List<OrderItem> orderItems = orderItemAccess.getAllOrderItems(orderId);
+
+        for (OrderItem item : orderItems) {
+                ProductModel product = productAccess.findById(item.getProductId())
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.CONFLICT,
+                                "Product does not exist"
+                        ));
+
+                // Definitive wiring of Step 2
+                orderLiveSyncService.syncOrderToGraph(
+                        orderId,
+                        customerId.toString(),
+                        item.getProductId(),
+                        product.getProductName(),
+                        item.getQuantity()
+                );
+        }
+
         Shipment shipment = shipmentAccess.getShipmentByOrderId(orderId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.CONFLICT,
@@ -161,7 +182,6 @@ public class CheckoutService {
         );
     }
 
-    // HELPER: Calculate total and validate inventory
     private BigDecimal calculateTotalAmountAndValidateInventory(List<CartItem> cartItems) {
         BigDecimal totalAmount = BigDecimal.ZERO;
 
@@ -173,7 +193,8 @@ public class CheckoutService {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Inventory does not exist for product"));
 
             if (inventory.getQuantityAvailable() < cartItem.getQuantity()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Not enough inventory for product id: " + cartItem.getProductId());
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Not enough inventory for product id: " + cartItem.getProductId());
             }
 
             BigDecimal itemTotal = product.getBasePrice()
@@ -185,7 +206,6 @@ public class CheckoutService {
         return totalAmount;
     }
 
-    // HELPER: Update inventory after order
     private void updateInventoryAfterOrder(List<CartItem> cartItems) {
         for (CartItem cartItem : cartItems) {
             InventoryModel inventory = inventoryAccess.findByProductId(cartItem.getProductId())
@@ -202,7 +222,6 @@ public class CheckoutService {
         }
     }
 
-    // HELPER: Find payment method by provider or type
     private PaymentMethodModel getPaymentMethodByName(String paymentMethodName) {
         if (paymentMethodName == null || paymentMethodName.isBlank()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Payment method is required");
