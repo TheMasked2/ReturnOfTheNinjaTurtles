@@ -38,12 +38,12 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                    .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
-                    .requestMatchers("/health").permitAll()
-                    .requestMatchers("/error").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
-                    .anyRequest().authenticated()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/api/auth/**", "/api/products/**").permitAll()
+                        .requestMatchers("/health").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/api/reviews", "/api/reviews/**").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 

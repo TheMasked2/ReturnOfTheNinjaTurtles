@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -14,9 +15,13 @@ import org.turtleshop.api.modules.reviews.dto.ReviewStatsResponse;
 import org.turtleshop.api.modules.reviews.model.ReviewModel;
 import org.turtleshop.api.modules.reviews.repository.ReviewAccess;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.data.neo4j.core.Neo4jClient;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
@@ -25,18 +30,42 @@ public class ReviewService {
     private final ReviewAccess repository;
     private final SequenceGeneratorService sequenceGenerator;
     private final MongoTemplate mongoTemplate;
+    private final Neo4jClient neo4jClient;
 
-    public ReviewResponse createReview(ReviewRequest request) {
+    public ReviewResponse createReview(Integer productId, ReviewRequest request) {
+        validateProductExists(productId);
+
         ReviewModel review = ReviewModel.builder()
                 .reviewId(sequenceGenerator.generateSequence("review_sequence"))
-                .productId(request.getProductId())
+                .productId(productId)
                 .customerId(request.getCustomerId())
                 .rating(request.getRating())
                 .comment(request.getComment())
-                .createdAt(OffsetDateTime.now())
+                .createdAt(LocalDateTime.now().toString())
                 .build();
 
-        return mapToResponse(repository.save(review));
+        ReviewModel savedReview = repository.save(review);
+
+        String currentMonthId = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+
+        this.neo4jClient.query(
+                "MATCH (m:Month {id: $monthId}) " +
+                "MERGE (c:Customer {id: $customer_id}) " +
+                "MERGE (p:Product {id: $product_id}) " +
+                "MERGE (r:Review {id: $review_id}) " +
+                "ON CREATE SET r.rating = $rating " +
+                "MERGE (c)-[:WROTE]->(r) " +
+                "MERGE (r)-[:REVIEWS]->(p) " +
+                "MERGE (r)-[:WRITTEN_IN]->(m)"
+        )
+        .bind(currentMonthId).to("monthId")
+        .bind(savedReview.getCustomerId().toString()).to("customer_id")
+        .bind(savedReview.getProductId()).to("product_id")
+        .bind(savedReview.getReviewId()).to("review_id")
+        .bind(savedReview.getRating()).to("rating")
+        .run();
+
+        return mapToResponse(savedReview);
     }
 
     public ReviewResponse getReviewById(String id) {
@@ -73,15 +102,33 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
-    public ReviewResponse updateReview(String id, ReviewRequest request) {
-        ReviewModel review = repository.findById(id)
+    public ReviewResponse updateReview(String reviewId, ReviewRequest request) {
+        ReviewModel existingReview = repository.findById(reviewId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
 
-        review.setProductId(request.getProductId());
-        review.setCustomerId(request.getCustomerId());
-        review.setRating(request.getRating());
-        review.setComment(request.getComment());
-        return mapToResponse(repository.save(review));
+        validateProductExists(existingReview.getProductId());
+
+        existingReview.setCustomerId(request.getCustomerId());
+        existingReview.setRating(request.getRating());
+        existingReview.setComment(request.getComment());
+
+        return mapToResponse(repository.save(existingReview));
+    }
+
+
+    private void validateProductExists(Integer productId) {
+        Query query = Query.query(
+                Criteria.where("product_id").is(productId)
+        );
+
+        boolean exists = mongoTemplate.exists(query, "products");
+
+        if (!exists) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Product does not exist"
+            );
+        }
     }
 
     public void deleteReview(String id) {
@@ -93,8 +140,8 @@ public class ReviewService {
 
     public ReviewStatsResponse getProductReviewStats(Integer productId) {
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("productId").is(productId)),
-                Aggregation.group("productId")
+                Aggregation.match(Criteria.where("product_id").is(productId)),
+                Aggregation.group("product_id")
                         .count().as("reviewCount")
                         .avg("rating").as("averageRating")
         );

@@ -3,6 +3,7 @@ package org.turtleshop.api.performance;
 import static io.gatling.javaapi.core.CoreDsl.*;
 import static io.gatling.javaapi.http.HttpDsl.*;
 import io.github.cdimascio.dotenv.Dotenv;
+import static io.gatling.javaapi.core.CoreDsl.constantUsersPerSec;
 
 import io.gatling.javaapi.core.*;
 import io.gatling.javaapi.http.*;
@@ -43,8 +44,6 @@ public class AdminCustomerAuditSimulation extends Simulation {
                     .get("/api/customer")
                     .header("Authorization", "Bearer #{jwtToken}")
                     .check(status().is(200))
-                    // $[0].id means: "Go to the first object in the array, grab the 'id' field"
-                    // If your DTO uses a field named 'uuid' instead of 'id', change this to $.uuid
                     .check(jsonPath("$[0].id").saveAs("dynamicCustomerId")))
 
             .pause(1)
@@ -59,9 +58,8 @@ public class AdminCustomerAuditSimulation extends Simulation {
     {
         setUp(
                 scn.injectOpen(
-                        nothingFor(2),
-                        rampUsers(10).during(5),
-                        constantUsersPerSec(20).during(15)
+                        rampUsers(50).during(20),
+                        constantUsersPerSec(15).during(30)
                 )
         ).protocols(httpProtocol);
     }
