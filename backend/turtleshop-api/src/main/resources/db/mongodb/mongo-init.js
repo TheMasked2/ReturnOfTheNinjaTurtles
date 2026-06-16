@@ -7,6 +7,10 @@ db.reviews.createIndex({ productId: 1 });
 db.reviews.createIndex({ customerId: 1 });
 db.reviews.createIndex({ comment: "text" });
 
+db.products.createIndex({ product_id: 1 }, { unique: true });
+db.reviews.createIndex({ productId: 1, createdAt: -1 });
+db.reviews.createIndex({ customerId: 1, createdAt: -1 });
+
 db.products.createIndex({ sku: 1 }, { unique: true });
 
 // Seeding data

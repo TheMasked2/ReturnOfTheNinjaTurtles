@@ -534,12 +534,12 @@ def main():
                         order_date = datetime.now(UTC)
 
                     status_dice = random.random()
-                    if status_dice < 0.80:
-                        status = "DELIVERED"
+                    if status_dice < 0.70:
+                        status = "COMPLETED"
                     elif status_dice < 0.90:
-                        status = "SHIPPED"
+                        status = "CONFIRMED"
                     elif status_dice < 0.95:
-                        status = "PENDING"
+                        status = "AWAITING_PAYMENT"
                     else:
                         status = "CANCELLED"
 
@@ -629,7 +629,7 @@ def main():
 
                 t_status = (
                     "SUCCESS"
-                    if payload["status"] in ["DELIVERED", "SHIPPED", "PENDING"]
+                    if payload["status"] in ["CONFIRMED", "COMPLETED"]
                     else "FAILED"
                 )
                 trans_rows.append(
@@ -642,7 +642,7 @@ def main():
                     )
                 )
 
-                if payload["status"] in ["DELIVERED", "SHIPPED", "PENDING"]:
+                if payload["status"] in ["CONFIRMED", "COMPLETED"]:
                     shipment_payloads.append(
                         {
                             "order_id": order_id,
@@ -666,7 +666,7 @@ def main():
                     }
                 )
 
-                if payload["status"] == "DELIVERED" and random.random() < 0.30:
+                if payload["status"] == "COMPLETED" and random.random() < 0.30:
                     reviewed_prod = chosen_products[0][0]
                     mongo_reviews_batch.append(
                         {
@@ -722,7 +722,7 @@ def main():
                             "Order verified and processed.",
                         )
                     )
-                    if s_meta["status"] in ["SHIPPED", "DELIVERED"]:
+                    if s_meta["status"] in ["CONFIRMED", "COMPLETED"]:
                         ship_log_rows.append(
                             (
                                 s_id,
@@ -731,7 +731,7 @@ def main():
                                 "Handed over to carrier network.",
                             )
                         )
-                    if s_meta["status"] == "DELIVERED":
+                    if s_meta["status"] == "COMPLETED":
                         ship_log_rows.append(
                             (
                                 s_id,

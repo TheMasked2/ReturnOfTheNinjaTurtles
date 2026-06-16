@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import org.turtleshop.api.modules.order.dto.OrderItemResponse;
 import org.turtleshop.api.modules.order.dto.OrderResponse;
 import org.turtleshop.api.modules.order.service.OrderService;
+import org.turtleshop.api.modules.order.dto.OrderSummaryResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -44,6 +45,13 @@ public class OrderController {
             "(hasAuthority('ORDER_READ_OWN') and @authorizationService.isOrderOwner(#orderId, authentication))")
     public ResponseEntity<List<OrderItemResponse>> getAllOrderItems(@PathVariable int orderId) {
         return ResponseEntity.ok(orderService.getAllOrderItemsInOrder(orderId));
+    }
+
+    @GetMapping("/admin/summary")
+    @PreAuthorize("hasAuthority('ORDER_READ_ALL')")
+    public ResponseEntity<List<OrderSummaryResponse>> getOrderSummaries(
+            @RequestParam(defaultValue = "50") int limit) {
+        return ResponseEntity.ok(orderService.getOrderSummaries(limit));
     }
 
     @PatchMapping("/{orderId}/cancel")
