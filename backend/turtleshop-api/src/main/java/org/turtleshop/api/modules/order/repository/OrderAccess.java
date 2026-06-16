@@ -9,6 +9,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import org.turtleshop.api.modules.order.enums.OrderStatus;
 import org.turtleshop.api.modules.order.model.Order;
+import org.turtleshop.api.modules.order.model.OrderSummary;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,6 +28,18 @@ public class OrderAccess {
             .orderDate(rs.getTimestamp("order_date").toLocalDateTime())
             .status(OrderStatus.valueOf(rs.getString("status").toUpperCase()))
             .totalAmount(rs.getBigDecimal("total_amount"))
+            .build();
+
+    // MAPPER: Maps row from db result into a Java Object
+    private final RowMapper<OrderSummary> orderSummaryRowMapper = (rs, rowNum) -> OrderSummary.builder()
+            .orderId(rs.getInt("order_id"))
+            .customerId(rs.getObject("customer_id", java.util.UUID.class))
+            .customerEmail(rs.getString("customer_email"))
+            .orderDate(rs.getTimestamp("order_date").toLocalDateTime())
+            .status(OrderStatus.valueOf(rs.getString("status").toUpperCase()))
+            .totalAmount(rs.getBigDecimal("total_amount"))
+            .itemLines(rs.getLong("item_lines"))
+            .totalItems(rs.getLong("total_items"))
             .build();
 
     public int createOrder(UUID customerId, OrderStatus status, BigDecimal totalAmount) {
@@ -60,6 +73,13 @@ public class OrderAccess {
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("customerId", customerId);
         return jdbc.query(sql, params, orderRowMapper);
+    }
+
+    public List<OrderSummary> getOrderSummaries(int limit) {
+        String sql = " SELECT * FROM v_order_summary ORDER BY order_date DESC LIMIT :limit ";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("limit", limit);
+        return jdbc.query(sql, params, orderSummaryRowMapper);
     }
 
     // Update Order status
