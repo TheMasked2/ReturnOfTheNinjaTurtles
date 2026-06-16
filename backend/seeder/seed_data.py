@@ -4,7 +4,6 @@ import uuid
 import random
 from datetime import datetime, timedelta, UTC
 import psycopg2
-from psycopg2 import extras
 from pymongo import MongoClient
 from faker import Faker
 from pathlib import Path
