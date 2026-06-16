@@ -1,21 +1,16 @@
 package org.turtleshop.api.modules.wishlist.service;
 
-import lombok.RequiredArgsConstructor;
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.turtleshop.api.modules.wishlist.model.WishlistItem;
-import org.turtleshop.api.modules.wishlist.model.Wishlist;
 import org.turtleshop.api.modules.wishlist.repository.WishlistItemRepository;
 import org.turtleshop.api.modules.wishlist.repository.WishlistRepository;
-// import org.turtleshop.api.modules.product.repository.ProductRepository;
 
-
-
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

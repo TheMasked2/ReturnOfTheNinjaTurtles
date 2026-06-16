@@ -3,14 +3,16 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { cartApi } from "../../api/cartApi";
 import { wishlistApi } from "../../api/wishlistApi";
+import { productApi } from "../../api/productApi";
 import { CartPanel } from "../cart/CartPanel";
 import { WishlistPanel } from "../wishlist/WishlistPanel";
+import { subscribeHeaderRefresh } from "../../state/refreshBus";
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
     isActive ? "nav-link active" : "nav-link";
 
 export function PublicNavbar() {
-    const { isAuthenticated, logout } = useAuth();
+    const { isAuthenticated, logout, user } = useAuth();
     const navigate = useNavigate();
     const [wishlistCount, setWishlistCount] = useState(0);
     const [cartCount, setCartCount] = useState(0);
@@ -21,35 +23,70 @@ export function PublicNavbar() {
     const cartToggleRef = useRef<HTMLAnchorElement | null>(null);
     const wishlistToggleRef = useRef<HTMLAnchorElement | null>(null);
 
-    useEffect(() => {
-        if (!isAuthenticated) {
+        useEffect(() => {
+        if (!isAuthenticated || !user?.id) {
             setWishlistCount(0);
             setCartCount(0);
             setCartItems([]);
             setWishlistItems([]);
             return;
         }
-
+    
         const loadCounts = async () => {
             try {
-                const [wishlistItems, cartItems] = await Promise.all([
-                    wishlistApi.getItems(),
-                    cartApi.getItems(),
-                ]);
-                setWishlistCount(wishlistItems.length);
-                setCartCount(cartItems.length);
-                setCartItems(cartItems);
-                setWishlistItems(wishlistItems);
-            } catch {
+                const products = await productApi.getProducts().catch(() => []);
+                let activeCartItems: any[] = [];
+                try {
+                    const cart = await cartApi.getActiveCart(user.id);
+                    activeCartItems = cart.items || [];
+                } catch (error: any) {
+                    // Ignore missing cart
+                }
+    
+                let wishlistItemsResponse: any[] = [];
+                try {
+                    const wishlist = await wishlistApi.getWishlistByCustomer(user.id);
+                    wishlistItemsResponse = await wishlistApi.getWishlistItems(wishlist.wishlistId);
+                } catch (error: any) {
+                    // Ignore missing wishlist
+                }
+    
+                const mappedCartItems = activeCartItems.map((item: any) => {
+                    const product = products.find((p: any) => p.id === item.productId);
+                    return {
+                        ...item,
+                        name: product?.name || `Product #${item.productId}`,
+                        totalPrice: product ? product.price * (item.quantity || 1) : null,
+                    };
+                });
+    
+                const mappedWishlistItems = wishlistItemsResponse.map((item: any) => {
+                    const product = products.find((p: any) => p.id === item.productId);
+                    return {
+                        ...item,
+                        name: product?.name || `Product #${item.productId}`,
+                        totalPrice: product?.price ?? null,
+                    };
+                });
+    
+                setCartCount(mappedCartItems.length);
+                setCartItems(mappedCartItems);
+                setWishlistCount(mappedWishlistItems.length);
+                setWishlistItems(mappedWishlistItems);
+            } catch (error) {
+                console.error("Failed to load header items", error);
                 setWishlistCount(0);
                 setCartCount(0);
                 setCartItems([]);
                 setWishlistItems([]);
             }
         };
-
+    
+        const unsubscribe = subscribeHeaderRefresh(loadCounts);
         loadCounts();
-    }, [isAuthenticated]);
+    
+        return () => unsubscribe();
+    }, [isAuthenticated, user?.id]);
 
     const handleLogout = () => {
         logout();
@@ -69,6 +106,7 @@ export function PublicNavbar() {
     };
 
     return (
+        // ... (keep the existing JSX return block exactly the same) 
         <header className="site-header">
             <div className="site-branding">
                 <NavLink to="/" className="brand-link">

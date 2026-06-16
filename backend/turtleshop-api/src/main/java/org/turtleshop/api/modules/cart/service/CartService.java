@@ -40,12 +40,26 @@ public class CartService {
     }
 
     // Adds item to the cart
-    @Transactional
+        @Transactional
     public CartItemResponse addItemToCart(UUID customerId, AddCartItemRequest request) {
-        Cart activeCart = cartAccess.getActiveCartByCustomerId(customerId).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "No cart found for this customer"));
+        Cart activeCart = cartAccess.getActiveCartByCustomerId(customerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "No cart found for this customer"));
+
+        Optional<CartItem> existingCartItem =
+                cartItemAccess.getCartItemByCartIdAndProductId(activeCart.getCartId(), request.getProductId());
+
+        if (existingCartItem.isPresent()) {
+            CartItem cartItem = existingCartItem.get();
+            int newQuantity = cartItem.getQuantity() + request.getQuantity();
+            cartItemAccess.updateCartItemQuantity(cartItem.getCartItemId(), newQuantity);
+            CartItem updated = cartItemAccess.getCartItemById(cartItem.getCartItemId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "No cartitem found after update"));
+            return mapToCartItemResponse(updated);
+        }
+
         int cartItemId = cartItemAccess.insertCartItem(activeCart.getCartId(), request.getProductId(), request.getQuantity());
-        CartItem cartItem = cartItemAccess.getCartItemById(cartItemId).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "No cartitem found for this cartitemid given"));
-        // Item quantity per product add it to the quantity reserved.
+        CartItem cartItem = cartItemAccess.getCartItemById(cartItemId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "No cartitem found for this cartitemid given"));
         return mapToCartItemResponse(cartItem);
     }
 

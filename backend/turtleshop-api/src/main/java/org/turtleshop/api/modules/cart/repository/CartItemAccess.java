@@ -77,4 +77,12 @@ public class CartItemAccess {
                 .addValue("cartItemId", cartItemId);
         jdbc.update(sql, params);
     }
+
+    public Optional<CartItem> getCartItemByCartIdAndProductId(int cartId, int productId) {
+        String sql = "SELECT * FROM cart_item WHERE cart_id = :cartId AND product_id = :productId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("cartId", cartId)
+                .addValue("productId", productId);
+        return jdbc.query(sql, params, cartItemMapper).stream().findFirst();
+    }
 }

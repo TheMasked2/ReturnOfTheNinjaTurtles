@@ -1,4 +1,5 @@
 import { useEffect, useRef, type RefObject } from "react";
+import { PanelItemList } from "../panel/PanelItemList";
 
 interface WishlistPanelProps {
     isOpen: boolean;
@@ -41,25 +42,10 @@ export function WishlistPanel({ isOpen, items, onClose, toggleRef }: WishlistPan
                 </div>
 
                 <div className="cart-panel-items">
-                    {items.length === 0 ? (
-                        <div className="cart-dropdown-empty">wishlist empty</div>
-                    ) : (
-                        items.map((item, index) => (
-                            <div key={item.id ?? index} className="cart-dropdown-item">
-                                <div>
-                                    <strong>{item.productName ?? item.name ?? "Item"}</strong>
-                                    <div className="text-muted">
-                                        {item.quantity ? `Qty: ${item.quantity}` : "Qty: 1"}
-                                    </div>
-                                </div>
-                                {item.totalPrice != null && (
-                                    <span className="price-tag">
-                                        ${item.totalPrice.toFixed(2)}
-                                    </span>
-                                )}
-                            </div>
-                        ))
-                    )}
+                    <PanelItemList 
+                      items={items} 
+                      emptyMessage="Your wishlist is empty." 
+                    />
                 </div>
             </aside>
         </>
