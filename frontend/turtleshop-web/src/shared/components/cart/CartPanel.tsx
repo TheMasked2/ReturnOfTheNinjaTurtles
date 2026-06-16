@@ -64,6 +64,11 @@ export function CartPanel({ isOpen, items, onClose, toggleRef }: CartPanelProps)
     }
   };
 
+  const totalPrice = items.reduce(
+      (sum, item) => sum + (typeof item.totalPrice === "number" ? item.totalPrice : 0),
+      0
+  );
+  
   if (!isOpen) return null;
 
   return (
@@ -87,7 +92,7 @@ export function CartPanel({ isOpen, items, onClose, toggleRef }: CartPanelProps)
                   <div>
                     <strong>{item.name ?? item.productName ?? `Product #${item.productId}`}</strong>
                     <div className="cart-item-quantity">
-                        <button
+                      <button
                         type="button"
                         disabled={processingItemId === item.cartItemId}
                         onClick={() => handleQuantityChange(item.cartItemId, item.quantity - 1)}
@@ -124,17 +129,24 @@ export function CartPanel({ isOpen, items, onClose, toggleRef }: CartPanelProps)
           )}
         </div>
 
-        <button
-          className="button button-primary"
-          type="button"
-          disabled={items.length === 0}
-          onClick={() => {
-            onClose();
-            navigate("/cart");
-          }}
-        >
-          Checkout
-        </button>
+        <div className="cart-panel-footer">
+          <div className="cart-total">
+            <span>Total</span>
+            <strong>${totalPrice.toFixed(2)}</strong>
+          </div>
+
+          <button
+            className="button button-primary"
+            type="button"
+            disabled={items.length === 0}
+            onClick={() => {
+              onClose();
+              navigate("/checkout-summary");
+            }}
+          >
+            Checkout
+          </button>
+        </div>
       </aside>
     </>
   );

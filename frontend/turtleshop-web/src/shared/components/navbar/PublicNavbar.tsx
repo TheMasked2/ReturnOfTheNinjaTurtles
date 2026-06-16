@@ -6,7 +6,7 @@ import { wishlistApi } from "../../api/wishlistApi";
 import { productApi } from "../../api/productApi";
 import { CartPanel } from "../cart/CartPanel";
 import { WishlistPanel } from "../wishlist/WishlistPanel";
-import { subscribeHeaderRefresh } from "../../state/refreshBus";
+import { publishHeaderRefresh, subscribeHeaderRefresh } from "../../state/refreshBus";
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
     isActive ? "nav-link active" : "nav-link";
@@ -24,14 +24,14 @@ export function PublicNavbar() {
     const wishlistToggleRef = useRef<HTMLAnchorElement | null>(null);
 
         useEffect(() => {
-        if (!isAuthenticated || !user?.id) {
-            setWishlistCount(0);
-            setCartCount(0);
-            setCartItems([]);
-            setWishlistItems([]);
-            return;
-        }
-    
+            if (!isAuthenticated || !user?.id) {
+                setWishlistCount(0);
+                setCartCount(0);
+                setCartItems([]);
+                setWishlistItems([]);
+                return;
+            }
+
         const loadCounts = async () => {
             try {
                 const products = await productApi.getProducts().catch(() => []);
@@ -51,14 +51,19 @@ export function PublicNavbar() {
                     // Ignore missing wishlist
                 }
     
-                const mappedCartItems = activeCartItems.map((item: any) => {
-                    const product = products.find((p: any) => p.id === item.productId);
-                    return {
-                        ...item,
-                        name: product?.name || `Product #${item.productId}`,
-                        totalPrice: product ? product.price * (item.quantity || 1) : null,
-                    };
-                });
+                const mappedCartItems = activeCartItems
+                    .map((item: any) => {
+                        const product = products.find((p: any) => p.id === item.productId);
+                        return {
+                            ...item,
+                            name: product?.name || `Product #${item.productId}`,
+                            totalPrice: product ? product.price * (item.quantity || 1) : null,
+                        };
+                    })
+                    .sort(
+                        (a: any, b: any) =>
+                            (a.cartItemId ?? 0) - (b.cartItemId ?? 0)
+                    );
     
                 const mappedWishlistItems = wishlistItemsResponse.map((item: any) => {
                     const product = products.find((p: any) => p.id === item.productId);
@@ -73,6 +78,7 @@ export function PublicNavbar() {
                 setCartItems(mappedCartItems);
                 setWishlistCount(mappedWishlistItems.length);
                 setWishlistItems(mappedWishlistItems);
+
             } catch (error) {
                 console.error("Failed to load header items", error);
                 setWishlistCount(0);
@@ -103,6 +109,15 @@ export function PublicNavbar() {
         event.preventDefault();
         setIsCartOpen(false);
         setIsWishlistOpen((prev) => !prev);
+    };
+
+    const handleWishlistItemRemove = async (wishlistId: number, productId: number) => {
+        try {
+            await wishlistApi.deleteWishlistItem(wishlistId, productId);
+            publishHeaderRefresh();
+        } catch (error) {
+            console.error("Failed to remove wishlist item", error);
+        }
     };
 
     return (
@@ -159,6 +174,7 @@ export function PublicNavbar() {
                     items={wishlistItems}
                     onClose={() => setIsWishlistOpen(false)}
                     toggleRef={wishlistToggleRef}
+                    onRemoveItem={handleWishlistItemRemove}
                 />
             </div>
 

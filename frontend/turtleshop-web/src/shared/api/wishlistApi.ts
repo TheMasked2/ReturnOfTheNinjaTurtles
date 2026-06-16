@@ -15,4 +15,6 @@ export const wishlistApi = {
     baseApi.post(`/wishlist-item/wishlist/${wishlistId}/product/${productId}/return-id`, {}),
   getWishlistItems: (wishlistId: number) =>
     baseApi.get<any[]>(`/wishlist-item/wishlist/${wishlistId}`),
+  deleteWishlistItem: (wishlistId: number, productId: number) =>
+    baseApi.delete(`/wishlist-item/wishlist/${wishlistId}/product/${productId}`),
 };

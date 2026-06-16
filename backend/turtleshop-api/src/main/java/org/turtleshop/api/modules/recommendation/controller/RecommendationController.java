@@ -23,7 +23,7 @@ public class RecommendationController {
     @GetMapping("/seasonal")
     public ResponseEntity<List<RecommendedProduct>> getSeasonalRecommendations(
             @RequestParam String customerId,
-            @RequestParam(defaultValue = "5") int limit) {
+            @RequestParam(defaultValue = "4") int limit) {
         
         List<RecommendedProduct> recommendations = this.recommendationService.getHydratedRecommendations(customerId, limit);
         return ResponseEntity.ok(recommendations);
