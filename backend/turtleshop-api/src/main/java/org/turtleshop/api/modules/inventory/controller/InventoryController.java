@@ -23,7 +23,7 @@ public class InventoryController {
     private final InventoryService inventoryService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('INVENTORY_READ_ALL')")
     public ResponseEntity<List<InventoryResponse>> listInventory(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -32,96 +32,110 @@ public class InventoryController {
     }
 
     @GetMapping("/{inventoryId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('INVENTORY_READ_ALL')")
     public ResponseEntity<InventoryResponse> getInventoryById(@PathVariable int inventoryId) {
         return ResponseEntity.ok(toResponse(inventoryService.getInventoryById(inventoryId)));
     }
 
     @GetMapping("/product/{productId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('INVENTORY_READ_ALL')")
     public ResponseEntity<InventoryResponse> getInventoryByProductId(@PathVariable int productId) {
         return ResponseEntity.ok(toResponse(inventoryService.getInventoryByProductId(productId)));
     }
 
     @GetMapping("/quantity/{quantity}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('INVENTORY_READ_ALL')")
     public ResponseEntity<List<InventoryResponse>> getInventoryByQuantityAvailable(@PathVariable int quantity) {
         List<InventoryModel> inventoryList = inventoryService.getInventoryByQuantityAvailable(quantity);
         return ResponseEntity.ok(toResponseList(inventoryList));
     }
 
     @GetMapping("/last-updated")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('INVENTORY_READ_ALL')")
     public ResponseEntity<List<InventoryResponse>> getLastUpdatedInventory(
             @RequestParam(defaultValue = "10") int limit) {
         return ResponseEntity.ok(toResponseList(inventoryService.getLastUpdatedInventory(limit)));
     }
 
     @GetMapping("/low-stock")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('INVENTORY_READ_ALL')")
     public ResponseEntity<List<InventoryResponse>> getLowStock(
             @RequestParam(defaultValue = "10") int threshold) {
         return ResponseEntity.ok(toResponseList(inventoryService.getLowStock(threshold)));
     }
 
     @GetMapping("/batch")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('INVENTORY_READ_ALL')")
     public ResponseEntity<List<InventoryResponse>> getBatchByProducts(
             @RequestParam List<Integer> productIds) {
         return ResponseEntity.ok(toResponseList(inventoryService.getByProductIds(productIds)));
     }
 
     @PostMapping("/product/{productId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> createInventory(@PathVariable int productId,
-                                                @RequestBody InventoryCreateRequest request) {
-        inventoryService.createInventory(productId, request.getQuantityAvailable(), request.getQuantityReserved());
+    @PreAuthorize("hasAuthority('INVENTORY_CREATE_ALL')")
+    public ResponseEntity<Void> createInventory(
+            @PathVariable int productId,
+            @RequestBody InventoryCreateRequest request) {
+        inventoryService.createInventory(
+                productId,
+                request.getQuantityAvailable(),
+                request.getQuantityReserved()
+        );
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PutMapping("/product/{productId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> updateInventory(@PathVariable int productId,
-                                                @RequestBody InventoryUpdateRequest request) {
-        inventoryService.updateInventoryByProductId(productId, request.getQuantityAvailable(), request.getQuantityReserved());
+    @PreAuthorize("hasAuthority('INVENTORY_UPDATE_ALL')")
+    public ResponseEntity<Void> updateInventory(
+            @PathVariable int productId,
+            @RequestBody InventoryUpdateRequest request) {
+        inventoryService.updateInventoryByProductId(
+                productId,
+                request.getQuantityAvailable(),
+                request.getQuantityReserved()
+        );
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/product/{productId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('INVENTORY_DELETE_ALL')")
     public ResponseEntity<Void> deleteInventoryByProductId(@PathVariable int productId) {
         inventoryService.deleteInventoryByProductId(productId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/product/{productId}/reserve")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> reserveStock(@PathVariable int productId,
-                                             @RequestBody InventoryAdjustmentRequest request) {
+    @PreAuthorize("hasAuthority('INVENTORY_RESERVE_ALL')")
+    public ResponseEntity<Void> reserveStock(
+            @PathVariable int productId,
+            @RequestBody InventoryAdjustmentRequest request) {
         inventoryService.reserveStock(productId, request.getQuantity());
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/product/{productId}/consume")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> consumeStock(@PathVariable int productId,
-                                             @RequestBody InventoryAdjustmentRequest request) {
+    @PreAuthorize("hasAuthority('INVENTORY_RESERVE_ALL')")
+    public ResponseEntity<Void> consumeStock(
+            @PathVariable int productId,
+            @RequestBody InventoryAdjustmentRequest request) {
         inventoryService.consumeStock(productId, request.getQuantity());
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/product/{productId}/release")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> releaseStock(@PathVariable int productId,
-                                             @RequestBody InventoryAdjustmentRequest request) {
+    @PreAuthorize("hasAuthority('INVENTORY_RESERVE_ALL')")
+    public ResponseEntity<Void> releaseStock(
+            @PathVariable int productId,
+            @RequestBody InventoryAdjustmentRequest request) {
         inventoryService.releaseStock(productId, request.getQuantity());
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/product/{productId}/restock")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> restockInventory(@PathVariable int productId,
-                                                 @RequestBody InventoryAdjustmentRequest request) {
+    @PreAuthorize("hasAuthority('INVENTORY_RESERVE_ALL')")
+    public ResponseEntity<Void> restockInventory(
+            @PathVariable int productId,
+            @RequestBody InventoryAdjustmentRequest request) {
         inventoryService.restock(productId, request.getQuantity());
         return ResponseEntity.noContent().build();
     }

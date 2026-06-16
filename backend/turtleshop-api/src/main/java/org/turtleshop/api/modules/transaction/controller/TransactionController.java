@@ -24,14 +24,14 @@ public class TransactionController {
     private final CheckoutService checkoutService;
 
     @PostMapping("/{transactionId}/confirm-payment")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PAYMENT_UPDATE_ALL')")
     public ResponseEntity<Void> confirmPayment(@PathVariable int transactionId, @RequestParam int orderId) {
         checkoutService.confirmOrderPayment(orderId, transactionId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PAYMENT_READ_ALL')")
     public ResponseEntity<List<TransactionResponse>> listTransactions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -41,13 +41,15 @@ public class TransactionController {
     }
 
     @GetMapping("/{transactionId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PAYMENT_READ_ALL') or " +
+            "(hasAuthority('PAYMENT_READ_OWN') and @authorizationService.isTransactionOwner(#transactionId, authentication))")
     public ResponseEntity<TransactionResponse> getTransactionById(@PathVariable int transactionId) {
         return ResponseEntity.ok(toTransactionResponse(transactionService.getTransactionById(transactionId)));
     }
 
     @GetMapping("/order/{orderId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PAYMENT_READ_ALL') or " +
+            "(hasAuthority('PAYMENT_READ_OWN') and @authorizationService.isOrderOwner(#orderId, authentication))")
     public ResponseEntity<List<TransactionResponse>> getTransactionsByOrderId(@PathVariable int orderId) {
         return ResponseEntity.ok(transactionService.getTransactionsByOrderId(orderId).stream()
                 .map(this::toTransactionResponse)
@@ -55,7 +57,7 @@ public class TransactionController {
     }
 
     @GetMapping("/payment-method/{paymentMethodId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PAYMENT_READ_ALL')")
     public ResponseEntity<List<TransactionResponse>> getTransactionsByPaymentMethod(
             @PathVariable int paymentMethodId) {
         return ResponseEntity.ok(transactionService.getTransactionsByPaymentMethod(paymentMethodId).stream()
@@ -64,7 +66,7 @@ public class TransactionController {
     }
 
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PAYMENT_READ_ALL')")
     public ResponseEntity<List<TransactionResponse>> getTransactionsByStatus(@PathVariable String status) {
         return ResponseEntity.ok(transactionService.getTransactionsByStatus(status).stream()
                 .map(this::toTransactionResponse)
@@ -72,7 +74,8 @@ public class TransactionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PAYMENT_UPDATE_ALL') or " +
+            "(hasAuthority('PAYMENT_CREATE_OWN') and @authorizationService.isOrderOwner(#request.orderId, authentication))")
     public ResponseEntity<Void> createTransaction(@RequestBody TransactionCreateRequest request) {
         TransactionModel transaction = TransactionModel.builder()
                 .orderId(request.getOrderId())
@@ -85,7 +88,7 @@ public class TransactionController {
     }
 
     @PutMapping("/{transactionId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PAYMENT_UPDATE_ALL')")
     public ResponseEntity<Void> updateTransaction(@PathVariable int transactionId,
                                                   @RequestBody TransactionUpdateRequest request) {
         transactionService.updateTransaction(transactionId, request.getAmount(),
@@ -94,7 +97,7 @@ public class TransactionController {
     }
 
     @DeleteMapping("/{transactionId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PAYMENT_UPDATE_ALL')")
     public ResponseEntity<Void> deleteTransaction(@PathVariable int transactionId) {
         transactionService.deleteTransaction(transactionId);
         return ResponseEntity.noContent().build();

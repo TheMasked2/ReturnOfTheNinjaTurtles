@@ -21,7 +21,7 @@ public class PaymentMethodController {
     private final PaymentMethodService paymentMethodService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PAYMENT_READ_ALL')")
     public ResponseEntity<List<PaymentMethodResponse>> listPaymentMethods() {
         return ResponseEntity.ok(paymentMethodService.listPaymentMethods().stream()
                 .map(this::toPaymentMethodResponse)
@@ -29,13 +29,13 @@ public class PaymentMethodController {
     }
 
     @GetMapping("/{paymentMethodId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PAYMENT_READ_ALL')")
     public ResponseEntity<PaymentMethodResponse> getPaymentMethodById(@PathVariable int paymentMethodId) {
         return ResponseEntity.ok(toPaymentMethodResponse(paymentMethodService.getPaymentMethodById(paymentMethodId)));
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PAYMENT_UPDATE_ALL')")
     public ResponseEntity<Void> createPaymentMethod(@RequestBody PaymentMethodCreateRequest request) {
         paymentMethodService.createPaymentMethod(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();

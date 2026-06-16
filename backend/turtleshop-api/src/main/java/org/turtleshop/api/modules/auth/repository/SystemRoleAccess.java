@@ -15,28 +15,43 @@ public class SystemRoleAccess {
 
     private final NamedParameterJdbcTemplate jdbc;
 
-    // MAPPER: Maps row from db result into a Java Object
     private final RowMapper<SystemRole> roleMapper = (rs, rowNum) -> SystemRole.builder()
             .roleId(rs.getInt("role_id"))
             .name(rs.getString("name"))
             .description(rs.getString("description"))
             .build();
 
-    // Find Role by the Email of a Customer
     public List<String> findRoleNamesByCustomerEmail(String email) {
         String sql = """
-            SELECT r.name FROM SYSTEM_ROLES r
-            JOIN USER_SYSTEM_ROLES ur ON r.role_id = ur.role_id
-            JOIN CUSTOMER c ON ur.customer_id = c.customer_id
-            WHERE c.email = :email
+            SELECT DISTINCT r.name
+            FROM system_roles r
+            JOIN user_system_roles ur ON r.role_id = ur.role_id
+            JOIN customer c ON ur.customer_id = c.customer_id
+            WHERE LOWER(c.email) = LOWER(:email)
         """;
-        return jdbc.queryForList(sql, new MapSqlParameterSource("email", email), String.class);
+
+        return jdbc.queryForList(
+                sql,
+                new MapSqlParameterSource("email", email),
+                String.class
+        );
     }
 
-    // HELPER: Converts a Java object into list of values SQL understands
-    private MapSqlParameterSource getParameters(SystemRole item) {
-        return new MapSqlParameterSource()
-                .addValue("name", item.getName())
-                .addValue("description", item.getDescription());
+    public List<String> findPermissionCodesByCustomerEmail(String email) {
+        String sql = """
+            SELECT DISTINCT p.code
+            FROM permissions p
+            JOIN role_permissions rp ON p.permission_id = rp.permission_id
+            JOIN system_roles r ON rp.role_id = r.role_id
+            JOIN user_system_roles ur ON r.role_id = ur.role_id
+            JOIN customer c ON ur.customer_id = c.customer_id
+            WHERE LOWER(c.email) = LOWER(:email)
+        """;
+
+        return jdbc.queryForList(
+                sql,
+                new MapSqlParameterSource("email", email),
+                String.class
+        );
     }
 }

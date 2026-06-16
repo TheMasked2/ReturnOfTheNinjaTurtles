@@ -3,8 +3,6 @@ package org.turtleshop.api.modules.reviews.dto;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.OffsetDateTime;
-
 @Getter
 @Builder
 public class ReviewResponse {
@@ -14,5 +12,5 @@ public class ReviewResponse {
     private String customerId;
     private Integer rating;
     private String comment;
-    private OffsetDateTime createdAt;
+    private String createdAt;
 }
