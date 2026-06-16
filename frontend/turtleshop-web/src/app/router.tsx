@@ -8,6 +8,7 @@ import LoginPage from "../shared/pages/loginpage/LoginPage.tsx";
 import RegisterPage from "../shared/pages/registerpage/RegisterPage.tsx";
 import CheckoutSummaryPage from "../shared/pages/checkoutsummarypage/CheckoutSummaryPage.tsx";
 import CheckoutPage from "../shared/pages/checkoutpage/CheckoutPage.tsx";
+import OrderConfirmationPage from "../shared/pages/checkoutpage/OrderConfirmationPage.tsx";
 import NotFoundPage from "../shared/pages/errorpage/NotFoundPage.tsx";
 import { ProtectedRoute } from "../shared/components/ProtectedRoute.tsx";
 import { ProfilePage } from "../shared/pages/profilepage/ProfilePage.tsx";
@@ -40,6 +41,7 @@ export const router = createBrowserRouter([
             { path: "register", element: <RegisterPage /> },
             { path: "checkout-summary", element: <CheckoutSummaryPage /> },
             { path: "checkout", element: <ProtectedRoute><CheckoutPage /></ProtectedRoute> },
+            { path: "checkout/confirmation/:orderId", element: <OrderConfirmationPage /> },
             { path: "*", element: <NotFoundPage /> },
         ],
     },

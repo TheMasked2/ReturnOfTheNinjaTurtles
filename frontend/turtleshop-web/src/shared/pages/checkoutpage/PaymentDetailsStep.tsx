@@ -22,65 +22,89 @@ export default function PaymentDetailsStep({
   onPaymentDetailChange,
   onSelectPaymentMethod,
 }: PaymentDetailsStepProps) {
+  const selectedMethod = paymentMethods.find(
+    (method) => method.paymentMethodId === selectedPaymentMethodId
+  );
+  const showCardForm = selectedMethod?.type === "Credit Card";
+
   return (
     <>
       <h3>Payment details</h3>
-      <p className="text-muted" style={{ marginTop: "-0.5rem", marginBottom: "1rem" }}>
-        Your card information is encrypted and never stored in plain text.
-      </p>
 
       <div
         className="form-grid"
         style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "1rem" }}
       >
-        <label style={{ gridColumn: "1 / -1" }}>
-          Cardholder name<RequiredMark />
-          <input
-            type="text"
-            value={paymentDetails.nameOnCard}
-            onChange={(event) => onPaymentDetailChange("nameOnCard", event.target.value)}
-            style={showErrors && errors.nameOnCard ? errorInputStyle : undefined}
-          />
-          {showErrors && <FieldError message={errors.nameOnCard} />}
-        </label>
+        {showCardForm ? (
+          <>
+            <p className="text-muted" style={{ marginTop: "-0.5rem", marginBottom: "1rem" }}>
+            Your card information is encrypted and never stored in plain text.
+            </p>
+            <label style={{ gridColumn: "1 / -1" }}>
+              Cardholder name<RequiredMark />
+              <input
+                type="text"
+                value={paymentDetails.nameOnCard}
+                onChange={(event) => onPaymentDetailChange("nameOnCard", event.target.value)}
+                style={showErrors && errors.nameOnCard ? errorInputStyle : undefined}
+              />
+              {showErrors && <FieldError message={errors.nameOnCard} />}
+            </label>
 
-        <label style={{ gridColumn: "1 / -1" }}>
-          Card number<RequiredMark />
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="1234 5678 9012 3456"
-            value={paymentDetails.cardNumber}
-            onChange={(event) => onPaymentDetailChange("cardNumber", event.target.value)}
-            style={showErrors && errors.cardNumber ? errorInputStyle : undefined}
-          />
-          {showErrors && <FieldError message={errors.cardNumber} />}
-        </label>
+            <label style={{ gridColumn: "1 / -1" }}>
+              Card number<RequiredMark />
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="1234 5678 9012 3456"
+                value={paymentDetails.cardNumber}
+                onChange={(event) => onPaymentDetailChange("cardNumber", event.target.value)}
+                style={showErrors && errors.cardNumber ? errorInputStyle : undefined}
+              />
+              {showErrors && <FieldError message={errors.cardNumber} />}
+            </label>
 
-        <label>
-          Expiry<RequiredMark />
-          <input
-            type="text"
-            placeholder="MM/YY"
-            value={paymentDetails.expiry}
-            onChange={(event) => onPaymentDetailChange("expiry", event.target.value)}
-            style={showErrors && errors.expiry ? errorInputStyle : undefined}
-          />
-          {showErrors && <FieldError message={errors.expiry} />}
-        </label>
+            <label>
+              Expiry<RequiredMark />
+              <input
+                type="text"
+                placeholder="MM/YY"
+                value={paymentDetails.expiry}
+                onChange={(event) => onPaymentDetailChange("expiry", event.target.value)}
+                style={showErrors && errors.expiry ? errorInputStyle : undefined}
+              />
+              {showErrors && <FieldError message={errors.expiry} />}
+            </label>
 
-        <label>
-          CVV<RequiredMark />
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="123"
-            value={paymentDetails.cvv}
-            onChange={(event) => onPaymentDetailChange("cvv", event.target.value)}
-            style={showErrors && errors.cvv ? errorInputStyle : undefined}
-          />
-          {showErrors && <FieldError message={errors.cvv} />}
-        </label>
+            <label>
+              CVV<RequiredMark />
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="123"
+                value={paymentDetails.cvv}
+                onChange={(event) => onPaymentDetailChange("cvv", event.target.value)}
+                style={showErrors && errors.cvv ? errorInputStyle : undefined}
+              />
+              {showErrors && <FieldError message={errors.cvv} />}
+            </label>
+          </>
+        ) : (
+          <div
+            style={{
+              gridColumn: "1 / -1",
+              padding: "1rem",
+              borderRadius: "0.85rem",
+              border: "1px solid var(--border)",
+              background: "#fafafa",
+            }}
+          >
+            <strong>Payment will be handled after proceeding to payment.</strong>
+            <p className="text-muted" style={{ marginTop: "0.5rem" }}>
+              We’ll redirect you to your selected payment provider on the next step.
+            </p>
+          </div>
+        )}
 
         <div style={{ gridColumn: "1 / -1", marginTop: "0.5rem" }}>
           <h4>Saved payment methods</h4>

@@ -37,16 +37,10 @@ ON CONFLICT (product_id) DO NOTHING;
 
 -- 4) Payment methods
 INSERT INTO PAYMENT_METHOD (payment_method_id, provider, type) VALUES
-   (1, 'Visa', 'Credit Card'),
-   (2, 'Mastercard', 'Credit Card'),
-   (3, 'American Express', 'Credit Card'),
-   (4, 'PayPal', 'Online Wallet'),
-   (5, 'Apple Pay', 'Mobile Wallet'),
-   (6, 'Google Pay', 'Mobile Wallet'),
-   (7, 'Bank Transfer', 'Bank'),
-   (8, 'Cash', 'Cash'),
-   (9, 'Discover', 'Credit Card'),
-   (10, 'CryptoPay', 'Crypto')
+   (1, 'VISA/ Mastercard/ Amex', 'Credit Card'),
+   (2, 'PayPal', 'Online Wallet'),
+   (3, 'IDEAL/ Wero', 'Mobile banking')
+
 ON CONFLICT (payment_method_id) DO NOTHING;
 
 -- 5) Inventory
@@ -106,6 +100,8 @@ JOIN permissions p ON p.code IN (
     -- Own payments
     'PAYMENT_CREATE_OWN',
     'PAYMENT_READ_OWN',
+    'PAYMENT_READ_ALL', -- Allow users to see all payment methods for selection
+    'PAYMENT_UPDATE_OWN',
 
     -- Own shipments
     'SHIPMENT_READ_OWN',

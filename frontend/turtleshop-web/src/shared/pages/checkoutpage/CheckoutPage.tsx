@@ -6,6 +6,7 @@ import { customerApi, type Customer } from "../../api/customerApi";
 import { paymentApi, type PaymentMethod } from "../../api/paymentApi";
 import { productApi, type Product } from "../../api/productApi";
 import { checkoutApi } from "../../api/checkoutApi";
+import  type { PlaceOrderPayload } from "../../api/checkoutApi";
 import { publishHeaderRefresh } from "../../state/refreshBus";
 
 import OrderSummary from "./OrderSummary";
@@ -142,12 +143,18 @@ export default function CheckoutPage() {
   );
   const step1Valid = !hasErrors(billingErrors) && !hasErrors(shippingErrors);
 
-  const paymentErrors = useMemo(() => validatePaymentDetails(paymentDetails), [paymentDetails]);
-  const step2Valid = !hasErrors(paymentErrors);
-
   const selectedPaymentMethod = paymentMethods.find(
     (method) => method.paymentMethodId === selectedPaymentMethodId
   );
+
+  const requiresCard = selectedPaymentMethod?.type === "Credit Card";
+
+  const paymentErrors = useMemo(
+    () => (requiresCard ? validatePaymentDetails(paymentDetails) : {}),
+    [paymentDetails, requiresCard]
+  );
+
+const step2Valid = requiresCard ? !hasErrors(paymentErrors) : true;
 
   const handleBillingChange = (field: keyof AddressForm, value: string) => {
     setBillingInfo((prev) => ({ ...prev, [field]: value }));
@@ -188,26 +195,43 @@ export default function CheckoutPage() {
       setStepAttempted((prev) => ({ ...prev, 1: true, 2: true }));
       return;
     }
-
+  
+    const paymentMethodString =
+      selectedPaymentMethod?.provider || selectedPaymentMethod?.type;
+  
+    if (!paymentMethodString) {
+      setError("Please select a payment method.");
+      return;
+    }
+  
     setSubmitting(true);
     setError(null);
-
+  
     try {
-      await checkoutApi.placeOrder(user.id, {
-        paymentMethodId: selectedPaymentMethodId,
-        shippingMethodId: selectedShippingOption,
-        billingAddress: billingInfo,
-        shippingAddress: shippingSameAsBilling ? billingInfo : shippingInfo,
-        shippingSameAsBilling,
-        paymentDetails,
-        items: cartItems.map((item) => ({
-          productId: item.productId,
-          quantity: item.quantity,
-        })),
-      });
+      // Format the shipping address into a single string for the payload consisting of: Fullname,country, postal code and housenumber.
+      // This will be enough for most GPS systems to find the address.
+      const formatAddress = (address: AddressForm) =>
+        [
+          address.fullName,
+          address.addressLine1,
+          address.addressLine2,
+          `${address.postalCode} ${address.city}`,
+          address.state,
+          address.country,
+        ]
+          .filter(Boolean)
+          .join("\n");
 
+      const payload: PlaceOrderPayload = {
+        paymentMethod: paymentMethodString,
+        shippingMethod: selectedShippingOption,
+        shippingAddress: formatAddress(shippingSameAsBilling ? billingInfo : shippingInfo),
+      };
+
+      const response = await checkoutApi.placeOrder(user.id, payload);
+      await checkoutApi.confirmOrder(response.orderId, response.transactionId);
       publishHeaderRefresh();
-      navigate("/profile");
+      navigate(`/checkout/confirmation/${response.orderId}`);
     } catch (err: any) {
       setError(err.message || "Unable to place order.");
     } finally {
