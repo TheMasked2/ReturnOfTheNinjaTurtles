@@ -1,5 +1,8 @@
 -- Proof of concept RLS verification using real seeded CUSTOMER and ORDERS data
 
+# Be sure to grab an UUID from the Customers to start testing:
+SELECT * FROM CUSTOMER ORDER BY customer_id LIMIT 5;
+
 -- 1) Create a temporary restricted test role
 CREATE ROLE rls_test_user NOLOGIN;
 GRANT SELECT ON CUSTOMER TO rls_test_user;
@@ -7,10 +10,10 @@ GRANT SELECT ON ORDERS TO rls_test_user;
 
 -- 2) Verify seeded data using a real customer UUID
 BEGIN;
-
 SET ROLE rls_test_user;
--- This should match a seeded customer_id in the CUSTOMER table, probably different after a new seed.
-SET LOCAL turtleshop.customer_id = 'a86f29f8-7130-4bac-b421-ef788860b083';
+
+# This UUID will be different everytime the database gets seeded, be sure to change this before testing again.
+SET LOCAL turtleshop.customer_id = '003e71fa-fea5-4b2d-81c4-9d39d8b90c36';
 
 -- 3) Confirm session state and RLS metadata
 SELECT
@@ -27,17 +30,13 @@ FROM pg_policies
 WHERE tablename IN ('customer', 'orders');
 
 -- 4) Confirm customer isolation under the restricted role
+# Should only diplay user's own customer record and orders associated with that customer_id
 SELECT 'CUSTOMER' AS source_table, * FROM CUSTOMER ORDER BY customer_id;
 SELECT 'ORDERS' AS source_table, * FROM ORDERS ORDER BY order_id;
-
--- Expected results:
--- - CUSTOMER should return only the seeded row for customer_id = (chosen uuid)
--- - ORDERS should return only rows with customer_id = (chosen uuid)
 
 RESET ROLE;
 ROLLBACK;
 
 REVOKE SELECT ON CUSTOMER FROM rls_test_user;
 REVOKE SELECT ON ORDERS FROM rls_test_user;
-
 DROP ROLE IF EXISTS rls_test_user;
