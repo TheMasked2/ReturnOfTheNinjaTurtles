@@ -44,10 +44,13 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-    @Cacheable(value = "frequent_products", key = "#id", unless = "#result.isEmpty()")
+    @Cacheable(value = "frequent_products", key = "#id", unless = "#result == null")
     public Optional<ProductModel> getProductById(int id) {
         return productAccess.findById(id)
-                .map(base -> merge(base, productMongoAccess.findByProductId(id).orElse(null)));
+                .map(base -> merge(
+                        base,
+                        productMongoAccess.findByProductId(id).orElse(null)
+                ));
     }
 
     @CachePut(value = "frequent_products", key = "#result.productId")

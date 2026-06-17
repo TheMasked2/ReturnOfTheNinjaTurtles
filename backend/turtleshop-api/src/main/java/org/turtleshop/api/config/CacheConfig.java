@@ -12,28 +12,52 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 @Configuration
 @EnableCaching
 public class CacheConfig {
 
     @Bean
-    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        // Uniform JSON serialization for visibility via Redis CLI
-        RedisCacheConfiguration baseConfig = RedisCacheConfiguration.defaultCacheConfig()
-            .disableCachingNullValues()
-            .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
-                new GenericJackson2JsonRedisSerializer()
-            ));
+    public RedisCacheManager cacheManager(
+            RedisConnectionFactory connectionFactory) {
+
+        GenericJackson2JsonRedisSerializer serializer =
+                new GenericJackson2JsonRedisSerializer();
+
+        serializer.configure(objectMapper -> {
+            objectMapper.registerModule(new JavaTimeModule());
+            objectMapper.disable(
+                    SerializationFeature.WRITE_DATES_AS_TIMESTAMPS
+            );
+        });
+
+        RedisCacheConfiguration defaultConfiguration =
+                RedisCacheConfiguration.defaultCacheConfig()
+                        .disableCachingNullValues()
+                        .serializeValuesWith(
+                                RedisSerializationContext.SerializationPair
+                                        .fromSerializer(serializer)
+                        )
+                        .entryTtl(Duration.ofMinutes(10));
+
+        RedisCacheConfiguration productsConfiguration =
+                defaultConfiguration.entryTtl(Duration.ofMinutes(15));
+
+        RedisCacheConfiguration categoriesConfiguration =
+                defaultConfiguration.entryTtl(Duration.ofHours(6));
 
         return RedisCacheManager.builder(connectionFactory)
-            .cacheDefaults(baseConfig.entryTtl(Duration.ofMinutes(10))) // Default fallback TTL
-            .withInitialCacheConfigurations(Map.of(
-                // Products: Volatile pool. Relies on Redis LFU to keep only popular items.
-                "frequent_products", baseConfig.entryTtl(Duration.ofMinutes(15)),
-                
-                // Categories: Highly static, loaded constantly by navigation menus.
-                "categories", baseConfig.entryTtl(Duration.ofHours(6))
-            ))
-            .build();
+                .cacheDefaults(defaultConfiguration)
+                .withInitialCacheConfigurations(
+                        Map.of(
+                                "frequent_products",
+                                productsConfiguration,
+                                "categories",
+                                categoriesConfiguration
+                        )
+                )
+                .build();
     }
 }
