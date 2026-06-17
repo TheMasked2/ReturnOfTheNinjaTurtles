@@ -1,20 +1,36 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { productApi } from "../../api/productApi";
+import { productApi  } from "../../api/productApi";
 import type { Product } from "../../api/productApi";
 
 export default function ProductDetailsPage() {
-  const params = useParams();
-  const productId = params.productId ?? "";
+  const { productId } = useParams<{ productId: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!productId) return;
+    if (!productId) {
+      setProduct(null);
+      setError("Product not found.");
+      setLoading(false);
+      return;
+    }
+
+    const id = Number(productId);
+    if (Number.isNaN(id)) {
+      setProduct(null);
+      setError("Invalid product identifier.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setProduct(null);
 
     productApi
-      .getProductById(productId)
+      .getProductById(id)
       .then((item) => setProduct(item))
       .catch((err) => setError(err.message || "Product not found."))
       .finally(() => setLoading(false));

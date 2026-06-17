@@ -154,12 +154,13 @@ public class CheckoutService {
         List<OrderItem> orderItems = orderItemAccess.getAllOrderItems(orderId);
 
         for (OrderItem item : orderItems) {
-                ProductModel product = productAccess.findById(item.getProductId())
+                ProductModel product = productAccess.findAllByIds(List.of(item.getProductId()))
+                        .stream()
+                        .findFirst()
                         .orElseThrow(() -> new ResponseStatusException(
                                 HttpStatus.CONFLICT,
-                                "Product does not exist"
+                                "Product does not exist for order item"
                         ));
-
                 // Definitive wiring of Step 2
                 orderLiveSyncService.syncOrderToGraph(
                         orderId,
@@ -186,7 +187,9 @@ public class CheckoutService {
         BigDecimal totalAmount = BigDecimal.ZERO;
 
         for (CartItem cartItem : cartItems) {
-            ProductModel product = productAccess.findById(cartItem.getProductId())
+            ProductModel product = productAccess.findAllByIds(List.of(cartItem.getProductId()))
+                    .stream()
+                    .findFirst()
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Product does not exist"));
 
             InventoryModel inventory = inventoryAccess.findByProductId(cartItem.getProductId())

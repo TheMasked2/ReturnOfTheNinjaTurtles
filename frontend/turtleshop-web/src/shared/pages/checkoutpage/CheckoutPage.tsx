@@ -6,7 +6,7 @@ import { customerApi, type Customer } from "../../api/customerApi";
 import { paymentApi, type PaymentMethod } from "../../api/paymentApi";
 import { productApi, type Product } from "../../api/productApi";
 import { checkoutApi } from "../../api/checkoutApi";
-import  type { PlaceOrderPayload } from "../../api/checkoutApi";
+import type { PlaceOrderPayload } from "../../api/checkoutApi";
 import { publishHeaderRefresh } from "../../state/refreshBus";
 
 import OrderSummary from "./OrderSummary";
@@ -61,11 +61,10 @@ export default function CheckoutPage() {
       setError(null);
 
       try {
-        const [cart, customerResponse, methods, products] = await Promise.all([
+        const [cart, customerResponse, methods] = await Promise.all([
           cartApi.getActiveCart(user.id),
           customerApi.getCustomer(user.id),
           paymentApi.listPaymentMethods(),
-          productApi.getProducts(),
         ]);
 
         setCustomer(customerResponse);
@@ -90,6 +89,10 @@ export default function CheckoutPage() {
         };
         setBillingInfo(defaultAddress);
         setShippingInfo(defaultAddress);
+
+        const products = await productApi.getProductsByIds(
+          Array.from(new Set((cart.items ?? []).map((item: any) => item.productId).filter(Boolean)))
+        );
 
         const mappedItems: CartSummaryItem[] = (cart.items ?? [])
           .map((item: any) => {
@@ -154,7 +157,7 @@ export default function CheckoutPage() {
     [paymentDetails, requiresCard]
   );
 
-const step2Valid = requiresCard ? !hasErrors(paymentErrors) : true;
+  const step2Valid = requiresCard ? !hasErrors(paymentErrors) : true;
 
   const handleBillingChange = (field: keyof AddressForm, value: string) => {
     setBillingInfo((prev) => ({ ...prev, [field]: value }));
@@ -195,21 +198,19 @@ const step2Valid = requiresCard ? !hasErrors(paymentErrors) : true;
       setStepAttempted((prev) => ({ ...prev, 1: true, 2: true }));
       return;
     }
-  
+
     const paymentMethodString =
       selectedPaymentMethod?.provider || selectedPaymentMethod?.type;
-  
+
     if (!paymentMethodString) {
       setError("Please select a payment method.");
       return;
     }
-  
+
     setSubmitting(true);
     setError(null);
-  
+
     try {
-      // Format the shipping address into a single string for the payload consisting of: Fullname,country, postal code and housenumber.
-      // This will be enough for most GPS systems to find the address.
       const formatAddress = (address: AddressForm) =>
         [
           address.fullName,

@@ -7,9 +7,6 @@ import { recommendationApi, type RecommendedProduct } from "../../api/recommenda
 import { publishHeaderRefresh } from "../../state/refreshBus";
 import { ProductCard } from "../../components/product/ProductCard";
 
-const SHIPPING_RATE = 4.99;
-const FREE_SHIPPING_THRESHOLD = 100;
-
 type CartSummaryItem = {
   cartItemId: number;
   productId: number;
@@ -39,20 +36,37 @@ export default function CheckoutSummaryPage() {
     const loadSummary = async () => {
       setLoading(true);
       setError(null);
-
+ 
       try {
-        const [products, cart] = await Promise.all([
+        const [pageProducts, cart] = await Promise.all([
           productApi.getProducts(),
           cartApi.getActiveCart(user.id),
         ]);
 
-        const cartProductIds = new Set<number>();
+        const cartItemsData = (cart.items ?? []) as Array<{
+          cartItemId: number;
+          productId: number;
+          quantity?: number;
+        }>;
 
-        const mappedCartItems: CartSummaryItem[] = (cart.items ?? [])
-          .map((item: any) => {
-            const product = products.find((p) => p.id === item.productId);
+        const cartProductIds = Array.from(
+          new Set(
+            cartItemsData
+              .map((item) => item.productId)
+              .filter((productId): productId is number => typeof productId === "number")
+          )
+        );
+
+        const cartProducts = cartProductIds.length
+          ? await productApi.getProductsByIds(cartProductIds).catch(() => [] as Product[])
+          : [];
+
+        const cartProductIdSet = new Set<number>(cartProductIds);
+
+        const mappedCartItems: CartSummaryItem[] = cartItemsData
+          .map((item) => {
+            const product = cartProducts.find((p) => p.id === item.productId);
             const unitPrice = product?.price ?? 0;
-            cartProductIds.add(item.productId);
 
             return {
               cartItemId: item.cartItemId,
@@ -63,7 +77,7 @@ export default function CheckoutSummaryPage() {
               subtotal: unitPrice * (item.quantity ?? 1),
             };
           })
-          .sort((a: CartSummaryItem, b: CartSummaryItem) => a.cartItemId - b.cartItemId);
+          .sort((a, b) => a.cartItemId - b.cartItemId);
 
         setCartItems(mappedCartItems);
 
@@ -72,7 +86,7 @@ export default function CheckoutSummaryPage() {
           const recommendationResponse = await recommendationApi.getSeasonalRecommendations(user.id);
           recommended = recommendationResponse
             .map((item: RecommendedProduct) => {
-              const product = products.find((p) => p.id === (item.id ?? item.productId));
+              const product = pageProducts.find((p) => p.id === (item.id ?? item.productId));
               const id = item.id ?? item.productId ?? 0;
               return {
                 id,
@@ -84,15 +98,15 @@ export default function CheckoutSummaryPage() {
                 suggestedProducts: item.suggestedProducts ?? product?.suggestedProducts ?? [],
               } as Product;
             })
-            .filter((product) => product.id && !cartProductIds.has(product.id))
+            .filter((product) => product.id && !cartProductIdSet.has(product.id))
             .slice(0, 4);
         } catch {
           recommended = [];
         }
 
         if (recommended.length === 0) {
-          recommended = products
-            .filter((product) => !cartProductIds.has(product.id))
+          recommended = pageProducts
+            .filter((product) => !cartProductIdSet.has(product.id))
             .slice(0, 4);
         }
 
@@ -108,9 +122,6 @@ export default function CheckoutSummaryPage() {
   }, [isAuthenticated, user?.id]);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
-  const shipping = subtotal === 0 ? 0 : subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_RATE;
-  const total = subtotal + shipping;
-  const shippingLabel = subtotal === 0 ? "$0.00" : shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`;
 
   const handleQuantityChange = async (cartItemId: number, quantity: number) => {
     if (quantity <= 0) {
@@ -232,14 +243,6 @@ export default function CheckoutSummaryPage() {
                 <div className="summary-line">
                   <span>Subtotal</span>
                   <span>${subtotal.toFixed(2)}</span>
-                </div>
-                <div className="summary-line">
-                  <span>Shipping</span>
-                  <span>{shippingLabel}</span>
-                </div>
-                <div className="summary-line summary-total">
-                  <span>Total</span>
-                  <strong>${total.toFixed(2)}</strong>
                 </div>
                 <button
                   className="button button-primary"

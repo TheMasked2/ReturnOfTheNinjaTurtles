@@ -29,11 +29,25 @@ export default function WishlistPage() {
     const loadWishlist = async () => {
       try {
         setLoading(true);
-        const products = await productApi.getProducts().catch(() => []);
         const wishlist = await wishlistApi.getWishlistByCustomer(user.id);
+        if (!wishlist?.wishlistId) {
+          setItems([]);
+          setWishlistId(null);
+          setError(null);
+          return;
+        }
+
         setWishlistId(wishlist.wishlistId);
 
         const wishlistItems = await wishlistApi.getWishlistItems(wishlist.wishlistId);
+        const productIds = Array.from(
+          new Set(wishlistItems.map((item: any) => item.productId).filter(Boolean))
+        );
+
+        const products = productIds.length
+          ? await productApi.getProductsByIds(productIds).catch(() => [])
+          : [];
+
         const mappedItems = wishlistItems.map((item: any) => {
           const product = products.find((p: any) => p.id === item.productId);
           return {
@@ -46,7 +60,13 @@ export default function WishlistPage() {
         setItems(mappedItems);
         setError(null);
       } catch (error: any) {
-        setError(error?.message || "Unable to load wishlist.");
+        if (error?.message?.toLowerCase().includes("not found")) {
+          setItems([]);
+          setWishlistId(null);
+          setError(null);
+        } else {
+          setError(error?.message || "Unable to load wishlist.");
+        }
       } finally {
         setLoading(false);
       }
@@ -95,6 +115,20 @@ export default function WishlistPage() {
     );
   }
 
+  if (items.length === 0) {
+    return (
+      <div className="form-panel">
+        <p>Your wishlist is currently empty.</p>
+        <p className="text-muted">
+          Add favorite products from the products page and come back here to view them later.
+        </p>
+        <Link to="/products" className="button button-primary">
+          Add products
+        </Link>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="page">
@@ -131,7 +165,10 @@ export default function WishlistPage() {
         ) : (
           <div className="grid-list">
             {items.map((item) => (
-              <article key={item.wishlistItemId ?? `${item.wishlistId}-${item.productId}`} className="product-card">
+              <article
+                key={item.wishlistItemId ?? `${item.wishlistId}-${item.productId}`}
+                className="product-card"
+              >
                 <div className="product-card-body">
                   <h3>{item.name}</h3>
                   <p className="text-muted">Product #{item.productId}</p>
