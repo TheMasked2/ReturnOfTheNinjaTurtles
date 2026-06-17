@@ -1,5 +1,6 @@
 package org.turtleshop.api.modules.product.repository;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,11 +29,41 @@ public class ProductAccess {
         return jdbc.query(sql, productMapper);
     }
 
-    public Optional<ProductModel> findById(int id) {
-        String sql = "SELECT product_id, base_price FROM PRODUCT WHERE product_id = :id";
-        return jdbc.query(sql, new MapSqlParameterSource("id", id), productMapper)
-                .stream()
-                .findFirst();
+    public List<ProductModel> findAllByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String sql = """
+            SELECT product_id, base_price
+            FROM PRODUCT
+            WHERE product_id IN (:ids)
+            ORDER BY product_id
+        """;
+
+        return jdbc.query(sql,
+                new MapSqlParameterSource("ids", ids),
+                productMapper);
+    }
+
+    public List<ProductModel> findPage(int limit, int offset) {
+        String sql = """
+            SELECT product_id, base_price
+            FROM PRODUCT
+            ORDER BY product_id
+            LIMIT :limit OFFSET :offset
+        """;
+
+        return jdbc.query(sql,
+                new MapSqlParameterSource()
+                        .addValue("limit", limit)
+                        .addValue("offset", offset),
+                productMapper);
+    }
+
+    public int countAll() {
+        return jdbc.queryForObject("SELECT COUNT(*) FROM PRODUCT",
+                new MapSqlParameterSource(), Integer.class);
     }
 
     public int insert(ProductModel product) {

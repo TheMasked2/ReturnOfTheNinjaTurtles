@@ -1,20 +1,29 @@
 import { useEffect, useState } from "react";
 import { ProductCard } from "../../components/product/ProductCard";
-import { productApi } from "../../api/productApi";
-import type { Product } from "../../api/productApi";
+import { Pagination } from "../../components/pagination/Pagination";
+import { productApi, type PaginatedResponse, type Product } from "../../api/productApi";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const pageSize = 20;
 
   useEffect(() => {
+    setLoading(true);
     productApi
-      .getProducts()
-      .then((items) => setProducts(items))
+      .getProducts(page, pageSize)
+      .then((response: PaginatedResponse<Product[]>) => {
+        setProducts(response.content);
+        setTotalPages(response.totalPages);
+        setError(null);
+      })
       .catch((err) => setError(err.message || "Unable to load products."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [page]);
 
   return (
     <div className="page">
@@ -33,11 +42,15 @@ export default function ProductsPage() {
         ) : products.length === 0 ? (
           <div className="status-message">No products are available at the moment.</div>
         ) : (
-          <div className="grid grid-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-4">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={loading} />
+          </>
         )}
       </section>
     </div>

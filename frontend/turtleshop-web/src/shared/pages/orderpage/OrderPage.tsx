@@ -18,7 +18,15 @@ export default function OrdersPage() {
 
     orderApi.getOrdersByCustomer(user.id)
       .then(setOrders)
-      .catch((err) => setError(err.message || "Unable to load orders."))
+      .catch((err) => {
+        const message = err?.message?.toLowerCase?.() ?? "";
+        if (message.includes("not found") || message.includes("conflict")) {
+          setOrders([]);
+          return;
+        }
+
+        setError(err.message || "Unable to load orders.");
+      })
       .finally(() => setLoading(false));
   }, [isAuthenticated, user?.id]);
 
