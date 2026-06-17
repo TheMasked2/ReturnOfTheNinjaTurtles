@@ -833,27 +833,31 @@ def main():
     print("[✔] TRANSACTIONAL SIMULATION SEED COMPLETED SUCCESSFULLY.")
     print("=" * 60)
 
-    from neo4j import GraphDatabase
+    import requests
 
-    # Connect to Neo4j container
-    neo4j_driver = GraphDatabase.driver("bolt://neo4j:7687", auth=("neo4j", "splinter"))
+    print("\n[!] Triggering Neo4j Graph Database Backfill over Spring API...")
+    
+    # Using the container service name 'api' as defined in docker-compose
+    endpoints = [
+        "http://api:8080/api/recommendations/backfill/orders",
+        "http://api:8080/api/recommendations/backfill/reviews"
+    ]
 
-    with neo4j_driver.session() as session:
-        print("Triggering Neo4j recommendation compilation...")
-        
-        # Build the JDBC URL with username and password parameters
-        jdbc_url = f"jdbc:postgresql://db:5432/{DB_NAME}?user={DB_USER}&password={DB_PASSWORD}"
-        
-        session.run(f"""
-            CALL apoc.load.jdbc('{jdbc_url}', 'SELECT order_id, customer_id, total_amount FROM ORDERS') 
-            YIELD row
-            MERGE (o:Order {{id: row.order_id}})
-            SET o.amount = row.total_amount
-            MERGE (c:Customer {{id: row.customer_id}})
-            MERGE (c)-[:PLACED]->(o);
-        """)
-    neo4j_driver.close()
-    print("Seeding complete and recommendation engine updated!")
+    for url in endpoints:
+        try:
+            print(f" -> Sending POST request to {url}...")
+            # Inside seed_data.py, pass administrative credentials
+            response = requests.post(url, auth=('admin_user', 'admin_password'), timeout=120)
+            
+            if response.status_code == 200:
+                print(f" [✔] Successfully triggered: {url}")
+                print(f"     Response: {response.text}")
+            else:
+                print(f" [✘] Target responded with status {response.status_code}: {response.text}")
+                
+        except requests.exceptions.RequestException as e:
+            print(f" [✘] Failed to connect to backfill engine on {url}.")
+            print(f"     Error Details: {e}")
 
 
 if __name__ == "__main__":

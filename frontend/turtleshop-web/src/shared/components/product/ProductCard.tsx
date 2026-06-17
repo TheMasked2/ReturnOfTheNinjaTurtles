@@ -113,13 +113,19 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <>
       <article className="card product-card">
-        {/* ... existing card internals ... */}
         <div className="product-card-header">
           <div>
             <h3>{product.name}</h3>
             <p>{product.description}</p>
           </div>
-          <div className="product-card-actions">
+        </div>
+
+        <div className="product-card-footer">
+          <div className="product-meta">
+            <span className="price-tag">${product.price.toFixed(2)}</span>
+          </div>
+
+          <div className="product-card-action-group">
             <button
               type="button"
               className="icon-button"
@@ -141,9 +147,6 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
 
-        <div className="product-meta">
-          <span className="price-tag">${product.price.toFixed(2)}</span>
-        </div>
         <Link to={`/products/${product.id}`} className="button button-secondary">
           View details
         </Link>

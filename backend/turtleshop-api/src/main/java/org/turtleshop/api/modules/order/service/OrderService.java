@@ -15,7 +15,6 @@ import org.turtleshop.api.modules.order.dto.OrderSummaryResponse;
 import org.turtleshop.api.modules.order.model.OrderSummary;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service

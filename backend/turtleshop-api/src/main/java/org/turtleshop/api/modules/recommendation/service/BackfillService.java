@@ -3,7 +3,6 @@ package org.turtleshop.api.modules.recommendation.service;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.util.CloseableIterator;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.turtleshop.api.modules.recommendation.repository.BackfillGraphRepository;
@@ -11,11 +10,15 @@ import org.turtleshop.api.modules.recommendation.repository.BackfillGraphReposit
 import lombok.RequiredArgsConstructor;
 
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -37,30 +40,33 @@ public class BackfillService {
 
         jdbcTemplate.query(sql, (ResultSet rs) -> {
             List<Map<String, Object>> batch = new ArrayList<>();
-            
-            do {
+
+            while (rs.next()) {
                 Map<String, Object> row = new HashMap<>();
-                row.put("orderId", rs.getInt("order_id"));
-                row.put("customerId", rs.getString("customer_id"));
-                row.put("productId", rs.getInt("product_id"));
-                row.put("productName", rs.getString("product_name"));
+                row.put("order_id", rs.getInt("order_id"));
+                row.put("customer_id", rs.getString("customer_id"));
+                row.put("product_id", rs.getInt("product_id"));
+                row.put("product_name", rs.getString("product_name"));
                 row.put("quantity", rs.getInt("quantity"));
-                
-                // Transform timestamp to Month ID (e.g., "2026-05")
-                String monthId = rs.getTimestamp("order_date").toLocalDateTime().format(MONTH_FORMATTER);
+
+                Timestamp orderDate = rs.getTimestamp("order_date");
+                String monthId = orderDate != null
+                        ? orderDate.toLocalDateTime().format(MONTH_FORMATTER)
+                        : LocalDate.now().format(MONTH_FORMATTER);
                 row.put("month_id", monthId);
-                
+
                 batch.add(row);
 
                 if (batch.size() >= BATCH_SIZE) {
                     backfillGraphRepository.batchInsertOrders(batch);
                     batch.clear();
                 }
-            } while (rs.next());
+            }
 
             if (!batch.isEmpty()) {
                 backfillGraphRepository.batchInsertOrders(batch);
             }
+
             return null;
         });
     }
@@ -68,28 +74,27 @@ public class BackfillService {
     public void executeReviewDataBackfill() {
         Query query = new Query();
         query.cursorBatchSize(BATCH_SIZE);
-        try (java.util.stream.Stream<Document> stream = mongoTemplate.stream(query, Document.class, "reviews")) {
-            List<Map<String, Object>> batch = new ArrayList<>();
-            java.util.Iterator<Document> cursor = stream.iterator();
 
-            while (cursor.hasNext()) {
-                Document reviewDoc = cursor.next();
+        try (Stream<Document> stream = mongoTemplate.stream(query, Document.class, "reviews")) {
+            Iterator<Document> iterator = stream.iterator();
+            List<Map<String, Object>> batch = new ArrayList<>();
+
+            while (iterator.hasNext()) {
+                Document reviewDoc = iterator.next();
 
                 Map<String, Object> row = new HashMap<>();
-                
-                row.put("reviewId", reviewDoc.get("reviewId"));
-                row.put("customerId", reviewDoc.get("customerId").toString());
-                row.put("productId", reviewDoc.get("productId"));
+                row.put("review_id", reviewDoc.get("reviewId"));
+                row.put("customer_id", reviewDoc.getString("customerId"));
+                row.put("product_id", reviewDoc.getInteger("productId"));
                 row.put("rating", reviewDoc.get("rating"));
-                row.put("comment", reviewDoc.get("comment"));
+                row.put("comment", reviewDoc.getString("comment"));
 
-                // Handle the MongoDB ISODate to Month ID transformation
-                java.util.Date createdAt = (java.util.Date) reviewDoc.get("createdAt");
-                String monthId = createdAt.toInstant()
-                        .atZone(java.time.ZoneId.systemDefault())
-                        .format(MONTH_FORMATTER);
-                
-                row.put("monthId", monthId);
+                java.util.Date createdAt = reviewDoc.getDate("createdAt");
+                String monthId = createdAt != null
+                        ? createdAt.toInstant().atZone(java.time.ZoneId.systemDefault()).format(MONTH_FORMATTER)
+                        : LocalDate.now().format(MONTH_FORMATTER);
+                row.put("month_id", monthId);
+
                 batch.add(row);
 
                 if (batch.size() >= BATCH_SIZE) {

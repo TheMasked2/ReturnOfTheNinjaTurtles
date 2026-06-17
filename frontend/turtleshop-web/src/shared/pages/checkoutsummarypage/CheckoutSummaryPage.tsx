@@ -36,12 +36,9 @@ export default function CheckoutSummaryPage() {
     const loadSummary = async () => {
       setLoading(true);
       setError(null);
- 
+
       try {
-        const [pageProducts, cart] = await Promise.all([
-          productApi.getProducts(),
-          cartApi.getActiveCart(user.id),
-        ]);
+        const cart = await cartApi.getActiveCart(user.id);
 
         const cartItemsData = (cart.items ?? []) as Array<{
           cartItemId: number;
@@ -66,53 +63,36 @@ export default function CheckoutSummaryPage() {
         const mappedCartItems: CartSummaryItem[] = cartItemsData
           .map((item) => {
             const product = cartProducts.find((p) => p.id === item.productId);
+            const quantity = item.quantity ?? 1;
             const unitPrice = product?.price ?? 0;
 
             return {
               cartItemId: item.cartItemId,
               productId: item.productId,
-              quantity: item.quantity ?? 1,
+              quantity,
               name: product?.name ?? `Product #${item.productId}`,
               unitPrice,
-              subtotal: unitPrice * (item.quantity ?? 1),
+              subtotal: unitPrice * quantity,
             };
           })
           .sort((a, b) => a.cartItemId - b.cartItemId);
 
         setCartItems(mappedCartItems);
 
-        let recommended: Product[] = [];
-        try {
-          const recommendationResponse = await recommendationApi.getSeasonalRecommendations(user.id);
-          recommended = recommendationResponse
-            .map((item: RecommendedProduct) => {
-              const product = pageProducts.find((p) => p.id === (item.id ?? item.productId));
-              const id = item.id ?? item.productId ?? 0;
-              return {
-                id,
-                name: item.name ?? product?.name ?? `Product #${id}`,
-                description: item.description ?? product?.description ?? "",
-                specs: item.specs ?? product?.specs ?? "",
-                price: item.price ?? product?.price ?? 0,
-                availableSince: item.availableSince ?? product?.availableSince ?? "",
-                suggestedProducts: item.suggestedProducts ?? product?.suggestedProducts ?? [],
-              } as Product;
-            })
-            .filter((product) => product.id && !cartProductIdSet.has(product.id))
-            .slice(0, 4);
-        } catch {
-          recommended = [];
-        }
+        const recommendationResponse = await recommendationApi.getPopularThisMonth(4);
+        const recommendedProductIds = recommendationResponse
+          .map((item: RecommendedProduct) => item.productId)
+          .filter((id): id is number => typeof id === "number");
 
-        if (recommended.length === 0) {
-          recommended = pageProducts
-            .filter((product) => !cartProductIdSet.has(product.id))
-            .slice(0, 4);
-        }
+        const recommended = recommendedProductIds.length
+          ? await productApi.getProductsByIds(recommendedProductIds).catch(() => [] as Product[])
+          : [];
 
-        setRecommendedProducts(recommended);
+        setRecommendedProducts(
+          recommended.filter((product) => !cartProductIdSet.has(product.id)).slice(0, 4)
+        );
       } catch (err: any) {
-        setError(err.message || "Unable to load order summary.");
+        setError(err?.message || "Unable to load order summary.");
       } finally {
         setLoading(false);
       }

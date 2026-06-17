@@ -1,19 +1,26 @@
 import { baseApi } from "./base-api";
 
 export interface RecommendedProduct {
-  id?: number;
-  productId?: number;
-  name: string;
-  description?: string;
-  specs?: string;
-  price?: number;
-  availableSince?: string;
-  suggestedProducts?: string[];
+  productId: number;
+  productName: string;
+  price: number;
+  imageUrl?: string | null;
 }
 
+const endpoint = "/recommendations";
+
 export const recommendationApi = {
-  getSeasonalRecommendations: (customerId: string, limit = 4) =>
+  getPopularThisMonth: (limit = 4) =>
+    baseApi.get<RecommendedProduct[]>(`${endpoint}/popular/month?limit=${limit}`),
+
+  getPopularThisSeason: (limit = 4) =>
+    baseApi.get<RecommendedProduct[]>(`${endpoint}/popular/season?limit=${limit}`),
+
+  getFrequentlyBoughtTogether: (productId: number, limit = 4) =>
     baseApi.get<RecommendedProduct[]>(
-      `/recommendations/seasonal?customerId=${encodeURIComponent(customerId)}&limit=${limit}`
+      `${endpoint}/frequently-bought-together?productId=${productId}&limit=${limit}`
     ),
+
+  getSeasonalRecommendations: (customerId: string, limit = 4) =>
+    baseApi.get<RecommendedProduct[]>(`${endpoint}/seasonal?customerId=${customerId}&limit=${limit}`),
 };
