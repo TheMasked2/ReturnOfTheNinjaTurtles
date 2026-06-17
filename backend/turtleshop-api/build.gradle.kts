@@ -60,6 +60,8 @@ dependencies {
     // Testcontainers: starts temporary Docker containers for tests
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
+    testImplementation("org.testcontainers:neo4j")
+    testImplementation("org.testcontainers:mongodb")
 
     // Security testing: @WithMockUser, MockMvc security support
     testImplementation("org.springframework.security:spring-security-test")
@@ -93,12 +95,14 @@ tasks.test {
     useJUnitPlatform()
     systemProperty("api.version", "1.44")
 }
-val gatlingSimulations = listOf(
-    "org.turtleshop.api.performance.AdminCustomerAuditSimulation",
-    "org.turtleshop.api.performance.CustomerRegisterAndCheckoutSimulation",
-    "org.turtleshop.api.performance.RaceConditionSimulation",
-    "org.turtleshop.api.performance.CatalogSearchAndPaginationSimulation",
-)
+val gatlingSrcDir = file("src/gatling/java")
+val gatlingSimulations = fileTree(gatlingSrcDir)
+    .matching { include("**/*Simulation.java") }
+    .map { file ->
+        file.relativeTo(gatlingSrcDir).path
+            .replace(File.separatorChar, '.')
+            .removeSuffix(".java")
+    }
 
 val gatlingTaskNames = gatlingSimulations.map { simulationClass ->
     val simpleName = simulationClass.substringAfterLast(".")

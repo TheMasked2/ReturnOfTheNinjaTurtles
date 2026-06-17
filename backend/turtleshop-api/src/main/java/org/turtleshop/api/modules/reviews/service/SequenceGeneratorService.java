@@ -22,6 +22,7 @@ public class SequenceGeneratorService {
                 FindAndModifyOptions.options().returnNew(true).upsert(true),
                 DatabaseSequence.class);
 
-        return counter != null ? counter.getSeq().intValue() : 1;
+        // Uses a null-check to prevent a NullPointerException
+        return (counter != null && counter.getSeq() != null) ? counter.getSeq() : 1;
     }
 }

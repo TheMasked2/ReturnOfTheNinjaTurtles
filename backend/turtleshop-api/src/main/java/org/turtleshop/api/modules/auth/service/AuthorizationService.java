@@ -27,7 +27,7 @@ public class AuthorizationService {
     private final CartItemAccess cartItemAccess;
 
     public boolean isCurrentCustomer(UUID customerId, Authentication authentication) {
-        if (authentication == null || authentication.getName() == null) {
+        if (customerId == null || authentication == null || authentication.getName() == null) {
             return false;
         }
 
@@ -66,8 +66,8 @@ public class AuthorizationService {
                 .orElse(false);
     }
 
-        public boolean isWishlistOwner(int wishlistId, Authentication authentication) {
-        if (authentication == null || authentication.getName() == null) {
+    public boolean isWishlistOwner(Integer wishlistId, Authentication authentication) {
+        if (wishlistId == null || authentication == null || authentication.getName() == null) {
             return false;
         }
 
@@ -84,8 +84,8 @@ public class AuthorizationService {
                 .orElse(false);
     }
 
-    public boolean isWishlistItemOwner(int wishlistItemId, Authentication authentication) {
-        if (authentication == null || authentication.getName() == null) {
+    public boolean isWishlistItemOwner(Integer wishlistItemId, Authentication authentication) {
+        if (wishlistItemId == null || authentication == null || authentication.getName() == null) {
             return false;
         }
 

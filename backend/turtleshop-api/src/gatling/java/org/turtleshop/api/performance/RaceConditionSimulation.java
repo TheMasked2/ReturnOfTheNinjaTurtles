@@ -2,6 +2,7 @@ package org.turtleshop.api.performance;
 
 import static io.gatling.javaapi.core.CoreDsl.*;
 import static io.gatling.javaapi.http.HttpDsl.*;
+import static io.gatling.javaapi.core.CoreDsl.constantUsersPerSec;
 import io.gatling.javaapi.core.*;
 import io.gatling.javaapi.http.*;
 import java.util.UUID;
@@ -74,9 +75,8 @@ public class RaceConditionSimulation extends Simulation {
     {
         setUp(
                 scn.injectOpen(
-                        nothingFor(2),
-                        // We ramp up 30 users quickly so they arrive together at the Checkout step ready to compete
-                        rampUsers(30).during(5)
+                        rampUsers(50).during(20),
+                        constantUsersPerSec(15).during(30)
                 )
         ).protocols(httpProtocol);
     }

@@ -4,8 +4,6 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.OffsetDateTime;
-
 @Getter
 @Setter
 @Builder
@@ -21,5 +19,5 @@ public class ReviewModel {
     private String customerId;
     private Integer rating;
     private String comment;
-    private OffsetDateTime createdAt;
+    private String createdAt;
 }

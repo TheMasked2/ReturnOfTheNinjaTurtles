@@ -1,0 +1,141 @@
+```http
+### =========================================
+### TurtleShop Review API Manual Test File
+### =========================================
+
+@baseUrl = http://localhost:8080
+
+###
+### STEP 1 — REGISTER USER
+###
+
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "reviewtester@test.com",
+  "password": "SecurePass123!",
+  "firstName": "Review",
+  "lastName": "Tester",
+  "phone": "+17165550000"
+}
+
+###
+### STEP 2 — LOGIN
+###
+
+# @name login
+
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "reviewtester@test.com",
+  "password": "SecurePass123!"
+}
+
+###
+### Save JWT
+###
+
+@jwt = {{login.response.body.token}}
+
+###
+### Save Customer ID
+###
+
+@customerId = {{login.response.body.customer.id}}
+
+###
+### STEP 3 — SEARCH PRODUCTS
+###
+
+# @name products
+
+GET {{baseUrl}}/api/products?search=Turtle
+Accept: application/json
+
+###
+### Save Product ID
+###
+
+@productId = {{products.response.body.$[0].id}}
+
+###
+### STEP 4 — VERIFY PRODUCT EXISTS
+###
+
+GET {{baseUrl}}/api/products/{{productId}}
+Authorization: Bearer {{jwt}}
+
+###
+### STEP 5 — CREATE REVIEW
+###
+### THIS IS THE IMPORTANT ONE
+###
+
+# @name createReview
+
+POST {{baseUrl}}/api/products/{{productId}}/reviews
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+{
+  "customerId": "{{customerId}}",
+  "rating": 5,
+  "comment": "Manual HTTP review test."
+}
+
+###
+### Save Review ID
+###
+
+@reviewId = {{createReview.response.body.reviewId}}
+
+###
+### STEP 6 — GET REVIEW BY ID
+###
+
+GET {{baseUrl}}/api/reviews/{{reviewId}}
+Authorization: Bearer {{jwt}}
+
+###
+### STEP 7 — GET REVIEWS BY PRODUCT
+###
+
+GET {{baseUrl}}/api/products/{{productId}}/reviews
+Authorization: Bearer {{jwt}}
+
+###
+### STEP 8 — UPDATE REVIEW
+###
+
+PUT {{baseUrl}}/api/reviews/{{reviewId}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+{
+  "customerId": "{{customerId}}",
+  "rating": 4,
+  "comment": "Updated review from HTTP test."
+}
+
+###
+### STEP 9 — DELETE REVIEW
+###
+
+DELETE {{baseUrl}}/api/reviews/{{reviewId}}
+Authorization: Bearer {{jwt}}
+
+###
+### STEP 10 — VERIFY DELETE
+###
+
+GET {{baseUrl}}/api/reviews/{{reviewId}}
+Authorization: Bearer {{jwt}}
+
+###
+### EXPECTED RESULT:
+### 404 NOT FOUND
+###
+```

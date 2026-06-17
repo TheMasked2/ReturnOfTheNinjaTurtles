@@ -31,8 +31,11 @@ public class RecommendationService {
         }
 
         // Hydrate the relational assets from PostgreSQL using the graph database keys
-        String sql = "SELECT product_id, product_name, price, image_url " +
-                     "FROM PRODUCT WHERE product_id IN (:productIds)";
+        String sql = """
+        SELECT product_id, product_name, base_price AS price, NULL AS image_url
+        FROM PRODUCT
+        WHERE product_id IN (:productIds)
+        """;
 
         List<RecommendedProduct> hydratedProducts = namedParameterJdbcTemplate.query(
             sql, 

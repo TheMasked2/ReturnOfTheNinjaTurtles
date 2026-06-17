@@ -20,6 +20,10 @@ public class Neo4jConstraintInitializer {
         try (Session session = this.driver.session()) {
             session.run("CREATE CONSTRAINT unique_customer_id IF NOT EXISTS FOR (c:Customer) REQUIRE c.id IS UNIQUE");
             session.run("CREATE CONSTRAINT unique_product_id IF NOT EXISTS FOR (p:Product) REQUIRE p.id IS UNIQUE");
+            session.run("CREATE CONSTRAINT unique_month_id IF NOT EXISTS FOR (m:Month) REQUIRE m.id IS UNIQUE");
+            session.run("CREATE CONSTRAINT unique_season_id IF NOT EXISTS FOR (s:Season) REQUIRE s.id IS UNIQUE");
+            session.run("CREATE CONSTRAINT unique_order_id IF NOT EXISTS FOR (o:Order) REQUIRE o.id IS UNIQUE");
+            session.run("CREATE CONSTRAINT unique_review_id IF NOT EXISTS FOR (r:Review) REQUIRE r.id IS UNIQUE");
         }
     }
 }
