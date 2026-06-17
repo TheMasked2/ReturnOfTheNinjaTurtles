@@ -6,6 +6,9 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.turtleshop.api.modules.auth.model.Customer;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +41,31 @@ public class CustomerAccess {
     // Get All Customers
     public List<Customer> getAll() {
         return jdbc.query("SELECT * FROM CUSTOMER", customerMapper);
+    }
+
+    // Get Customers paginated
+    public Page<Customer> getPage(Pageable pageable) {
+        String sql = " SELECT * FROM CUSTOMER ORDER BY created_at DESC, customer_id ASC LIMIT :limit OFFSET :offset ";
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("limit", pageable.getPageSize())
+                .addValue("offset", pageable.getOffset());
+
+        List<Customer> customers = jdbc.query(sql, params, customerMapper);
+
+        String countSql = "SELECT COUNT(*) FROM CUSTOMER";
+
+        Long total = jdbc.queryForObject(
+                countSql,
+                new MapSqlParameterSource(),
+                Long.class
+        );
+
+        return new PageImpl<>(
+                customers,
+                pageable,
+                total != null ? total : 0
+        );
     }
 
     // Find customer by email

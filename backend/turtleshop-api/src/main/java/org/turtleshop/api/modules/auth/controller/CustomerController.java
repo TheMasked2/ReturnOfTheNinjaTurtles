@@ -1,6 +1,7 @@
 package org.turtleshop.api.modules.auth.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +29,13 @@ public class CustomerController {
     // Get all customers
     @GetMapping
     @PreAuthorize("hasAuthority('CUSTOMER_READ_ALL')")
-    public ResponseEntity<List<CustomerResponse>> getAll() {
-        return ResponseEntity.ok(customerService.getAllCustomers());
+    public ResponseEntity<Page<CustomerResponse>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+
+        return ResponseEntity.ok(customerService.getCustomersPage(safePage, safeSize));
     }
 }

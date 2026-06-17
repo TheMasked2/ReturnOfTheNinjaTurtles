@@ -4,7 +4,6 @@ import uuid
 import random
 from datetime import datetime, timedelta, UTC
 import psycopg2
-from psycopg2 import extras
 from pymongo import MongoClient
 from faker import Faker
 from pathlib import Path
@@ -19,7 +18,7 @@ load_dotenv(dotenv_path)
 # ==========================================
 # 1. SIMULATION CONFIGURATION (VIA ENV VARS)
 # ==========================================
-NUM_CUSTOMERS = 100000
+NUM_CUSTOMERS = 10000#0
 BATCH_SIZE = 5000
 NUM_PRODUCTS = 2500
 
@@ -28,7 +27,7 @@ DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
+DB_PORT = os.getenv("DB_SEEDER_PORT")
 
 # MongoDB Connection Parameters
 MONGO_USER = os.getenv("MONGO_USER")
@@ -534,12 +533,12 @@ def main():
                         order_date = datetime.now(UTC)
 
                     status_dice = random.random()
-                    if status_dice < 0.80:
-                        status = "DELIVERED"
+                    if status_dice < 0.70:
+                        status = "COMPLETED"
                     elif status_dice < 0.90:
-                        status = "SHIPPED"
+                        status = "CONFIRMED"
                     elif status_dice < 0.95:
-                        status = "PENDING"
+                        status = "AWAITING_PAYMENT"
                     else:
                         status = "CANCELLED"
 
@@ -629,7 +628,7 @@ def main():
 
                 t_status = (
                     "SUCCESS"
-                    if payload["status"] in ["DELIVERED", "SHIPPED", "PENDING"]
+                    if payload["status"] in ["CONFIRMED", "COMPLETED"]
                     else "FAILED"
                 )
                 trans_rows.append(
@@ -642,7 +641,7 @@ def main():
                     )
                 )
 
-                if payload["status"] in ["DELIVERED", "SHIPPED", "PENDING"]:
+                if payload["status"] in ["CONFIRMED", "COMPLETED"]:
                     shipment_payloads.append(
                         {
                             "order_id": order_id,
@@ -666,7 +665,7 @@ def main():
                     }
                 )
 
-                if payload["status"] == "DELIVERED" and random.random() < 0.30:
+                if payload["status"] == "COMPLETED" and random.random() < 0.30:
                     reviewed_prod = chosen_products[0][0]
                     mongo_reviews_batch.append(
                         {
@@ -722,7 +721,7 @@ def main():
                             "Order verified and processed.",
                         )
                     )
-                    if s_meta["status"] in ["SHIPPED", "DELIVERED"]:
+                    if s_meta["status"] in ["CONFIRMED", "COMPLETED"]:
                         ship_log_rows.append(
                             (
                                 s_id,
@@ -731,7 +730,7 @@ def main():
                                 "Handed over to carrier network.",
                             )
                         )
-                    if s_meta["status"] == "DELIVERED":
+                    if s_meta["status"] == "COMPLETED":
                         ship_log_rows.append(
                             (
                                 s_id,
@@ -833,6 +832,28 @@ def main():
     print("=" * 60)
     print("[✔] TRANSACTIONAL SIMULATION SEED COMPLETED SUCCESSFULLY.")
     print("=" * 60)
+
+    from neo4j import GraphDatabase
+
+    # Connect to Neo4j container
+    neo4j_driver = GraphDatabase.driver("bolt://neo4j:7687", auth=("neo4j", "splinter"))
+
+    with neo4j_driver.session() as session:
+        print("Triggering Neo4j recommendation compilation...")
+        
+        # Build the JDBC URL with username and password parameters
+        jdbc_url = f"jdbc:postgresql://db:5432/{DB_NAME}?user={DB_USER}&password={DB_PASSWORD}"
+        
+        session.run(f"""
+            CALL apoc.load.jdbc('{jdbc_url}', 'SELECT order_id, customer_id, total_amount FROM ORDERS') 
+            YIELD row
+            MERGE (o:Order {{id: row.order_id}})
+            SET o.amount = row.total_amount
+            MERGE (c:Customer {{id: row.customer_id}})
+            MERGE (c)-[:PLACED]->(o);
+        """)
+    neo4j_driver.close()
+    print("Seeding complete and recommendation engine updated!")
 
 
 if __name__ == "__main__":
