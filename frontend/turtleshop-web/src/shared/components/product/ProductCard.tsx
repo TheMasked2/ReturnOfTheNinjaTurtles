@@ -9,9 +9,10 @@ import type { Product } from "../../api/productApi";
 
 interface ProductCardProps {
   product: Product;
+  onAddedToCart?: () => void;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, onAddedToCart }: ProductCardProps) {
   const { isAuthenticated, user } = useAuth();
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(false);
@@ -102,7 +103,7 @@ export function ProductCard({ product }: ProductCardProps) {
       showNotification("Added to cart! 🛒");
 
       publishHeaderRefresh();
-      
+      onAddedToCart?.();
     } catch (error) {
       console.error("Failed to add cart item", error);
     } finally {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { cartApi } from "../../api/cartApi";
@@ -25,7 +25,7 @@ export default function CheckoutSummaryPage() {
   const [error, setError] = useState<string | null>(null);
   const [processingItemId, setProcessingItemId] = useState<number | null>(null);
 
-  useEffect(() => {
+  const loadSummary = useCallback(async () => {
     if (!isAuthenticated || !user?.id) {
       setCartItems([]);
       setRecommendedProducts([]);
@@ -33,73 +33,75 @@ export default function CheckoutSummaryPage() {
       return;
     }
 
-    const loadSummary = async () => {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      try {
-        const cart = await cartApi.getActiveCart(user.id);
+    try {
+      const cart = await cartApi.getActiveCart(user.id);
 
-        const cartItemsData = (cart.items ?? []) as Array<{
-          cartItemId: number;
-          productId: number;
-          quantity?: number;
-        }>;
+      const cartItemsData = (cart.items ?? []) as Array<{
+        cartItemId: number;
+        productId: number;
+        quantity?: number;
+      }>;
 
-        const cartProductIds = Array.from(
-          new Set(
-            cartItemsData
-              .map((item) => item.productId)
-              .filter((productId): productId is number => typeof productId === "number")
-          )
-        );
+      const cartProductIds = Array.from(
+        new Set(
+          cartItemsData
+            .map((item) => item.productId)
+            .filter((productId): productId is number => typeof productId === "number")
+        )
+      );
 
-        const cartProducts = cartProductIds.length
-          ? await productApi.getProductsByIds(cartProductIds).catch(() => [] as Product[])
-          : [];
+      const cartProducts = cartProductIds.length
+        ? await productApi.getProductsByIds(cartProductIds).catch(() => [] as Product[])
+        : [];
 
-        const cartProductIdSet = new Set<number>(cartProductIds);
+      const cartProductIdSet = new Set<number>(cartProductIds);
 
-        const mappedCartItems: CartSummaryItem[] = cartItemsData
-          .map((item) => {
-            const product = cartProducts.find((p) => p.id === item.productId);
-            const quantity = item.quantity ?? 1;
-            const unitPrice = product?.price ?? 0;
+      const mappedCartItems: CartSummaryItem[] = cartItemsData
+        .map((item) => {
+          const product = cartProducts.find((p) => p.id === item.productId);
+          const quantity = item.quantity ?? 1;
+          const unitPrice = product?.price ?? 0;
 
-            return {
-              cartItemId: item.cartItemId,
-              productId: item.productId,
-              quantity,
-              name: product?.name ?? `Product #${item.productId}`,
-              unitPrice,
-              subtotal: unitPrice * quantity,
-            };
-          })
-          .sort((a, b) => a.cartItemId - b.cartItemId);
+          return {
+            cartItemId: item.cartItemId,
+            productId: item.productId,
+            quantity,
+            name: product?.name ?? `Product #${item.productId}`,
+            unitPrice,
+            subtotal: unitPrice * quantity,
+          };
+        })
+        .sort((a, b) => a.cartItemId - b.cartItemId);
 
-        setCartItems(mappedCartItems);
+      setCartItems(mappedCartItems);
 
-        const recommendationResponse = await recommendationApi.getPopularThisMonth(4);
-        const recommendedProductIds = recommendationResponse
-          .map((item: RecommendedProduct) => item.productId)
-          .filter((id): id is number => typeof id === "number");
+      const recommendationResponse = await recommendationApi.getPopularThisMonth(4);
+      const recommendedProductIds = recommendationResponse
+        .map((item: RecommendedProduct) => item.productId)
+        .filter((id): id is number => typeof id === "number");
 
-        const recommended = recommendedProductIds.length
-          ? await productApi.getProductsByIds(recommendedProductIds).catch(() => [] as Product[])
-          : [];
+      const recommended = recommendedProductIds.length
+        ? await productApi.getProductsByIds(recommendedProductIds).catch(() => [] as Product[])
+        : [];
 
-        setRecommendedProducts(
-          recommended.filter((product) => !cartProductIdSet.has(product.id)).slice(0, 4)
-        );
-      } catch (err: any) {
-        setError(err?.message || "Unable to load order summary.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadSummary();
+      setRecommendedProducts(
+        recommended
+          .filter((product) => !cartProductIdSet.has(product.id))
+          .slice(0, 4)
+      );
+    } catch (err: any) {
+      setError(err?.message || "Unable to load order summary.");
+    } finally {
+      setLoading(false);
+    }
   }, [isAuthenticated, user?.id]);
+
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
 
@@ -110,18 +112,14 @@ export default function CheckoutSummaryPage() {
     }
 
     setProcessingItemId(cartItemId);
+
     try {
       await cartApi.updateItemQuantity(cartItemId, quantity);
-      setCartItems((prev) =>
-        prev.map((item) =>
-          item.cartItemId === cartItemId
-            ? { ...item, quantity, subtotal: item.unitPrice * quantity }
-            : item
-        )
-      );
+      await loadSummary();
       publishHeaderRefresh();
     } catch (err) {
       console.error("Failed to update cart quantity", err);
+      setError("Unable to update quantity right now.");
     } finally {
       setProcessingItemId(null);
     }
@@ -129,12 +127,14 @@ export default function CheckoutSummaryPage() {
 
   const handleRemoveItem = async (cartItemId: number) => {
     setProcessingItemId(cartItemId);
+
     try {
       await cartApi.removeItem(cartItemId);
-      setCartItems((prev) => prev.filter((item) => item.cartItemId !== cartItemId));
+      await loadSummary();
       publishHeaderRefresh();
     } catch (err) {
       console.error("Failed to remove cart item", err);
+      setError("Unable to remove item right now.");
     } finally {
       setProcessingItemId(null);
     }
@@ -168,6 +168,7 @@ export default function CheckoutSummaryPage() {
             >
               <div className="card">
                 <h3>Cart items</h3>
+
                 {cartItems.length === 0 ? (
                   <div className="status-message">Your cart is empty.</div>
                 ) : (
@@ -199,9 +200,11 @@ export default function CheckoutSummaryPage() {
                               +
                             </button>
                           </div>
+
                           <div className="cart-summary-price">
                             <strong>${item.subtotal.toFixed(2)}</strong>
                           </div>
+
                           <button
                             type="button"
                             className="button button-link"
@@ -224,6 +227,7 @@ export default function CheckoutSummaryPage() {
                   <span>Subtotal</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
+
                 <button
                   className="button button-primary"
                   type="button"
@@ -237,14 +241,17 @@ export default function CheckoutSummaryPage() {
 
             <div className="card" style={{ marginTop: "1rem" }}>
               <h3>Products often ordered with your items</h3>
+
               {recommendedProducts.length === 0 ? (
-                <div className="status-message">
-                  We couldn't find recommendations right now.
-                </div>
+                <div className="status-message">We couldn't find recommendations right now.</div>
               ) : (
                 <div className="grid grid-4">
                   {recommendedProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onAddedToCart={loadSummary}
+                    />
                   ))}
                 </div>
               )}

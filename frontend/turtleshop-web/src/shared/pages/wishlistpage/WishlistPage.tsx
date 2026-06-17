@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { productApi } from "../../api/productApi";
 import { wishlistApi } from "../../api/wishlistApi";
+import { publishHeaderRefresh } from "../../state/refreshBus";
 
 interface WishlistItem {
   wishlistId: number;
@@ -179,7 +180,11 @@ export default function WishlistPage() {
                     type="button"
                     className="button button-ghost"
                     disabled={removingProductId === item.productId}
-                    onClick={() => handleRemove(item.productId)}
+                    // Trigger a header refresh on successful removal
+                    onClick={() => {
+                      handleRemove(item.productId).then(() => {
+                        publishHeaderRefresh();
+                      })}}
                   >
                     Remove
                   </button>
