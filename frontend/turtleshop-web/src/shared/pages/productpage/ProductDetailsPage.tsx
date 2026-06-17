@@ -1,14 +1,95 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
+import { cartApi } from "../../api/cartApi";
+import { wishlistApi } from "../../api/wishlistApi";
 import { productApi, type Product } from "../../api/productApi";
 import { recommendationApi } from "../../api/recommendationApi";
+import { publishHeaderRefresh } from "../../state/refreshBus";
+import { ProductCard } from "../../components/product/ProductCard";
 
 export default function ProductDetailsPage() {
   const { productId } = useParams<{ productId: string }>();
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const showNotification = (message: string) => {
+    setNotification(message);
+    window.setTimeout(() => setNotification(null), 3000);
+  };
+
+  const ensureCart = async () => {
+    if (!user?.id) return;
+    try {
+      await cartApi.getActiveCart(user.id);
+    } catch (error: any) {
+      if (error.message.includes("409") || error.message.includes("no active carts")) {
+        await cartApi.createCart(user.id);
+      } else {
+        throw error;
+      }
+    }
+  };
+
+  const handleAddToCart = async () => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    if (!user?.id) return;
+
+    setBusy(true);
+    try {
+      await ensureCart();
+      await cartApi.addItem(user.id, Number(productId));
+      showNotification("Added to cart! 🛒");
+      publishHeaderRefresh();
+    } catch (err) {
+      console.error("Failed to add product to cart", err);
+      setError("Unable to add product to cart right now.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleAddToWishlist = async () => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    if (!user?.id) return;
+
+    setBusy(true);
+    try {
+      let wishlistId: number;
+      try {
+        const wishlist = await wishlistApi.getWishlistByCustomer(user.id);
+        wishlistId = wishlist.wishlistId;
+      } catch (error: any) {
+        if (error.message.includes("404") || error.message.includes("Wishlist not found")) {
+          wishlistId = await wishlistApi.createWishlist(user.id);
+        } else {
+          throw error;
+        }
+      }
+      await wishlistApi.addItemToWishlist(wishlistId, Number(productId));
+      showNotification("Added to wishlist! ❤️");
+      publishHeaderRefresh();
+    } catch (err) {
+      console.error("Failed to add product to wishlist", err);
+      setError("Unable to add product to wishlist right now.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!productId) {
@@ -26,12 +107,12 @@ export default function ProductDetailsPage() {
       return;
     }
 
-    setLoading(true);
-    setError(null);
-    setProduct(null);
-    setRelatedProducts([]);
-
     const loadProductAndSuggestions = async () => {
+      setLoading(true);
+      setError(null);
+      setProduct(null);
+      setRelatedProducts([]);
+
       try {
         const productItem = await productApi.getProductById(id);
         setProduct(productItem);
@@ -41,7 +122,7 @@ export default function ProductDetailsPage() {
         const related = ids.length ? await productApi.getProductsByIds(ids) : [];
         setRelatedProducts(related);
       } catch (err: any) {
-        setError(err?.message || "Product not found.");
+        setError(err?.message || "Unable to load product details.");
       } finally {
         setLoading(false);
       }
@@ -80,6 +161,26 @@ export default function ProductDetailsPage() {
             <span className="price-tag">${product.price.toFixed(2)}</span>
             <span className="badge">Available since {new Date(product.availableSince).getFullYear()}</span>
           </div>
+
+          <div className="product-detail-actions">
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={handleAddToWishlist}
+              disabled={busy}
+            >
+              Add to wishlist
+            </button>
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={handleAddToCart}
+              disabled={busy}
+            >
+              Add to cart
+            </button>
+          </div>
+
           <p>{product.description}</p>
           <div className="form-field">
             <label>Specs</label>
@@ -91,13 +192,11 @@ export default function ProductDetailsPage() {
             {relatedProducts.length > 0 ? (
               <div className="grid grid-4">
                 {relatedProducts.map((related) => (
-                  <div key={related.id} className="suggested-card card">
-                    <h4>{related.name}</h4>
-                    <p className="text-muted">${related.price.toFixed(2)}</p>
-                    <Link to={`/products/${related.id}`} className="text-link">
-                      View product
-                    </Link>
-                  </div>
+                  <ProductCard
+                    key={related.id}
+                    product={related}
+                    onAddedToCart={() => showNotification("Added related product to cart! 🛒")}
+                  />
                 ))}
               </div>
             ) : (
@@ -106,6 +205,12 @@ export default function ProductDetailsPage() {
           </div>
         </div>
       </section>
+
+      {notification && (
+        <div className="toast-notification">
+          {notification}
+        </div>
+      )}
     </div>
   );
 }

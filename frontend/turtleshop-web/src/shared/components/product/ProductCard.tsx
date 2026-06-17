@@ -10,9 +10,10 @@ import type { Product } from "../../api/productApi";
 interface ProductCardProps {
   product: Product;
   onAddedToCart?: () => void;
+  onAddedToWishlist?: () => void;
 }
 
-export function ProductCard({ product, onAddedToCart }: ProductCardProps) {
+export function ProductCard({ product, onAddedToCart, onAddedToWishlist }: ProductCardProps) {
   const { isAuthenticated, user } = useAuth();
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(false);
@@ -59,9 +60,10 @@ export function ProductCard({ product, onAddedToCart }: ProductCardProps) {
       
       // 3a. Trigger popup on success
       showNotification("Added to wishlist! ❤️");
-
-      publishHeaderRefresh();
       
+      publishHeaderRefresh();
+      onAddedToWishlist?.();
+    
     } catch (error: any) {
       // Optional: Inform user if item already exists (409 Conflict)
       if (error.message.includes("409") || error.message.includes("already exists")) {

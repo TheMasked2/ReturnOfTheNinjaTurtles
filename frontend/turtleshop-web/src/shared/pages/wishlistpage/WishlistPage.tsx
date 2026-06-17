@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
-import { productApi } from "../../api/productApi";
+import { productApi, type Product } from "../../api/productApi";
 import { wishlistApi } from "../../api/wishlistApi";
+import { ProductCard } from "../../components/product/ProductCard";
+import { recommendationApi } from "../../api/recommendationApi";
 import { publishHeaderRefresh } from "../../state/refreshBus";
 
 interface WishlistItem {
@@ -20,13 +22,14 @@ export default function WishlistPage() {
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [wishlistId, setWishlistId] = useState<number | null>(null);
   const [removingProductId, setRemovingProductId] = useState<number | null>(null);
+  const [seasonalProducts, setSeasonalProducts] = useState<Product[]>([]);
 
-  useEffect(() => {
+  const loadWishlistSummary = useCallback(async () => {
     if (!isAuthenticated || !user?.id) {
       setLoading(false);
       return;
     }
-
+    
     const loadWishlist = async () => {
       try {
         setLoading(true);
@@ -73,7 +76,23 @@ export default function WishlistPage() {
       }
     };
 
+    const loadSeasonalRecommendations = async () => {
+      try {
+        const recommendations = await recommendationApi.getPopularThisSeason(4);
+        const seasonIds = recommendations.map((item) => item.productId);
+        const seasonProducts = await productApi.getProductsByIds(seasonIds);
+        setSeasonalProducts(seasonProducts);
+      } catch (error) {
+        console.error("Failed to load seasonal recommendations", error);
+      }
+    };
+
     loadWishlist();
+    loadSeasonalRecommendations();
+  }, [isAuthenticated, user?.id]);
+
+  useEffect(() => {
+    loadWishlistSummary();
   }, [isAuthenticated, user?.id]);
 
   const handleRemove = async (productId: number) => {
@@ -192,6 +211,33 @@ export default function WishlistPage() {
               </article>
             ))}
           </div>
+        )}
+      </section>
+
+      <section className="section">
+        <div className="section-heading">
+          <h2>Popular items this season</h2>
+          <Link to="/products" className="text-link">
+            See all products
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="status-message">Loading popular season items...</div>
+        ) : error ? (
+          <div className="status-message status-error">{error}</div>
+        ) : seasonalProducts.length > 0 ? (
+          <div className="grid grid-4">
+            {seasonalProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddedToWishlist={loadWishlistSummary}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="status-message">No seasonal recommendations available.</div>
         )}
       </section>
     </div>
