@@ -5,8 +5,7 @@ import { cartApi } from "../../api/cartApi";
 import { wishlistApi } from "../../api/wishlistApi";
 import { productApi } from "../../api/productApi";
 import { CartPanel } from "../cart/CartPanel";
-import { WishlistPanel } from "../wishlist/WishlistPanel";
-import { publishHeaderRefresh, subscribeHeaderRefresh } from "../../state/refreshBus";
+import { subscribeHeaderRefresh } from "../../state/refreshBus";
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
     isActive ? "nav-link active" : "nav-link";
@@ -17,20 +16,16 @@ export function PublicNavbar() {
     const [wishlistCount, setWishlistCount] = useState(0);
     const [cartCount, setCartCount] = useState(0);
     const [cartItems, setCartItems] = useState<any[]>([]);
-    const [wishlistItems, setWishlistItems] = useState<any[]>([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
-    const [isWishlistOpen, setIsWishlistOpen] = useState(false);
     const cartToggleRef = useRef<HTMLAnchorElement | null>(null);
-    const wishlistToggleRef = useRef<HTMLAnchorElement | null>(null);
 
-        useEffect(() => {
-            if (!isAuthenticated || !user?.id) {
-                setWishlistCount(0);
-                setCartCount(0);
-                setCartItems([]);
-                setWishlistItems([]);
-                return;
-            }
+    useEffect(() => {
+        if (!isAuthenticated || !user?.id) {
+            setWishlistCount(0);
+            setCartCount(0);
+            setCartItems([]);
+            return;
+        }
 
         const loadCounts = async () => {
             try {
@@ -42,7 +37,7 @@ export function PublicNavbar() {
                 } catch (error: any) {
                     // Ignore missing cart
                 }
-    
+
                 let wishlistItemsResponse: any[] = [];
                 try {
                     const wishlist = await wishlistApi.getWishlistByCustomer(user.id);
@@ -50,7 +45,7 @@ export function PublicNavbar() {
                 } catch (error: any) {
                     // Ignore missing wishlist
                 }
-    
+
                 const mappedCartItems = activeCartItems
                     .map((item: any) => {
                         const product = products.find((p: any) => p.id === item.productId);
@@ -60,37 +55,22 @@ export function PublicNavbar() {
                             totalPrice: product ? product.price * (item.quantity || 1) : null,
                         };
                     })
-                    .sort(
-                        (a: any, b: any) =>
-                            (a.cartItemId ?? 0) - (b.cartItemId ?? 0)
-                    );
-    
-                const mappedWishlistItems = wishlistItemsResponse.map((item: any) => {
-                    const product = products.find((p: any) => p.id === item.productId);
-                    return {
-                        ...item,
-                        name: product?.name || `Product #${item.productId}`,
-                        totalPrice: product?.price ?? null,
-                    };
-                });
-    
+                    .sort((a: any, b: any) => (a.cartItemId ?? 0) - (b.cartItemId ?? 0));
+
                 setCartCount(mappedCartItems.length);
                 setCartItems(mappedCartItems);
-                setWishlistCount(mappedWishlistItems.length);
-                setWishlistItems(mappedWishlistItems);
-
+                setWishlistCount(wishlistItemsResponse.length);
             } catch (error) {
                 console.error("Failed to load header items", error);
                 setWishlistCount(0);
                 setCartCount(0);
                 setCartItems([]);
-                setWishlistItems([]);
             }
         };
-    
+
         const unsubscribe = subscribeHeaderRefresh(loadCounts);
         loadCounts();
-    
+
         return () => unsubscribe();
     }, [isAuthenticated, user?.id]);
 
@@ -101,27 +81,10 @@ export function PublicNavbar() {
 
     const handleCartToggle = (event: ReactMouseEvent<HTMLAnchorElement>) => {
         event.preventDefault();
-        setIsWishlistOpen(false);
         setIsCartOpen((prev) => !prev);
     };
 
-    const handleWishlistToggle = (event: ReactMouseEvent<HTMLAnchorElement>) => {
-        event.preventDefault();
-        setIsCartOpen(false);
-        setIsWishlistOpen((prev) => !prev);
-    };
-
-    const handleWishlistItemRemove = async (wishlistId: number, productId: number) => {
-        try {
-            await wishlistApi.deleteWishlistItem(wishlistId, productId);
-            publishHeaderRefresh();
-        } catch (error) {
-            console.error("Failed to remove wishlist item", error);
-        }
-    };
-
     return (
-        // ... (keep the existing JSX return block exactly the same) 
         <header className="site-header">
             <div className="site-branding">
                 <NavLink to="/" className="brand-link">
@@ -138,26 +101,10 @@ export function PublicNavbar() {
                     <NavLink to="/products" className={navClass}>
                         Products
                     </NavLink>
-                    <NavLink
-                        to="/wishlist"
-                        className={navClass}
-                        onClick={handleWishlistToggle}
-                        ref={wishlistToggleRef}
-                    >
+                    <NavLink to="/wishlist" className={navClass}>
                         Wishlist
                         {wishlistCount > 0 && (
                             <span className="badge badge-nav">{wishlistCount}</span>
-                        )}
-                    </NavLink>
-                    <NavLink
-                        to="/cart"
-                        className={navClass}
-                        onClick={handleCartToggle}
-                        ref={cartToggleRef}
-                    >
-                        Cart
-                        {cartCount > 0 && (
-                            <span className="badge badge-nav">{cartCount}</span>
                         )}
                     </NavLink>
                 </nav>
@@ -168,17 +115,22 @@ export function PublicNavbar() {
                     onClose={() => setIsCartOpen(false)}
                     toggleRef={cartToggleRef}
                 />
-
-                <WishlistPanel
-                    isOpen={isWishlistOpen}
-                    items={wishlistItems}
-                    onClose={() => setIsWishlistOpen(false)}
-                    toggleRef={wishlistToggleRef}
-                    onRemoveItem={handleWishlistItemRemove}
-                />
             </div>
 
             <div className="auth-actions">
+                <a
+                    href="#"
+                    className="button button-icon cart-toggle"
+                    onClick={handleCartToggle}
+                    ref={cartToggleRef}
+                    aria-label="Toggle cart"
+                >
+                    <span className="icon icon-cart" aria-hidden="true">🛒</span>
+                    {cartCount > 0 && (
+                        <span className="badge badge-nav">{cartCount}</span>
+                    )}
+                </a>
+
                 {isAuthenticated ? (
                     <>
                         <NavLink to="/profile" className="button button-ghost">

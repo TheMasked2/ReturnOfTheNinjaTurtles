@@ -12,6 +12,8 @@ import OrderConfirmationPage from "../shared/pages/checkoutpage/OrderConfirmatio
 import NotFoundPage from "../shared/pages/errorpage/NotFoundPage.tsx";
 import { ProtectedRoute } from "../shared/components/ProtectedRoute.tsx";
 import { ProfilePage } from "../shared/pages/profilepage/ProfilePage.tsx";
+import OrdersPage from "../shared/pages/orderpage/OrderPage.tsx";
+import OrderDetailsPage from "../shared/pages/orderpage/OrderDetailsPage.tsx";
 
 export const router = createBrowserRouter([
     {
@@ -34,6 +36,22 @@ export const router = createBrowserRouter([
                 element: (
                     <ProtectedRoute>
                         <ProfilePage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "orders",
+                element: (
+                    <ProtectedRoute>
+                        <OrdersPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "orders/:orderId",
+                element: (
+                    <ProtectedRoute>
+                        <OrderDetailsPage />
                     </ProtectedRoute>
                 ),
             },
