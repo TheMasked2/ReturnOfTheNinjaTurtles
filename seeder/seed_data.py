@@ -18,7 +18,7 @@ load_dotenv(dotenv_path)
 # ==========================================
 # 1. SIMULATION CONFIGURATION (VIA ENV VARS)
 # ==========================================
-NUM_CUSTOMERS = 100000
+NUM_CUSTOMERS = 10000#0
 BATCH_SIZE = 5000
 NUM_PRODUCTS = 2500
 
@@ -27,7 +27,7 @@ DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
+DB_PORT = os.getenv("DB_SEEDER_PORT")
 
 # MongoDB Connection Parameters
 MONGO_USER = os.getenv("MONGO_USER")
@@ -832,6 +832,28 @@ def main():
     print("=" * 60)
     print("[✔] TRANSACTIONAL SIMULATION SEED COMPLETED SUCCESSFULLY.")
     print("=" * 60)
+
+    from neo4j import GraphDatabase
+
+    # Connect to Neo4j container
+    neo4j_driver = GraphDatabase.driver("bolt://neo4j:7687", auth=("neo4j", "splinter"))
+
+    with neo4j_driver.session() as session:
+        print("Triggering Neo4j recommendation compilation...")
+        
+        # Build the JDBC URL with username and password parameters
+        jdbc_url = f"jdbc:postgresql://db:5432/{DB_NAME}?user={DB_USER}&password={DB_PASSWORD}"
+        
+        session.run(f"""
+            CALL apoc.load.jdbc('{jdbc_url}', 'SELECT order_id, customer_id, total_amount FROM ORDERS') 
+            YIELD row
+            MERGE (o:Order {{id: row.order_id}})
+            SET o.amount = row.total_amount
+            MERGE (c:Customer {{id: row.customer_id}})
+            MERGE (c)-[:PLACED]->(o);
+        """)
+    neo4j_driver.close()
+    print("Seeding complete and recommendation engine updated!")
 
 
 if __name__ == "__main__":
