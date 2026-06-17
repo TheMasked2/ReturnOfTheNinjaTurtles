@@ -8,10 +8,15 @@ import static io.gatling.javaapi.core.CoreDsl.constantUsersPerSec;
 
 import java.util.UUID;
 
-import static io.gatling.javaapi.core.CoreDsl.*;
-import static io.gatling.javaapi.http.HttpDsl.*;
+import static io.gatling.javaapi.core.CoreDsl.StringBody;
+import static io.gatling.javaapi.core.CoreDsl.atOnceUsers;
+import static io.gatling.javaapi.core.CoreDsl.jsonPath;
+import static io.gatling.javaapi.core.CoreDsl.rampUsers;
+import static io.gatling.javaapi.core.CoreDsl.scenario;
+import static io.gatling.javaapi.http.HttpDsl.http;
+import static io.gatling.javaapi.http.HttpDsl.status;
 
-public class CustomerRegisterAndCheckoutSimulation extends Simulation {
+public class TransactionFlowSimulation extends Simulation {
 
     private static final Dotenv dotenv = Dotenv.configure()
             .directory("../../")
@@ -21,21 +26,16 @@ public class CustomerRegisterAndCheckoutSimulation extends Simulation {
     private static final String adminEmail = dotenv.get("ADMIN_EMAIL", "default-admin@turtleshop.com");
     private static final String adminPassword = dotenv.get("ADMIN_PASSWORD", "default-password");
 
-    /*
-     * This simulation uses product 3 only.
-     * We reset its inventory before the performance scenario starts.
-     */
-    private static final int CHECKOUT_TEST_PRODUCT_ID = 3;
-    private static final int CHECKOUT_TEST_STOCK = 1_000_000;
+    private static final int TRANSACTION_TEST_PRODUCT_ID = 9;
+    private static final int TRANSACTION_TEST_STOCK = 10000;
 
     HttpProtocolBuilder httpProtocol = http
             .baseUrl("http://localhost:8080")
             .acceptHeader("application/json")
             .contentTypeHeader("application/json");
 
-    ScenarioBuilder resetCheckoutTestData = scenario("Reset Checkout Test Data")
-
-            .exec(http("Admin Login For Checkout Test Setup")
+    ScenarioBuilder resetTransactionTestData = scenario("Reset Transaction Test Data")
+            .exec(http("Admin Login For Transaction Test Setup")
                     .post("/api/auth/login")
                     .body(StringBody(String.format(
                             "{\"email\":\"%s\",\"password\":\"%s\"}",
@@ -46,41 +46,38 @@ public class CustomerRegisterAndCheckoutSimulation extends Simulation {
                     .check(jsonPath("$.token").saveAs("adminJwtToken")))
             .exitHereIfFailed()
 
-            .exec(http("Reset Checkout Product Inventory")
-                    .put("/api/inventory/product/" + CHECKOUT_TEST_PRODUCT_ID)
+            .exec(http("Reset Transaction Test Product Inventory")
+                    .put("/api/inventory/product/" + TRANSACTION_TEST_PRODUCT_ID)
                     .header("Authorization", "Bearer #{adminJwtToken}")
                     .body(StringBody("{"
-                            + "\"quantityAvailable\":" + CHECKOUT_TEST_STOCK + ","
+                            + "\"quantityAvailable\":" + TRANSACTION_TEST_STOCK + ","
                             + "\"quantityReserved\":0"
                             + "}"))
                     .check(status().is(204)))
             .exitHereIfFailed();
 
-    ScenarioBuilder scn = scenario("Normal User Registration & Shopping Journey")
-
+    ScenarioBuilder scn = scenario("Transaction Payment Confirmation Flow")
             .exec(session -> {
                 String uniqueId = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-                String dynamicEmail = "ninja_" + uniqueId + "@turtleshop.com";
 
                 return session
-                        .set("dynamicEmail", dynamicEmail)
+                        .set("dynamicEmail", "transaction_user_" + uniqueId + "@turtleshop.com")
                         .set("dynamicPassword", "SecurePass123!");
             })
 
-            .exec(http("Customer Registration (Sign Up)")
+            .exec(http("Register Transaction Customer")
                     .post("/api/auth/register")
                     .body(StringBody("{"
                             + "\"email\":\"#{dynamicEmail}\","
                             + "\"password\":\"#{dynamicPassword}\","
-                            + "\"firstName\":\"Michelangelo\","
-                            + "\"lastName\":\"Splinterson\","
-                            + "\"phone\":\"+17166383774\""
+                            + "\"firstName\":\"April\","
+                            + "\"lastName\":\"ONeil\","
+                            + "\"phone\":\"+17165550123\""
                             + "}"))
                     .check(status().is(200)))
-            .exitHereIfFailed()
             .pause(1)
 
-            .exec(http("Customer Login")
+            .exec(http("Login Transaction Customer")
                     .post("/api/auth/login")
                     .body(StringBody("{"
                             + "\"email\":\"#{dynamicEmail}\","
@@ -92,56 +89,85 @@ public class CustomerRegisterAndCheckoutSimulation extends Simulation {
             .exitHereIfFailed()
             .pause(1)
 
-            .exec(http("Create Empty Cart")
+            .exec(http("Create Cart For Transaction Flow")
                     .post("/api/cart/#{currentCustomerId}")
                     .header("Authorization", "Bearer #{jwtToken}")
                     .check(status().is(200)))
-            .exitHereIfFailed()
             .pause(1)
 
-            .exec(http("Add Product to Cart")
+            .exec(http("Add Product For Transaction Flow")
                     .post("/api/cart/#{currentCustomerId}/items")
                     .header("Authorization", "Bearer #{jwtToken}")
                     .body(StringBody("{"
-                            + "\"productId\":" + CHECKOUT_TEST_PRODUCT_ID + ","
+                            + "\"productId\":" + TRANSACTION_TEST_PRODUCT_ID + ","
                             + "\"quantity\":1"
                             + "}"))
                     .check(status().in(200, 201)))
             .exitHereIfFailed()
             .pause(1)
 
-            .exec(http("Get Active Cart")
-                    .get("/api/cart/#{currentCustomerId}")
-                    .header("Authorization", "Bearer #{jwtToken}")
-                    .check(status().is(200)))
-            .exitHereIfFailed()
-            .pause(1)
-
-            .exec(http("Place Order via Checkout Controller")
+            .exec(http("Place Order And Create Pending Transaction")
                     .post("/api/checkout/customer/#{currentCustomerId}/place-order")
                     .header("Authorization", "Bearer #{jwtToken}")
                     .body(StringBody("{"
                             + "\"shippingMethod\":\"PostNL\","
-                            + "\"shippingAddress\":\"123 Sewer Lair, NYC\","
+                            + "\"shippingAddress\":\"123 Transaction Street, Amsterdam\","
                             + "\"paymentMethod\":\"Visa\""
                             + "}"))
                     .check(status().is(200))
-                    .check(jsonPath("$.orderId").saveAs("newOrderId"))
+                    .check(jsonPath("$.orderId").saveAs("orderId"))
+                    .check(jsonPath("$.transactionId").saveAs("transactionId"))
+                    .check(jsonPath("$.transactionStatus").is("PENDING"))
                     .check(jsonPath("$.totalAmount").saveAs("orderTotal")))
             .exitHereIfFailed()
-            .pause(2)
+            .pause(1)
 
-            .exec(http("View Order Details")
-                    .get("/api/orders/#{newOrderId}")
+            .exec(http("Customer Reads Transactions For Own Order")
+                    .get("/api/transactions/order/#{orderId}")
                     .header("Authorization", "Bearer #{jwtToken}")
-                    .check(status().is(200)));
+                    .check(status().is(200))
+                    .check(jsonPath("$[0].status").is("PENDING")))
+            .pause(1)
+
+            .exec(http("Admin Login For Payment Confirmation")
+                    .post("/api/auth/login")
+                    .body(StringBody(String.format(
+                            "{\"email\":\"%s\",\"password\":\"%s\"}",
+                            adminEmail,
+                            adminPassword
+                    )))
+                    .check(status().is(200))
+                    .check(jsonPath("$.token").saveAs("adminJwtToken")))
+            .exitHereIfFailed()
+            .pause(1)
+
+            .exec(http("Admin Confirms Transaction Payment")
+                    .post("/api/transactions/#{transactionId}/confirm-payment?orderId=#{orderId}")
+                    .header("Authorization", "Bearer #{adminJwtToken}")
+                    .check(status().is(204)))
+            .exitHereIfFailed()
+            .pause(1)
+
+            .exec(http("Admin Verifies Transaction Is Successful")
+                    .get("/api/transactions/#{transactionId}")
+                    .header("Authorization", "Bearer #{adminJwtToken}")
+                    .check(status().is(200))
+                    .check(jsonPath("$.status").is("SUCCESS")))
+            .pause(1)
+
+            .exec(http("Customer Verifies Order Is Confirmed")
+                    .get("/api/orders/#{orderId}")
+                    .header("Authorization", "Bearer #{jwtToken}")
+                    .check(status().is(200))
+                    .check(jsonPath("$.status").is("CONFIRMED")));
 
     {
         setUp(
-                resetCheckoutTestData.injectOpen(atOnceUsers(1))
+                resetTransactionTestData.injectOpen(atOnceUsers(1))
                         .andThen(
                                 scn.injectOpen(
-                                        rampUsers(20).during(10)
+                                        rampUsers(50).during(20),
+                                        constantUsersPerSec(15).during(30)
                                 )
                         )
         ).protocols(httpProtocol);

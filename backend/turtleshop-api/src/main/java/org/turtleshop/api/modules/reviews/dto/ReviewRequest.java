@@ -9,9 +9,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReviewRequest {
-    @NotNull(message = "productId is required")
-    private Integer productId;
-
     @NotBlank(message = "customerId is required")
     private String customerId;
 

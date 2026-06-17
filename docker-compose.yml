@@ -11,7 +11,7 @@ services:
     volumes:
       - turtleshop_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      test: [ "CMD-SHELL", "pg_isready -U $${DB_USER} -d $${DB_NAME}" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -32,7 +32,99 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    
+
+  download-driver:
+    image: alpine:latest
+    container_name: turtleshop-driver-downloader
+    command: sh -c "apk add --no-cache curl && curl -o /plugins/postgresql-42.7.2.jar https://jdbc.postgresql.org/download/postgresql-42.7.2.jar"
+    volumes:
+      - turtleshop_neo4j_plugins:/plugins
+
+  neo4j:
+    image: neo4j:5.12.0-community
+    container_name: turtleshop-neo4j
+    ports:
+      - "7474:7474" 
+      - "7687:7687" 
+    environment:
+      - NEO4J_AUTH=neo4j/${DB_PASSWORD}
+      - NEO4J_PLUGINS=["apoc", "apoc-extended"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.*
+    volumes:
+      - turtleshop_neo4j_data:/data
+      - turtleshop_neo4j_logs:/logs
+      - turtleshop_neo4j_plugins:/plugins
+    init: true
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      db:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ./backend/turtleshop-api
+      dockerfile: Dockerfile
+      target: dev
+    container_name: turtleshop-api
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/turtleshop?authSource=admin
+      NEO4J_USERNAME: neo4j
+      NEO4J_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend/turtleshop-api:/app
+      - /app/.gradle
+      - /app/build
+    depends_on:
+      db:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/swagger-ui/index.html || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  seeder:
+    image: python:3.11-slim
+    container_name: turtleshop-seeder
+    volumes:
+      - .:/app
+    working_dir: /app/seeder
+    command: sh -c "pip install --no-cache-dir -r requirements.txt && python seed_data.py"
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=${DB_SEEDER_PORT}
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+    depends_on:
+      api:
+        condition: service_healthy
+
   mongo-express:
     image: mongo-express
     container_name: turtleshop-mongo-gui
@@ -64,57 +156,6 @@ services:
       retries: 5
       start_period: 30s
     
-  neo4j:
-    image: neo4j:5.12.0-community
-    container_name: turtleshop-neo4j
-    ports:
-      - "7474:7474" # HTTP Web-GUI
-      - "7687:7687" # Bolt protocol for backend connection
-    environment:
-      - NEO4J_AUTH=neo4j/${DB_PASSWORD}
-      - NEO4J_PLUGINS=["apoc"]
-      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
-    volumes:
-      - turtleshop_neo4j_data:/data
-      - turtleshop_neo4j_logs:/logs
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474/ || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  api:
-    build:
-      context: ./backend/turtleshop-api
-      dockerfile: Dockerfile
-      target: dev
-    container_name: turtleshop-api
-    environment:
-      SPRING_PROFILES_ACTIVE: local
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
-      SPRING_DATASOURCE_USERNAME: ${DB_USER}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
-      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/turtleshop?authSource=admin
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
-      NEO4J_USERNAME: neo4j
-      NEO4J_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "8080:8080"
-    depends_on:
-      db:
-        condition: service_healthy
-      mongodb:
-        condition: service_healthy
-      neo4j:
-        condition: service_healthy
-    volumes:
-      - ./backend/turtleshop-api:/app
-      - /app/.gradle
-      - /app/build
 
   frontend:
     build:
@@ -123,11 +164,12 @@ services:
     container_name: turtleshop-frontend
     ports:
       - "5173:5173"
-    depends_on:
-      - api
     volumes:
       - ./frontend/turtleshop-web:/app
       - /app/node_modules
+    depends_on:
+      seeder:
+        condition: service_completed_successfully
 
 volumes:
   turtleshop_pgdata:
@@ -135,3 +177,4 @@ volumes:
   redis_data:
   turtleshop_neo4j_data:
   turtleshop_neo4j_logs:
+  turtleshop_neo4j_plugins:

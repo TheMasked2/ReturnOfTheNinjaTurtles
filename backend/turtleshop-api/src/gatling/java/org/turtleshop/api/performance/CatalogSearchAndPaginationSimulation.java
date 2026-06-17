@@ -2,6 +2,7 @@ package org.turtleshop.api.performance;
 
 import static io.gatling.javaapi.core.CoreDsl.*;
 import static io.gatling.javaapi.http.HttpDsl.*;
+import static io.gatling.javaapi.core.CoreDsl.constantUsersPerSec;
 import io.gatling.javaapi.core.*;
 import io.gatling.javaapi.http.*;
 
@@ -45,9 +46,8 @@ public class CatalogSearchAndPaginationSimulation extends Simulation {
     {
         setUp(
                 scn.injectOpen(
-                        nothingFor(2),
-                        rampUsers(15).during(5),
-                        constantUsersPerSec(20).during(30)
+                        rampUsers(50).during(20),
+                        constantUsersPerSec(15).during(30)
                 )
         ).protocols(httpProtocol);
     }

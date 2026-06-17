@@ -3,6 +3,7 @@ package org.turtleshop.api.performance;
 import static io.gatling.javaapi.core.CoreDsl.*;
 import static io.gatling.javaapi.http.HttpDsl.*;
 import io.github.cdimascio.dotenv.Dotenv;
+import static io.gatling.javaapi.core.CoreDsl.constantUsersPerSec;
 
 import io.gatling.javaapi.core.*;
 import io.gatling.javaapi.http.*;
@@ -38,18 +39,25 @@ public class AdminCustomerAuditSimulation extends Simulation {
 
             .pause(1)
 
-            // 2. Fetch all customers using the extracted Token
-            .exec(http("Get All Customers API")
-                    .get("/api/customer")
+            // 2. Test the SQL view endpoint
+            .exec(http("Get Order Summary View API")
+                    .get("/api/orders/admin/summary?limit=50")
                     .header("Authorization", "Bearer #{jwtToken}")
-                    .check(status().is(200))
-                    // $[0].id means: "Go to the first object in the array, grab the 'id' field"
-                    // If your DTO uses a field named 'uuid' instead of 'id', change this to $.uuid
-                    .check(jsonPath("$[0].id").saveAs("dynamicCustomerId")))
+                    .check(status().is(200)))
 
             .pause(1)
 
-            // 3. Fetch a single specific customer using the dynamically captured ID
+            // 3. Fetch all customers using the extracted Token
+            .exec(http("Get Customer Page API")
+                    .get("/api/customer?page=0&size=20")
+                    .header("Authorization", "Bearer #{jwtToken}")
+                    .check(status().is(200))
+                    .check(jsonPath("$.content[0].id").saveAs("dynamicCustomerId")))
+
+            .exitHereIfFailed()
+
+            .pause(1)
+
             .exec(http("Get Customer By ID API")
                     .get("/api/customer/#{dynamicCustomerId}")
                     .header("Authorization", "Bearer #{jwtToken}")
@@ -59,9 +67,8 @@ public class AdminCustomerAuditSimulation extends Simulation {
     {
         setUp(
                 scn.injectOpen(
-                        nothingFor(2),
-                        rampUsers(10).during(5),
-                        constantUsersPerSec(20).during(15)
+                        rampUsers(50).during(20),
+                        constantUsersPerSec(15).during(30)
                 )
         ).protocols(httpProtocol);
     }
