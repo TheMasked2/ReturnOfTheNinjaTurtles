@@ -537,3 +537,27 @@ button:hover {
     gap: 1rem;
   }
 }
+
+.product-layout-grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.product-filters-sidebar {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+}
+
+@media (max-width: 980px) {
+  .product-layout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-filters-sidebar {
+    position: static;
+    top: auto;
+  }
+}

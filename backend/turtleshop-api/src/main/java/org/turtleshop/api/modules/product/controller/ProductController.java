@@ -2,6 +2,7 @@ package org.turtleshop.api.modules.product.controller;
 
 import java.net.URI;
 import java.util.List;
+import java.math.BigDecimal;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,8 +35,13 @@ public class ProductController {
     @PreAuthorize("permitAll()")
     public ProductPageResponse getAllProducts(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return productService.getAllProducts(page, size);
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Integer categoryId) {
+        return productService.getAllProducts(page, size, search, sortBy, minPrice, maxPrice, categoryId);
     }
 
     @GetMapping(params = "ids")

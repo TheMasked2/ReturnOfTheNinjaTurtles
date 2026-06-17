@@ -1,5 +1,6 @@
 package org.turtleshop.api.modules.product.service;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -26,13 +27,36 @@ public class ProductService {
         this.productMongoAccess = productMongoAccess;
     }
 
-    public ProductPageResponse getAllProducts(int page, int size) {
+    public ProductPageResponse getAllProducts(
+            int page,
+            int size,
+            String search,
+            String sortBy,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            Integer categoryId) {
+
         int safePage = Math.max(page, 0);
         int safeSize = Math.max(size, 1);
         int offset = safePage * safeSize;
 
-        int totalElements = productAccess.countAll();
-        List<ProductModel> sqlProducts = productAccess.findPage(safeSize, offset);
+        List<Integer> searchIds = null;
+        if (search != null && !search.isBlank()) {
+            searchIds = productMongoAccess.findProductIdsByName(search);
+            if (searchIds.isEmpty()) {
+                return new ProductPageResponse(Collections.emptyList(), safePage, safeSize, 0);
+            }
+        }
+
+        int totalElements = productAccess.countFiltered(searchIds, minPrice, maxPrice, categoryId);
+        List<ProductModel> sqlProducts = productAccess.findPageWithFilters(
+                searchIds,
+                minPrice,
+                maxPrice,
+                categoryId,
+                sortBy,
+                safeSize,
+                offset);
 
         List<Integer> productIds = sqlProducts.stream()
                 .map(ProductModel::getProductId)

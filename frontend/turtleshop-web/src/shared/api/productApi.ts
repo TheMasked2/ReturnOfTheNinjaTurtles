@@ -18,19 +18,44 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-const endpoint = "/products";
-
-async function getProducts(): Promise<Product[]>;
-async function getProducts(page: number, size: number): Promise<PaginatedResponse<Product[]>>;
-async function getProducts(page = 0, size = 20) {
-  const response = await baseApi.get<PaginatedResponse<Product[]>>(
-    `${endpoint}?page=${page}&size=${size}`
-  );
-
-  return arguments.length === 0 ? response.content : response;
+export interface ProductSearchParams {
+  search?: string;
+  sortBy?: "price_asc" | "price_desc";
+  minPrice?: number;
+  maxPrice?: number;
+  categoryId?: number;
+  page?: number;
+  pageSize?: number;
 }
 
-const getProductsByIds = (productIds: number[]) => {
+export interface ProductCategory {
+  id: number;
+  name: string;
+}
+
+const endpoint = "/products";
+
+function buildQueryString(params?: ProductSearchParams) {
+  if (!params) return "";
+  const query = new URLSearchParams();
+
+  if (params.search) query.set("search", params.search);
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (typeof params.minPrice === "number") query.set("minPrice", String(params.minPrice));
+  if (typeof params.maxPrice === "number") query.set("maxPrice", String(params.maxPrice));
+  if (typeof params.categoryId === "number") query.set("categoryId", String(params.categoryId));
+  if (typeof params.page === "number") query.set("page", String(params.page));
+  if (typeof params.pageSize === "number") query.set("pageSize", String(params.pageSize));
+
+  const queryString = query.toString();
+  return queryString ? `?${queryString}` : "";
+}
+
+export async function getProducts(params: ProductSearchParams = {}): Promise<PaginatedResponse<Product[]>> {
+  return baseApi.get<PaginatedResponse<Product[]>>(`${endpoint}${buildQueryString(params)}`);
+}
+
+export const getProductsByIds = (productIds: number[]) => {
   if (!productIds?.length) {
     return Promise.resolve([] as Product[]);
   }
@@ -38,9 +63,19 @@ const getProductsByIds = (productIds: number[]) => {
   return baseApi.get<Product[]>(`${endpoint}?ids=${productIds.join(",")}`);
 };
 
+export const getCategories = async (): Promise<ProductCategory[]> => {
+  const raw = await baseApi.get<Array<ProductCategory | { categoryId: number; name: string }>>("/categories");
+
+  return raw.map((item) => ({
+    id: "id" in item ? item.id : item.categoryId,
+    name: item.name,
+  }));
+};
+
 export const productApi = {
   getProducts,
   getProductsByIds,
+  getCategories,
   getProductById: (productId: string | number) =>
     baseApi.get<Product>(`${endpoint}/${productId}`),
 };
