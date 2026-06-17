@@ -1,7 +1,6 @@
 const BASE_URL = "http://localhost:8080/api";
 
 export const baseApi = {
-  // Generic Request Handler
   request: async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
     const token = localStorage.getItem("turtleshop_token");
 
@@ -17,20 +16,25 @@ export const baseApi = {
     });
 
     if (!response.ok) {
-      // Try to get error message from Spring Boot, otherwise default
       const error = await response.json().catch(() => ({ message: "An error occurred" }));
       throw new Error(error.message || `HTTP error! status: ${response.status}`);
     }
 
-    // For 204 No Content responses
-    if (response.status === 204) return {} as T;
+    if (response.status === 204) {
+      return {} as T;
+    }
 
-    return response.json();
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      return response.json();
+    }
+
+    return response.text() as unknown as T;
   },
 
-  // Helper methods
   get: <T>(url: string) => baseApi.request<T>(url, { method: "GET" }),
   post: <T>(url: string, body: any) => baseApi.request<T>(url, { method: "POST", body: JSON.stringify(body) }),
   put: <T>(url: string, body: any) => baseApi.request<T>(url, { method: "PUT", body: JSON.stringify(body) }),
+  patch: <T>(url: string, body: any) => baseApi.request<T>(url, { method: "PATCH", body: JSON.stringify(body) }),
   delete: <T>(url: string) => baseApi.request<T>(url, { method: "DELETE" }),
 };

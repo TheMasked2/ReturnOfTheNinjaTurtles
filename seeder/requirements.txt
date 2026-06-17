@@ -3,4 +3,4 @@ pymongo==4.17.0
 python-dotenv==1.0.0
 Faker==23.3.0
 dotenv==0.9.9
-neo4j==5.12.0
+requests==2.32.3

@@ -50,8 +50,9 @@ public class CartController {
         return ResponseEntity.ok(cartService.getAllExistingActiveCarts());
     }
 
-    @PatchMapping("/items/{cartItemId}")
-    @PreAuthorize("hasAuthority('CART_UPDATE_ALL')")
+        @PatchMapping("/items/{cartItemId}")
+    @PreAuthorize("hasAuthority('CART_UPDATE_ALL') or " +
+            "(hasAuthority('CART_UPDATE_OWN') and @authorizationService.isCartItemOwner(#cartItemId, authentication))")
     public ResponseEntity<String> updateCartItemQuantity(
             @PathVariable int cartItemId,
             @RequestBody UpdateCartItemQuantityRequest request
@@ -61,7 +62,8 @@ public class CartController {
     }
 
     @DeleteMapping("/items/{cartItemId}")
-    @PreAuthorize("hasAuthority('CART_DELETE_ALL')")
+    @PreAuthorize("hasAuthority('CART_DELETE_ALL') or " +
+            "(hasAuthority('CART_DELETE_OWN') and @authorizationService.isCartItemOwner(#cartItemId, authentication))")
     public ResponseEntity<String> removeItemFromCart(@PathVariable int cartItemId) {
         cartService.removeItemFromCart(cartItemId);
         return ResponseEntity.ok("Item is removed from the cart");

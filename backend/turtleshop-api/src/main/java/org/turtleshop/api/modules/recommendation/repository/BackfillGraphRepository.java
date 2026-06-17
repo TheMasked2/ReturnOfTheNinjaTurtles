@@ -19,11 +19,14 @@ public class BackfillGraphRepository {
         String cypher = "UNWIND $batch AS row " +
                 "MATCH (m:Month {id: row.month_id}) " +
                 "MERGE (c:Customer {id: row.customer_id}) " +
-                "MERGE (p:Product {id: row.product_id, name: row.product_name}) " +
+                "MERGE (p:Product {id: row.product_id}) " +
+                "ON CREATE SET p.name = row.product_name " +
+                "ON MATCH SET p.name = coalesce(p.name, row.product_name) " +
                 "MERGE (o:Order {id: row.order_id}) " +
                 "MERGE (c)-[:PLACED]->(o) " +
                 "MERGE (o)-[:PLACED_IN]->(m) " +
-                "MERGE (o)-[:CONTAINS {quantity: row.quantity}]->(p)";
+                "MERGE (o)-[r:CONTAINS]->(p) " +
+                "SET r.quantity = row.quantity";
 
         this.neo4jClient.query(cypher)
                 .bind(batch).to("batch")
@@ -36,7 +39,7 @@ public class BackfillGraphRepository {
                 "MERGE (c:Customer {id: row.customer_id}) " +
                 "MERGE (p:Product {id: row.product_id}) " +
                 "MERGE (r:Review {id: row.review_id}) " +
-                "ON CREATE SET r.rating = row.rating " +
+                "ON CREATE SET r.rating = row.rating, r.comment = row.comment " +
                 "MERGE (c)-[:WROTE]->(r) " +
                 "MERGE (r)-[:REVIEWS]->(p) " +
                 "MERGE (r)-[:WRITTEN_IN]->(m)";

@@ -15,7 +15,6 @@ import org.turtleshop.api.modules.order.dto.OrderSummaryResponse;
 import org.turtleshop.api.modules.order.model.OrderSummary;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -34,10 +33,10 @@ public class OrderService {
     // Get all Orders for a customer
     public List<OrderResponse> getAllOrdersOfCustomer(UUID customerId) {
         List<Order> orders = orderAccess.getAllOrdersById(customerId);
-        if(orders.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "No orders exist for this customer");
+        if (orders == null) {
+            return List.of();
         }
-        return orders.stream().map(this:: mapToOrderResponse).toList();
+        return orders.stream().map(this::mapToOrderResponse).toList();
     }
 
     // Cancel Order based on OrderId
