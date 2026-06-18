@@ -319,27 +319,6 @@ public class CustomerAccess {
         return updatedCustomer + updatedSensitiveData;
     }
 
-    public int updateCustomer(UUID customerId, Customer item) {
-        String sql = """
-            UPDATE CUSTOMER
-            SET email = :email,
-                password = :password,
-                first_name = :firstName,
-                last_name = :lastName,
-                phone = :phone,
-                address = :address,
-                city = :city,
-                postal_code = :postalCode,
-                country = :country
-            WHERE customer_id = :id
-            """;
-
-        MapSqlParameterSource params = getParameters(item)
-                .addValue("id", customerId);
-
-        return jdbc.update(sql, params);
-    }
-
     // HELPER: Converts a Java object into list of values SQL understands
     private MapSqlParameterSource getParameters(Customer item) {
         CustomerSensitiveData sensitiveData = item.getSensitiveData();
