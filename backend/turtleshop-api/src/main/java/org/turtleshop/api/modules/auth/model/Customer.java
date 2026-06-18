@@ -5,8 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
+import java.util.List;
 
 @Getter
 @Setter
@@ -29,8 +29,11 @@ public class Customer {
      * Sensitive customer information is stored separately.
      */
     private CustomerSensitiveData sensitiveData;
-
-    private String bank;
+    private String phone;
+    private String address;
+    private String city;
+    private String postalCode;
+    private String country;
     private LocalDateTime createdAt;
     private List<String> roles;
 }

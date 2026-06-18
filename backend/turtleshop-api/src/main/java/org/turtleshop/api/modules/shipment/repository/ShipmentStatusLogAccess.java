@@ -54,6 +54,19 @@ public class ShipmentStatusLogAccess {
         return jdbc.query(sql, params, shipmentStatusLogRowMapper);
     }
 
+    public Optional<ShipmentStatusLog> getLatestShipmentStatusLog(int shipmentId) {
+        String sql = """
+                SELECT *
+                FROM shipment_status_log
+                WHERE shipment_id = :shipmentId
+                ORDER BY status_change_date DESC
+                LIMIT 1
+                """;
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("shipmentId", shipmentId);
+        return jdbc.query(sql, params, shipmentStatusLogRowMapper).stream().findFirst();
+    }
+
     public void updateNotes(int logId, String notes) {
         String sql = "UPDATE shipment_status_log SET notes = :notes WHERE log_id = :logId";
         MapSqlParameterSource params = new MapSqlParameterSource()

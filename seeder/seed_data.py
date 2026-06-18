@@ -138,111 +138,111 @@ def main():
         pm_ids = [r[0] for r in pm_rows]
 
     # Verify existing product volume
-    pg_curr.execute("SELECT count(*) FROM PRODUCT;")
-    product_count = pg_curr.fetchone()[0]
+    pg_curr.execute("SELECT count(*) FROM CATEGORY;")
+    category_count = pg_curr.fetchone()[0]
 
     # If it only contains the 10 basic testing elements from your migrations, append the music set
-    if product_count < 11:
+    if category_count < 11:
         print(
-            f"[!] Catalog contains base seeds ({product_count} items). Appending {NUM_PRODUCTS} music-themed products..."
+            f"[!] Catalog contains base seeds ({category_count} items). Appending {NUM_PRODUCTS} music-themed products..."
         )
 
-        # 1. Seed unique Categories (Starting at ID 11 to avoid conflicting with 1-10 from migrations)
+        # 1. Seed unique Categories by replacing existing ones
         music_categories = [
             (
-                11,
+                1,
                 "Vinyl Records",
                 "Classic analog vinyl releases and special pressings",
             ),
-            (12, "Studio Headphones", "High-fidelity reference monitor headphones"),
-            (13, "Microphones", "Condenser, dynamic, and ribbon tracking mics"),
-            (14, "Studio Monitors", "Active playback speakers for audio production"),
+            (2, "Studio Headphones", "High-fidelity reference monitor headphones"),
+            (3, "Microphones", "Condenser, dynamic, and ribbon tracking mics"),
+            (4, "Studio Monitors", "Active playback speakers for audio production"),
             (
-                15,
+                5,
                 "Mixing Consoles",
                 "Analog routing desks and digital control surfaces",
             ),
-            (16, "Audio Interfaces", "Low-latency sound cards and pre-amp units"),
-            (17, "Synthesizers", "Hardware analog synthesizers and sampler modules"),
-            (18, "MIDI Controllers", "Keyboards, pad matrices, and DAW controllers"),
+            (6, "Audio Interfaces", "Low-latency sound cards and pre-amp units"),
+            (7, "Synthesizers", "Hardware analog synthesizers and sampler modules"),
+            (8, "MIDI Controllers", "Keyboards, pad matrices, and DAW controllers"),
             (
-                19,
+                9,
                 "Cables & Accessories",
                 "Premium balanced audio connectivity solutions",
             ),
-            (20, "DJ Gear", "Turntables, media players, and performance mixers"),
+            (10, "DJ Gear", "Turntables, media players, and performance mixers"),
             (
-                21,
+                11,
                 "CDs & Music DVDs",
                 "Compact discs, box sets, and live concert video releases",
             ),
             (
-                22,
+                12,
                 "Electric Guitars",
                 "Solid-body, semi-hollow, and hollow-body electric guitars",
             ),
             (
-                23,
+                13,
                 "Acoustic Guitars",
                 "Steel-string acoustic and classical nylon-string guitars",
             ),
             (
-                24,
+                14,
                 "Bass Guitars",
                 "4-string, 5-string, electric, and acoustic bass guitars",
             ),
             (
-                25,
+                15,
                 "Guitar Amplifiers",
                 "Tube, solid-state, and digital modeling amps for guitar and bass",
             ),
             (
-                26,
+                16,
                 "Effects Pedals",
                 "Stompboxes, multi-effects processors, and pedalboard accessories",
             ),
             (
-                27,
+                17,
                 "Acoustic Drums",
                 "Complete drum kits, snare drums, cymbals, and acoustic percussion",
             ),
             (
-                28,
+                18,
                 "Electronic Drums",
                 "Digital drum kits, percussion pads, and drum modules",
             ),
             (
-                29,
+                19,
                 "Keyboards & Pianos",
                 "Digital pianos, stage keyboards, and arranger workstations",
             ),
             (
-                30,
+                20,
                 "PA Systems & Speakers",
                 "Active and passive loudspeakers, subwoofers, and portable PA units",
             ),
             (
-                31,
+                21,
                 "Stage Lighting & FX",
                 "LED fixtures, moving heads, lasers, and smoke machines",
             ),
             (
-                32,
+                22,
                 "Music Software",
                 "Digital Audio Workstations (DAWs), VST plugins, and virtual instruments",
             ),
             (
-                33,
+                23,
                 "Field Recorders",
                 "Portable handheld audio recorders and dictaphones",
             ),
             (
-                34,
+                24,
                 "Podcasting & Streaming",
                 "All-in-one streaming bundles, boom arms, and pop filters",
             ),
             (
-                35,
+                25,
                 "Merchandise & Clothing",
                 "Band t-shirts, posters, mugs, and music-related lifestyle products",
             ),
@@ -275,99 +275,99 @@ def main():
 
         # Specifieke producttypes gekoppeld aan de juiste categorie ID
         category_product_types = {
-            11: ["Vinyl Record LP", "Double Vinyl Album", "Limited Edition Vinyl"],
-            12: ["Monitor Headphones", "Over-Ear Studio Headphones", "In-Ear Monitors"],
-            13: ["Condenser Microphone", "Dynamic Vocal Mic", "Ribbon Studio Mic"],
-            14: [
+            1: ["Vinyl Record LP", "Double Vinyl Album", "Limited Edition Vinyl"],
+            2: ["Monitor Headphones", "Over-Ear Studio Headphones", "In-Ear Monitors"],
+            3: ["Condenser Microphone", "Dynamic Vocal Mic", "Ribbon Studio Mic"],
+            4: [
                 "Active Studio Monitor",
                 "Powered Reference Speaker",
                 "Studio Subwoofer",
             ],
-            15: [
+            5: [
                 "Analog Mixing Desk",
                 "Digital Mixing Console",
                 "Compact Control Surface",
             ],
-            16: [
+            6: [
                 "USB Audio Interface",
                 "Thunderbolt Soundcard",
                 "Multi-Channel Preamp",
             ],
-            17: [
+            7: [
                 "Analog Synthesizer",
                 "Polyphonic Synthesizer",
                 "Desktop Sampler Module",
             ],
-            18: [
+            8: [
                 "MIDI Keyboard Controller",
                 "Pad Matrix Controller",
                 "DAW Control Surface",
             ],
-            19: [
+            9: [
                 "Balanced XLR Cable",
                 "Premium Instrument Cable",
                 "TRS Patch Cable Pack",
             ],
-            20: [
+            10: [
                 "Direct-Drive Turntable",
                 "DJ Media Player",
                 "2-Channel Performance Mixer",
             ],
-            21: ["Remastered CD Box Set", "Live Concert DVD", "Gold Edition Audio CD"],
-            22: [
+            11: ["Remastered CD Box Set", "Live Concert DVD", "Gold Edition Audio CD"],
+            12: [
                 "Solid-Body Electric Guitar",
                 "Semi-Hollow Electric Guitar",
                 "Custom Shop Electric",
             ],
-            23: [
+            13: [
                 "Dreadnought Acoustic Guitar",
                 "Classical Nylon-String Guitar",
                 "Electro-Acoustic Guitar",
             ],
-            24: [
+            14: [
                 "4-String Electric Bass",
                 "5-String Active Bass",
                 "Acoustic Bass Guitar",
             ],
-            25: [
+            15: [
                 "Tube Combo Amplifier",
                 "Solid-State Amp Head",
                 "Digital Modeling Amp",
             ],
-            26: [
+            16: [
                 "Overdrive Stompbox",
                 "Multi-Effects Processor",
                 "Digital Delay Pedal",
             ],
-            27: [
+            17: [
                 "5-Piece Acoustic Drum Kit",
                 "Wooden Snare Drum",
                 "Performance Cymbal Pack",
             ],
-            28: [
+            18: [
                 "Mesh-Head Electronic Drum Kit",
                 "Digital Percussion Pad",
                 "Drum Trigger Module",
             ],
-            29: ["88-Key Digital Piano", "Pro Stage Keyboard", "Arranger Workstation"],
-            30: ["Active PA Loudspeaker", "Portable PA System", "Powered PA Subwoofer"],
-            31: ["LED Par Can Fixture", "Moving Head Light", "Strobe Laser FX Machine"],
-            32: [
+            19: ["88-Key Digital Piano", "Pro Stage Keyboard", "Arranger Workstation"],
+            20: ["Active PA Loudspeaker", "Portable PA System", "Powered PA Subwoofer"],
+            21: ["LED Par Can Fixture", "Moving Head Light", "Strobe Laser FX Machine"],
+            22: [
                 "Digital Audio Workstation (DAW)",
                 "Virtual Instrument VST",
                 "Mixing Plugin Bundle",
             ],
-            33: [
+            23: [
                 "Handheld Handy Recorder",
                 "Portable Field Recorder",
                 "Multitrack Audio Field Unit",
             ],
-            34: [
+            24: [
                 "All-in-One Streaming Bundle",
                 "Broadcast Boom Arm",
                 "Studio Pop Filter",
             ],
-            35: [
+            25: [
                 "Vintage Band T-Shirt",
                 "Limited Edition Tour Poster",
                 "Artist Ceramic Mug",
@@ -381,8 +381,8 @@ def main():
 
         # Range shifts from ID 11 to 2510 to preserve your migration database records
         for prod_id in range(11, 11 + NUM_PRODUCTS):
-            # Kies een willekeurige categorie uit de volledige nieuwe lijst (11 t/m 35)
-            assigned_cat = random.randint(11, 35)
+            # Kies een willekeurige categorie uit de volledige nieuwe lijst (1 t/m 25)
+            assigned_cat = random.randint(1, 25)
 
             # Pak een producttype dat specifiek bij deze categorie hoort
             g_type = random.choice(category_product_types[assigned_cat])
@@ -394,13 +394,13 @@ def main():
             if assigned_cat in [11, 19, 21, 34, 35]:  # Goedkopere accessoires en media
                 price = round(random.uniform(9.99, 89.99), 2)
             elif assigned_cat in [
+                5,
+                7,
+                12,
                 15,
                 17,
-                22,
-                25,
-                27,
-                29,
-                30,
+                19,
+                20,
             ]:  # High-end hardware en instrumenten
                 price = round(random.uniform(249.99, 1899.99), 2)
             else:  # Mid-range studio gear en effecten
@@ -461,7 +461,7 @@ def main():
         )
     else:
         print(
-            f"[✔] Custom testing catalog already verified ({product_count} products found). Skipping generation..."
+            f"[✔] Custom testing catalog already verified ({category_count} products found). Skipping generation..."
         )
 
     # Fetch pool for relational generation loops (Includes both base migration seeds and new items)

@@ -86,6 +86,20 @@ public class CustomerAccess {
                 )
                 .build();
     };
+    // // MAPPER: Maps row from db result into a Java Object
+    // private final RowMapper<Customer> customerMapper = (rs, rowNum) -> Customer.builder()
+    //         .customerId(rs.getObject("customer_id", java.util.UUID.class))
+    //         .email(rs.getString("email"))
+    //         .password(rs.getString("password"))
+    //         .firstName(rs.getString("first_name"))
+    //         .lastName(rs.getString("last_name"))
+    //         .phone(rs.getString("phone"))
+    //         .address(rs.getString("address"))
+    //         .city(rs.getString("city"))
+    //         .postalCode(rs.getString("postal_code"))
+    //         .country(rs.getString("country"))
+    //         .createdAt(rs.getTimestamp("created_at").toLocalDateTime())
+    //         .build();
 
     public Optional<Customer> getById(UUID id) {
         String sql = CUSTOMER_SELECT + """
@@ -288,6 +302,42 @@ public class CustomerAccess {
         jdbc.update(sql, parameters);
     }
 
+    public int updateCustomer(UUID customerId, Customer item) {
+        String sql = """
+            UPDATE CUSTOMER
+            SET email = :email,
+                password = :password,
+                first_name = :firstName,
+                last_name = :lastName,
+                phone = :phone,
+                address = :address,
+                city = :city,
+                postal_code = :postalCode,
+                country = :country
+            WHERE customer_id = :id
+            """;
+
+        MapSqlParameterSource params = getParameters(item)
+                .addValue("id", customerId);
+
+        return jdbc.update(sql, params);
+    }
+
+    // // HELPER: Converts a Java object into list of values SQL understands
+    // private MapSqlParameterSource getParameters(Customer item) {
+    //     return new MapSqlParameterSource()
+    //             .addValue("email", item.getEmail())
+    //             .addValue("password", item.getPassword())
+    //             .addValue("firstName", item.getFirstName())
+    //             .addValue("lastName", item.getLastName())
+    //             .addValue("phone", item.getPhone())
+    //             .addValue("address", item.getAddress())
+    //             .addValue("city", item.getCity())
+    //             .addValue("postalCode", item.getPostalCode())
+    //             .addValue("country", item.getCountry());
+    // }
+
+    // Test Connection
     public boolean testConnection() {
         try {
             jdbc.getJdbcTemplate().execute("SELECT 1");

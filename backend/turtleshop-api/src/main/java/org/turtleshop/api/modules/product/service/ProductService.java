@@ -38,11 +38,11 @@ public class ProductService {
             BigDecimal minPrice,
             BigDecimal maxPrice,
             Integer categoryId) {
-
+    
         int safePage = Math.max(page, 0);
         int safeSize = Math.max(size, 1);
         int offset = safePage * safeSize;
-
+    
         List<Integer> searchIds = null;
         if (search != null && !search.isBlank()) {
             searchIds = productMongoAccess.findProductIdsByName(search);
@@ -50,7 +50,7 @@ public class ProductService {
                 return new ProductPageResponse(Collections.emptyList(), safePage, safeSize, 0);
             }
         }
-
+    
         int totalElements = productAccess.countFiltered(searchIds, minPrice, maxPrice, categoryId);
         List<ProductModel> sqlProducts = productAccess.findPageWithFilters(
                 searchIds,
@@ -60,18 +60,18 @@ public class ProductService {
                 sortBy,
                 safeSize,
                 offset);
-
+    
         List<Integer> productIds = sqlProducts.stream()
                 .map(ProductModel::getProductId)
                 .collect(Collectors.toList());
-
+    
         Map<Integer, ProductModel> mongoProducts = productMongoAccess.findAllByProductIds(productIds).stream()
                 .collect(Collectors.toMap(ProductModel::getProductId, product -> product));
-
+    
         List<ProductResponse> content = sqlProducts.stream()
                 .map(base -> new ProductResponse(merge(base, mongoProducts.get(base.getProductId()))))
                 .collect(Collectors.toList());
-
+    
         return new ProductPageResponse(content, safePage, safeSize, totalElements);
     }
 

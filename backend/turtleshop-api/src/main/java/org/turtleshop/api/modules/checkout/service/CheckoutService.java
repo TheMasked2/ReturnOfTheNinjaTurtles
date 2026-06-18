@@ -113,7 +113,7 @@ public class CheckoutService {
                 .build();
     }
 
-    @Transactional
+        @Transactional
     public void confirmOrderPayment(int orderId, int transactionId) {
         Order order = orderAccess.getOrderById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -154,21 +154,20 @@ public class CheckoutService {
         List<OrderItem> orderItems = orderItemAccess.getAllOrderItems(orderId);
 
         for (OrderItem item : orderItems) {
-                ProductModel product = productAccess.findAllByIds(List.of(item.getProductId()))
-                        .stream()
-                        .findFirst()
-                        .orElseThrow(() -> new ResponseStatusException(
-                                HttpStatus.CONFLICT,
-                                "Product does not exist for order item"
-                        ));
-                // Definitive wiring of Step 2
-                orderLiveSyncService.syncOrderToGraph(
-                        orderId,
-                        customerId.toString(),
-                        item.getProductId(),
-                        product.getProductName(),
-                        item.getQuantity()
-                );
+            ProductModel product = productAccess.findAllByIds(List.of(item.getProductId()))
+                    .stream()
+                    .findFirst()
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.CONFLICT,
+                            "Product does not exist for order item"
+                    ));
+            orderLiveSyncService.syncOrderToGraph(
+                    orderId,
+                    customerId.toString(),
+                    item.getProductId(),
+                    product.getProductName(),
+                    item.getQuantity()
+            );
         }
 
         Shipment shipment = shipmentAccess.getShipmentByOrderId(orderId)
@@ -179,7 +178,7 @@ public class CheckoutService {
 
         shipmentStatusLogAccess.createShipmentStatusLog(
                 shipment.getShipmentId(),
-                ShipmentStatus.READY_TO_SHIP
+                ShipmentStatus.DELIVERED
         );
     }
 

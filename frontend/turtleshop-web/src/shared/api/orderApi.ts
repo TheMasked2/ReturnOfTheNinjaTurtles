@@ -42,8 +42,25 @@ export const orderApi = {
   getOrder: (orderId: number) =>
     baseApi.get<OrderDetails>(`/orders/${orderId}`),
 
-  getShipmentByOrder: (orderId: number) =>
-    baseApi.get<Shipment>(`/shipments/order/${orderId}`),
+  getShipmentByOrder: async (orderId: number) => {
+    const raw = await baseApi.get<{
+      shipmentId: number;
+      orderId: number;
+      shipmentMethod?: string;
+      shippingAddress?: string;
+      method?: string;
+      address?: string;
+      status?: string;
+    }>(`/shipments/order/${orderId}`);
+
+    return {
+      shipmentId: raw.shipmentId,
+      orderId: raw.orderId,
+      method: raw.method ?? raw.shipmentMethod ?? "",
+      address: raw.address ?? raw.shippingAddress ?? "",
+      status: raw.status ?? "UNKNOWN",
+    };
+  },
 
   getTransactionsByOrder: (orderId: number) =>
     baseApi.get<Transaction[]>(`/transactions/order/${orderId}`),

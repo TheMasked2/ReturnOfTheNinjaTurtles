@@ -13,14 +13,20 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  event.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      await register({ firstName, lastName, email, phoneNumber, password });
-      navigate("/");
+      await register({
+        email,
+        password,
+        firstName,
+        lastName,
+        phone: phoneNumber,
+      });
+      navigate("/login", { state: { message: "Account created successfully. Please log in." } });
     } catch (err: any) {
       setError(err.message || "Unable to register account.");
     } finally {

@@ -37,55 +37,100 @@ export default function OrderDetailsPage() {
     <div className="page">
       <section className="section">
         <div className="section-heading">
-          <h2>Order #{order.orderId}</h2>
+          <div>
+            <h2>Order #{order.orderId}</h2>
+            <p className="text-muted">Order placed on {order.orderDate}</p>
+          </div>
           <Link className="button button-secondary" to="/orders">
             Back to orders
           </Link>
         </div>
 
-        <div className="order-details">
-          <h3>Order summary</h3>
-          <p>Status: {order.status}</p>
-          <p>Total: ${order.totalAmount}</p>
-          <p>Placed on: {order.orderDate}</p>
-
-          {order.items?.length ? (
-            <div>
-              <h4>Items</h4>
-              <ul>
-                {order.items.map((item) => (
-                  <li key={item.productId}>
-                    {item.productName} × {item.quantity} — ${item.price}
-                  </li>
-                ))}
-              </ul>
+        <div className="order-details-grid">
+          <article className="card">
+            <h3>Order summary</h3>
+            <div className="order-summary-grid">
+              <div>
+                <p className="order-card-label">Status</p>
+                <p><strong>{order.status}</strong></p>
+              </div>
+              <div>
+                <p className="order-card-label">Total</p>
+                <p><strong>${order.totalAmount.toFixed(2)}</strong></p>
+              </div>
+              <div>
+                <p className="order-card-label">Items</p>
+                <p>{order.items?.length ?? 0}</p>
+              </div>
             </div>
-          ) : null}
 
-          <h3>Shipment</h3>
-          {shipment ? (
-            <div>
-              <p>Shipment ID: {shipment.shipmentId}</p>
-              <p>Method: {shipment.method}</p>
-              <p>Status: {shipment.status}</p>
-              <p>Address: {shipment.address}</p>
+            <div className="order-items">
+              {order.items?.length ? (
+                <>
+                  <h4>Items</h4>
+                  <ul>
+                    {order.items.map((item) => (
+                      <li key={item.productId}>
+                        {item.productName} × {item.quantity} — ${item.price.toFixed(2)}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p>No items found.</p>
+              )}
             </div>
-          ) : (
-            <p>No shipment details available.</p>
-          )}
+          </article>
 
-          <h3>Payment</h3>
-          {transactions.length ? (
-            <ul>
-              {transactions.map((transaction) => (
-                <li key={transaction.transactionId}>
-                  Transaction #{transaction.transactionId}: ${transaction.amount} — {transaction.status}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No payment records found.</p>
-          )}
+          <article className="card">
+            <h3>Shipment</h3>
+            {shipment ? (
+              <div className="shipment-details">
+                <div>
+                  <p className="order-card-label">Method</p>
+                  <p>{shipment.method}</p>
+                </div>
+                <div>
+                  <p className="order-card-label">Status</p>
+                  <p>{shipment.status}</p>
+                </div>
+                <div>
+                  <p className="order-card-label">Address</p>
+                  <p>{shipment.address}</p>
+                </div>
+              </div>
+            ) : (
+              <p>No shipment details available.</p>
+            )}
+          </article>
+
+          <article className="card">
+            <h3>Payment</h3>
+            {transactions.length ? (
+              <table className="transaction-table">
+                <thead>
+                  <tr>
+                    <th>Transaction</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((transaction) => (
+                    <tr key={transaction.transactionId}>
+                      <td>#{transaction.transactionId}</td>
+                      <td>${transaction.amount.toFixed(2)}</td>
+                      <td>{transaction.status}</td>
+                      <td>{transaction.transactionDate}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p>No payment records found.</p>
+            )}
+          </article>
         </div>
       </section>
     </div>

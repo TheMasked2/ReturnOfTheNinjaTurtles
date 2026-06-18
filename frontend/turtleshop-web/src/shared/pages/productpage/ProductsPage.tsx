@@ -20,14 +20,17 @@ export default function ProductsPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
   const pageSize = 20;
 
   useEffect(() => {
+    setCategoriesLoading(true);
     productApi
       .getCategories()
       .then(setCategories)
-      .catch(() => setCategories([]));
+      .catch(() => setCategories([]))
+      .finally(() => setCategoriesLoading(false));
   }, []);
 
   useEffect(() => {
@@ -71,7 +74,12 @@ export default function ProductsPage() {
 
         <div className="product-layout-grid">
           <aside className="product-filters-sidebar">
-            <ProductFilters categories={categories} filters={filters} onChange={handleFilterChange} />
+            <ProductFilters
+              categories={categories}
+              filters={filters}
+              onChange={handleFilterChange}
+            />
+            {categoriesLoading && <div className="status-message">Loading categories...</div>}
           </aside>
 
           <main className="product-listing-content">
@@ -88,7 +96,6 @@ export default function ProductsPage() {
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
-
                 <Pagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={loading} />
               </>
             )}

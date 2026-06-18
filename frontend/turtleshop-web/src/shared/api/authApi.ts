@@ -6,6 +6,10 @@ export interface Customer {
   firstName: string;
   lastName?: string;
   phone?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
   roles: string[];
   createdAt: string;
 }

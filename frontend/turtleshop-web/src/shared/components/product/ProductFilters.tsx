@@ -32,6 +32,9 @@ export function ProductFilters({ categories, filters, onChange }: ProductFilters
 
   return (
     <div className="product-filters card">
+      <div className="filter-heading">
+        <h3>Filter products</h3>
+      </div>
       <div className="filter-row">
         <label>
           Search

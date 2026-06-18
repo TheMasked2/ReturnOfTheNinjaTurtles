@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { orderApi } from "../../api/orderApi";
 import type { OrderSummary } from "../../api/orderApi";
+import { OrderList } from "../../components/order/OrderList";
 
 export default function OrdersPage() {
   const { isAuthenticated, user } = useAuth();
@@ -54,27 +55,7 @@ export default function OrdersPage() {
           <p className="text-muted">Click an order to view shipment and payment details.</p>
         </div>
 
-        {orders.length === 0 ? (
-          <div className="form-panel">
-            <p>You have no past orders yet.</p>
-            <Link to="/products" className="button button-secondary">
-              Browse products
-            </Link>
-          </div>
-        ) : (
-          <ul className="order-list">
-            {orders.map((order) => (
-              <li key={order.orderId} className="order-card">
-                <Link to={`/orders/${order.orderId}`} className="order-link">
-                  Order #{order.orderId}
-                </Link>
-                <p>Status: {order.status}</p>
-                <p>Total: ${order.totalAmount}</p>
-                <p>Placed on: {order.orderDate}</p>
-              </li>
-            ))}
-          </ul>
-        )}
+        <OrderList orders={orders} />
       </section>
     </div>
   );

@@ -16,7 +16,7 @@ export const checkoutApi = {
     baseApi.post<PlaceOrderResponse>(`/checkout/customer/${customerId}/place-order`, payload),
 
   confirmOrder: (orderId: number, transactionId: number) =>
-    baseApi.post<void>(`/transactions/${transactionId}/confirm-payment?orderId=${orderId}`, {}),
+    baseApi.post<void>(`/transactions/${transactionId}/confirm-payment/${orderId}`, {}),
 
   cancelOrder: (orderId: number) =>
     baseApi.patch<void>(`/orders/${orderId}/cancel`, {}),

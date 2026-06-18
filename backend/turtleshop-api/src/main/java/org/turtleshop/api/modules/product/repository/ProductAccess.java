@@ -106,18 +106,18 @@ public class ProductAccess {
             BigDecimal minPrice,
             BigDecimal maxPrice,
             Integer categoryId) {
-
+    
         StringBuilder sql = new StringBuilder("""
             SELECT COUNT(DISTINCT p.product_id)
             FROM PRODUCT p
             """);
-
+    
         if (categoryId != null) {
             sql.append(" JOIN PRODUCT_CATEGORY pc ON pc.product_id = p.product_id");
         }
-
+    
         sql.append(" WHERE 1=1");
-
+    
         MapSqlParameterSource params = new MapSqlParameterSource();
         if (searchIds != null) {
             sql.append(" AND p.product_id IN (:searchIds)");
@@ -135,10 +135,10 @@ public class ProductAccess {
             sql.append(" AND pc.category_id = :categoryId");
             params.addValue("categoryId", categoryId);
         }
-
+    
         return jdbc.queryForObject(sql.toString(), params, Integer.class);
     }
-
+    
     public List<ProductModel> findPageWithFilters(
             List<Integer> searchIds,
             BigDecimal minPrice,
@@ -147,18 +147,18 @@ public class ProductAccess {
             String sortBy,
             int limit,
             int offset) {
-
+    
         StringBuilder sql = new StringBuilder("""
             SELECT DISTINCT p.product_id, p.base_price
             FROM PRODUCT p
             """);
-
+    
         if (categoryId != null) {
             sql.append(" JOIN PRODUCT_CATEGORY pc ON pc.product_id = p.product_id");
         }
-
+    
         sql.append(" WHERE 1=1");
-
+    
         MapSqlParameterSource params = new MapSqlParameterSource();
         if (searchIds != null) {
             sql.append(" AND p.product_id IN (:searchIds)");
@@ -176,7 +176,7 @@ public class ProductAccess {
             sql.append(" AND pc.category_id = :categoryId");
             params.addValue("categoryId", categoryId);
         }
-
+    
         if ("price_desc".equals(sortBy)) {
             sql.append(" ORDER BY p.base_price DESC");
         } else if ("price_asc".equals(sortBy)) {
@@ -184,11 +184,11 @@ public class ProductAccess {
         } else {
             sql.append(" ORDER BY p.product_id");
         }
-
+    
         sql.append(" LIMIT :limit OFFSET :offset");
         params.addValue("limit", limit);
         params.addValue("offset", offset);
-
+    
         return jdbc.query(sql.toString(), params, productMapper);
     }
 }

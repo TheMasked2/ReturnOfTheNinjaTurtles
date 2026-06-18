@@ -37,9 +37,10 @@ public class ProductMongoAccess {
         if (search == null || search.isBlank()) {
             return Collections.emptyList();
         }
-
+    
         String regexPattern = ".*" + Pattern.quote(search) + ".*";
-        Query query = Query.query(Criteria.where("name").regex(regexPattern, "i"));
+        Query query = Query.query(Criteria.where("product_name").regex(regexPattern, "i"));
+    
         List<ProductModel> products = mongoTemplate.find(query, ProductModel.class);
         return products.stream()
                 .map(ProductModel::getProductId)

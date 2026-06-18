@@ -1,19 +1,15 @@
 package org.turtleshop.api.modules.auth.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
-import java.util.List;
+import lombok.*;
 
 @Getter
 @Setter
 @Builder
-public class CustomerResponse {
-    private UUID id;
+@NoArgsConstructor
+@AllArgsConstructor
+public class CustomerUpdateRequest {
     private String email;
+    private String password;
     private String firstName;
     private String lastName;
     private String phone;
@@ -21,6 +17,4 @@ public class CustomerResponse {
     private String city;
     private String postalCode;
     private String country;
-    private LocalDateTime createdAt;
-    private List<String> roles;
 }

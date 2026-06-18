@@ -6,9 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.turtleshop.api.modules.auth.dto.CustomerResponse;
+import org.turtleshop.api.modules.auth.dto.CustomerUpdateRequest;
 import org.turtleshop.api.modules.auth.service.CustomerService;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -37,5 +37,15 @@ public class CustomerController {
         int safeSize = Math.min(Math.max(size, 1), 100);
 
         return ResponseEntity.ok(customerService.getCustomersPage(safePage, safeSize));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('CUSTOMER_UPDATE_ALL') or " +
+            "(hasAuthority('CUSTOMER_UPDATE_OWN') and @authorizationService.isCurrentCustomer(#id, authentication))")
+    public ResponseEntity<CustomerResponse> updateCustomer(
+            @PathVariable UUID id,
+            @RequestBody CustomerUpdateRequest request
+    ) {
+        return ResponseEntity.ok(customerService.updateCustomer(id, request));
     }
 }
