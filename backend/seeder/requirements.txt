@@ -1,5 +1,0 @@
-psycopg2==2.9.12
-pymongo==4.17.0
-python-dotenv==1.0.0
-Faker==23.3.0
-dotenv==0.9.9
