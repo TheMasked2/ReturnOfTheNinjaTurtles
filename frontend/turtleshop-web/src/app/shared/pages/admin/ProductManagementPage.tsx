@@ -4,7 +4,7 @@ import { useGetProductsQuery, useCreateProductMutation, useUpdateProductMutation
 import ProductFormModal from '../../components/admin/ProductFormModal';
 
 const ProductManagementPage: React.FC = () => {
-  const { data: products, isLoading } = useGetProductsQuery();
+  const { data: products, isLoading, refetch } = useGetProductsQuery();
   const [deleteProduct] = useDeleteProductMutation();
   const [createProduct] = useCreateProductMutation();
   const [updateProduct] = useUpdateProductMutation();
@@ -17,9 +17,10 @@ const ProductManagementPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (product: Product) => {
+  const handleDelete = async (product: Product) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
-      deleteProduct(product.id);
+      await deleteProduct(product.id);
+      await refetch();
     }
   };
 
@@ -40,6 +41,7 @@ const ProductManagementPage: React.FC = () => {
       await createProduct(product);
     }
     handleModalClose();
+    await refetch();
   };
 
   if (isLoading) {
@@ -47,19 +49,24 @@ const ProductManagementPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Product Management</h1>
-        <button onClick={handleCreate} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Create Product
-        </button>
+    <div className="container mx-auto px-4 py-8 admin-management-page">
+      <div className="management-card">
+        <div className="management-header">
+          <div>
+            <h1>Product Management</h1>
+            <p className="management-description">Create, update, and remove products while keeping the product catalog clean and easy to browse.</p>
+          </div>
+          <button onClick={handleCreate} className="button button-secondary">
+            Create Product
+          </button>
+        </div>
+        <ManagementList
+          items={products || []}
+          columns={['id', 'name', 'price', 'specs']}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       </div>
-      <ManagementList
-        items={products || []}
-        columns={['id', 'name', 'price', 'stock']}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
       <ProductFormModal
         isOpen={isModalOpen}
         onClose={handleModalClose}

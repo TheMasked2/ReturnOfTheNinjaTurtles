@@ -353,6 +353,105 @@ button {
   text-align: center;
 }
 
+.admin-management-page {
+  display: grid;
+  justify-items: center;
+  gap: 2rem;
+}
+
+.management-card {
+  width: min(1180px, 100%);
+  display: grid;
+  gap: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 32px;
+  box-shadow: var(--shadow);
+  padding: 2rem;
+}
+
+.management-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.management-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 3rem);
+}
+
+.management-list-wrapper {
+  overflow: hidden;
+  border-radius: 28px;
+}
+
+.management-table-container {
+  width: 100%;
+  max-height: 620px;
+  overflow: auto;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.management-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.management-table th,
+.management-table td {
+  padding: 1rem 1.25rem;
+  text-align: left;
+  font-size: 0.95rem;
+  vertical-align: middle;
+}
+
+.management-table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  color: var(--text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+  z-index: 1;
+}
+
+.management-table tbody tr {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.management-table tbody tr:hover {
+  background: var(--surface-soft);
+}
+
+.management-table td {
+  color: var(--text);
+}
+
+.management-table .table-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.management-description {
+  color: var(--muted);
+  max-width: 40rem;
+}
+
+@media (max-width: 720px) {
+  .management-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .section {
   display: grid;
   gap: 1.5rem;

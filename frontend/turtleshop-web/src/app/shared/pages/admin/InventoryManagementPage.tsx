@@ -3,8 +3,10 @@ import ManagementList from '../../components/admin/ManagementList';
 import { useGetInventoryQuery, useAddInventoryMutation, useUpdateInventoryMutation, useDeleteInventoryMutation, type InventoryItem } from '../../api/adminApi';
 import InventoryFormModal from '../../components/admin/InventoryFormModal';
 
+type DisplayInventoryItem = InventoryItem & { id: number };
+
 const InventoryManagementPage: React.FC = () => {
-  const { data: inventory, isLoading } = useGetInventoryQuery();
+  const { data: inventory, isLoading, refetch } = useGetInventoryQuery();
   const [deleteInventory] = useDeleteInventoryMutation();
   const [addInventory] = useAddInventoryMutation();
   const [updateInventory] = useUpdateInventoryMutation();
@@ -12,14 +14,15 @@ const InventoryManagementPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Partial<InventoryItem> | null>(null);
 
-  const handleEdit = (item: InventoryItem) => {
+  const handleEdit = (item: DisplayInventoryItem) => {
     setSelectedItem(item);
     setIsModalOpen(true);
   };
 
-  const handleDelete = (item: InventoryItem) => {
+  const handleDelete = async (item: DisplayInventoryItem) => {
     if (window.confirm('Are you sure you want to delete this inventory item?')) {
-      deleteInventory(item.id);
+      await deleteInventory(item.productId);
+      await refetch();
     }
   };
 
@@ -34,12 +37,21 @@ const InventoryManagementPage: React.FC = () => {
   };
 
   const handleFormSubmit = async (item: Partial<InventoryItem>) => {
-    if (item.id) {
-      await updateInventory(item as InventoryItem);
+    if (item.productId) {
+      await updateInventory({
+        productId: item.productId,
+        quantityAvailable: item.quantityAvailable ?? 0,
+        quantityReserved: item.quantityReserved ?? 0,
+      });
     } else {
-      await addInventory(item);
+      await addInventory({
+        productId: item.productId ?? 0,
+        quantityAvailable: item.quantityAvailable ?? 0,
+        quantityReserved: item.quantityReserved ?? 0,
+      });
     }
     handleModalClose();
+    await refetch();
   };
 
   if (isLoading) {
@@ -48,23 +60,28 @@ const InventoryManagementPage: React.FC = () => {
 
   const formattedInventory = inventory?.map(item => ({
       ...item,
-      productName: item.product.name
-  }))
+      id: item.inventoryId,
+  })) as DisplayInventoryItem[];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Inventory Management</h1>
-        <button onClick={handleCreate} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Add Inventory
-        </button>
+    <div className="container mx-auto px-4 py-8 admin-management-page">
+      <div className="management-card">
+        <div className="management-header">
+          <div>
+            <h1>Inventory Management</h1>
+            <p className="management-description">Track stock levels, update product inventory, and keep quantity data aligned with the backend.</p>
+          </div>
+          <button onClick={handleCreate} className="button button-secondary">
+            Add Inventory
+          </button>
+        </div>
+        <ManagementList
+          items={formattedInventory || []}
+          columns={['id', 'productId', 'quantityAvailable', 'quantityReserved']}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       </div>
-      <ManagementList
-        items={formattedInventory || []}
-        columns={['id', 'productName', 'stock', 'location']}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
       <InventoryFormModal
         isOpen={isModalOpen}
         onClose={handleModalClose}

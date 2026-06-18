@@ -4,7 +4,7 @@ import { useGetTransactionsQuery, useCreateTransactionMutation, useUpdateTransac
 import TransactionFormModal from '../../components/admin/TransactionFormModal';
 
 const TransactionManagementPage: React.FC = () => {
-  const { data: transactions, isLoading } = useGetTransactionsQuery();
+  const { data: transactions, isLoading, refetch } = useGetTransactionsQuery();
   const [deleteTransaction] = useDeleteTransactionMutation();
   const [createTransaction] = useCreateTransactionMutation();
   const [updateTransaction] = useUpdateTransactionMutation();
@@ -12,14 +12,17 @@ const TransactionManagementPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Partial<Transaction> | null>(null);
 
-  const handleEdit = (transaction: Transaction) => {
+  type DisplayTransaction = Transaction & { id: number; date: string };
+
+  const handleEdit = (transaction: DisplayTransaction) => {
     setSelectedTransaction(transaction);
     setIsModalOpen(true);
   };
 
-  const handleDelete = (transaction: Transaction) => {
+  const handleDelete = async (transaction: DisplayTransaction) => {
     if (window.confirm('Are you sure you want to delete this transaction?')) {
-      deleteTransaction(transaction.id);
+      await deleteTransaction(transaction.transactionId);
+      await refetch();
     }
   };
 
@@ -34,32 +37,49 @@ const TransactionManagementPage: React.FC = () => {
   };
 
   const handleFormSubmit = async (transaction: Partial<Transaction>) => {
-    if (transaction.id) {
+    if (transaction.transactionId) {
       await updateTransaction(transaction as Transaction);
     } else {
-      await createTransaction(transaction);
+      await createTransaction({
+        orderId: Number(transaction.orderId),
+        paymentMethodId: transaction.paymentMethodId ?? 0,
+        amount: transaction.amount ?? 0,
+        status: transaction.status ?? "PENDING",
+      });
     }
     handleModalClose();
+    await refetch();
   };
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
+  const formattedTransactions = (transactions || []).map((transaction) => ({
+    ...transaction,
+    id: transaction.transactionId,
+    date: transaction.transactionDate,
+  })) as DisplayTransaction[];
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Transaction Management</h1>
-        <button onClick={handleCreate} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Create Transaction
-        </button>
+    <div className="container mx-auto px-4 py-8 admin-management-page">
+      <div className="management-card">
+        <div className="management-header">
+          <div>
+            <h1>Transaction Management</h1>
+            <p className="management-description">Manage payment records and transaction status with a clean, scrollable ledger view.</p>
+          </div>
+          <button onClick={handleCreate} className="button button-secondary">
+            Create Transaction
+          </button>
+        </div>
+        <ManagementList
+          items={formattedTransactions}
+          columns={['id', 'orderId', 'amount', 'date', 'status']}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       </div>
-      <ManagementList
-        items={transactions || []}
-        columns={['id', 'orderId', 'amount', 'date', 'status']}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
       <TransactionFormModal
         isOpen={isModalOpen}
         onClose={handleModalClose}

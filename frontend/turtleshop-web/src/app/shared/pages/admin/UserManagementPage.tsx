@@ -5,7 +5,7 @@ import UserFormModal from '../../components/admin/UserFormModal';
 import type { User } from '../../../../shared/auth/AuthContext';
 
 const UserManagementPage: React.FC = () => {
-  const { data: users, isLoading } = useGetUsersQuery();
+  const { data: users, isLoading, refetch } = useGetUsersQuery();
   const [deleteUser] = useDeleteUserMutation();
   const [createUser] = useCreateUserMutation();
   const [updateUser] = useUpdateUserMutation();
@@ -20,9 +20,10 @@ const UserManagementPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (user: User) => {
+  const handleDelete = async (user: User) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
-      deleteUser(user.id);
+      await deleteUser(user.id);
+      await refetch();
     }
   };
 
@@ -38,11 +39,12 @@ const UserManagementPage: React.FC = () => {
 
   const handleFormSubmit = async (user: UserFormData) => {
     if (user.id) {
-      await updateUser(user as User);
+      await updateUser(user as Partial<User> & { id: string });
     } else {
-      await createUser(user);
+      await createUser(user as Partial<User> & { password: string });
     }
     handleModalClose();
+    await refetch();
   };
 
   if (isLoading) {
@@ -50,19 +52,24 @@ const UserManagementPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">User Management</h1>
-        <button onClick={handleCreate} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Create User
-        </button>
+    <div className="container mx-auto px-4 py-8 admin-management-page">
+      <div className="management-card">
+        <div className="management-header">
+          <div>
+            <h1>User Management</h1>
+            <p className="management-description">Manage customer accounts, update details, and keep user information aligned with the backend.</p>
+          </div>
+          <button onClick={handleCreate} className="button button-secondary">
+            Create User
+          </button>
+        </div>
+        <ManagementList
+          items={users || []}
+          columns={['id', 'firstName', 'lastName', 'email', 'roles']}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       </div>
-      <ManagementList
-        items={users || []}
-        columns={['id', 'firstName', 'lastName', 'email', 'role']}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
       <UserFormModal
         isOpen={isModalOpen}
         onClose={handleModalClose}

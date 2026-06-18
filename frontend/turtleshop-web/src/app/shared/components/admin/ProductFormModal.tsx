@@ -25,7 +25,6 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, on
     const newErrors: Record<string, string> = {};
     if (!formData.name) newErrors.name = 'Name is required';
     if (!formData.price || formData.price <= 0) newErrors.price = 'Price must be a positive number';
-    if (formData.stock === undefined || formData.stock < 0) newErrors.stock = 'Stock must be a non-negative number';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
