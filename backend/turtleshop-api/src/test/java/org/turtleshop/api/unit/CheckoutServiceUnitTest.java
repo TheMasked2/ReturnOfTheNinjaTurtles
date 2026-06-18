@@ -91,14 +91,15 @@ class CheckoutServiceUnitTest {
         product.setBasePrice(new BigDecimal("12.50"));
         PaymentMethodModel paymentMethod = PaymentMethodModel.builder()
                 .paymentMethodId(3)
-                .provider("Visa")
+                .provider("Credit Card")
                 .type("Credit Card")
                 .build();
 
         when(cartAccess.getActiveCartByCustomerId(customerId)).thenReturn(Optional.of(cart));
         when(cartItemAccess.getAllCartItems(1)).thenReturn(List.of(cartItem));
         when(paymentMethodAccess.findAll()).thenReturn(List.of(paymentMethod));
-        when(productAccess.findById(7)).thenReturn(Optional.of(product));
+        when(productAccess.findAllByIds(List.of(7)))
+                .thenReturn(List.of(product));
         when(inventoryAccess.findByProductId(7))
                 .thenReturn(Optional.of(InventoryModel.builder().productId(7).quantityAvailable(5).quantityReserved(1).build()));
         when(orderAccess.createOrder(customerId, OrderStatus.AWAITING_PAYMENT, new BigDecimal("25.00"))).thenReturn(100);
@@ -161,7 +162,7 @@ class CheckoutServiceUnitTest {
         PlaceOrderRequest request = new PlaceOrderRequest();
         request.setShippingMethod("PostNL");
         request.setShippingAddress("Rotterdam");
-        request.setPaymentMethod("Visa");
+        request.setPaymentMethod("Credit Card");
         return request;
     }
 }

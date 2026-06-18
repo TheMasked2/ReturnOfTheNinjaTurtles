@@ -93,9 +93,13 @@ public class E2EShoppingJourneySimulation extends Simulation {
             .pause(1)
 
             .exec(http("Search Products")
-                    .get("/api/products/#{targetProductId}")
+                    .get("/api/products?page=0&size=20")
                     .check(status().is(200))
-                    .check(jsonPath("$.id").exists()))
+                    .check(
+                            jsonPath("$.content[*].id")
+                                    .findRandom()
+                                    .saveAs("targetProductId")
+                    ))
             .exitHereIfFailed()
             .pause(1)
 
@@ -124,7 +128,7 @@ public class E2EShoppingJourneySimulation extends Simulation {
                     .body(StringBody("{"
                             + "\"shippingMethod\":\"PostNL\","
                             + "\"shippingAddress\":\"123 Sewer Lair, NYC\","
-                            + "\"paymentMethod\":\"Visa\""
+                            + "\"paymentMethod\":\"Credit Card\""
                             + "}"))
                     .check(status().is(200))
                     .check(jsonPath("$.orderId").saveAs("newOrderId")))

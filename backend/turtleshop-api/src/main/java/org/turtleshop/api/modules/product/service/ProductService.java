@@ -98,7 +98,10 @@ public class ProductService {
     public Optional<ProductModel> getProductById(int id) {
         return productAccess.findAllByIds(Collections.singletonList(id)).stream()
                 .findFirst()
-                .map(base -> merge(base, productMongoAccess.findByProductId(id).orElse(null)));
+                .map(base -> merge(
+                        base,
+                        productMongoAccess.findByProductId(id).orElse(null)
+                ));
     }
 
     @CachePut(value = "frequent_products", key = "#result.productId")

@@ -48,7 +48,7 @@ class PaymentMethodE2ETest extends IntegrationTestBase {
                         )))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paymentMethodId").value(1))
-                .andExpect(jsonPath("$.provider").value("Visa"))
+                .andExpect(jsonPath("$.provider").value("VISA/ Mastercard/ Amex"))
                 .andExpect(jsonPath("$.type").value("Credit Card"));
     }
 

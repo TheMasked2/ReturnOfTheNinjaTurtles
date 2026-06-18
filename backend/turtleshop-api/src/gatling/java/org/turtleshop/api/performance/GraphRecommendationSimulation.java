@@ -130,7 +130,7 @@ public class GraphRecommendationSimulation extends Simulation {
                     .body(StringBody("{"
                             + "\"shippingMethod\":\"PostNL\","
                             + "\"shippingAddress\":\"123 Graph Target Street\","
-                            + "\"paymentMethod\":\"Visa\""
+                            + "\"paymentMethod\":\"Credit Card\""
                             + "}"))
                     .check(status().is(200))
                     .check(jsonPath("$.orderId").saveAs("targetOrderId"))
@@ -198,7 +198,7 @@ public class GraphRecommendationSimulation extends Simulation {
                     .body(StringBody("{"
                             + "\"shippingMethod\":\"PostNL\","
                             + "\"shippingAddress\":\"456 Graph Similar Street\","
-                            + "\"paymentMethod\":\"Visa\""
+                            + "\"paymentMethod\":\"Credit Card\""
                             + "}"))
                     .check(status().is(200))
                     .check(jsonPath("$.orderId").saveAs("similarOrderId"))
