@@ -246,7 +246,7 @@ public class GraphRecommendationSimulation extends Simulation {
             .pause(1)
 
             .exec(http("Get Seasonal Graph Recommendations")
-                    .get("/api/recommendations/seasonal?customerId=#{targetCustomerId}&limit=5")
+                    .get("/api/recommendations/seasonal?customerId=#{targetCustomerId}&limit=4")
                     .header("Authorization", "Bearer #{targetJwtToken}")
                     .check(status().is(200))
                     .check(jsonPath("$[?(@.productId == " + RECOMMENDED_PRODUCT_ID + ")].productId").exists()));

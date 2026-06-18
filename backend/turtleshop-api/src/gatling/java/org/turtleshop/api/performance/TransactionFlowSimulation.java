@@ -142,7 +142,7 @@ public class TransactionFlowSimulation extends Simulation {
             .pause(1)
 
             .exec(http("Admin Confirms Transaction Payment")
-                    .post("/api/transactions/#{transactionId}/confirm-payment/{orderId}")
+                    .post("/api/transactions/#{transactionId}/confirm-payment/#{orderId}")
                     .header("Authorization", "Bearer #{adminJwtToken}")
                     .check(status().is(204)))
             .exitHereIfFailed()
