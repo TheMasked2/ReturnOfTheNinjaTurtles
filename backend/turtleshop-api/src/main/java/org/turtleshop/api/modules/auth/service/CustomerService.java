@@ -58,14 +58,21 @@ public class CustomerService {
 
     // HELPER: Maps the Model to the Response DTO
     private CustomerResponse mapToResponse(Customer customer) {
-        List<String> roles = roleAccess.findRoleNamesByCustomerEmail(customer.getEmail());
+        List<String> roles =
+                roleAccess.findRoleNamesByCustomerEmail(
+                        customer.getEmail()
+                );
 
         return CustomerResponse.builder()
                 .id(customer.getCustomerId())
                 .email(customer.getEmail())
                 .firstName(customer.getFirstName())
                 .lastName(customer.getLastName())
-                .phone(customer.getPhone())
+                .phone(
+                        customer.getSensitiveData() == null
+                                ? null
+                                : customer.getSensitiveData().getPhone()
+                )
                 .createdAt(customer.getCreatedAt())
                 .roles(roles)
                 .build();

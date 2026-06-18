@@ -1,5 +1,6 @@
 package org.turtleshop.api.modules.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -33,6 +34,10 @@ public class RegisterRequest {
     @Size(max = 50)
     private String lastName;
 
-    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Invalid phone number")
+    @JsonAlias("phoneNumber")
+    @Pattern(
+            regexp = "^\\+?[0-9]{10,15}$",
+            message = "Invalid phone number"
+    )
     private String phone;
 }

@@ -485,6 +485,7 @@ def main():
         current_chunk_size = min(BATCH_SIZE, NUM_CUSTOMERS - total_processed)
 
         c_rows = []
+        sensitive_rows = []
         usr_rows = []
         wl_cust_ids = []
         order_generation_payloads = []
@@ -511,6 +512,13 @@ def main():
                     "mock_hashed_password_for_performance",
                     first,
                     last,
+                    created_at,
+                )
+            )
+
+            sensitive_rows.append(
+                (
+                    cust_id,
                     phone,
                     addr,
                     city,
@@ -571,17 +579,27 @@ def main():
             [
                 "customer_id",
                 "email",
-                "password",
+                "password_hash",
                 "first_name",
                 "last_name",
+                "created_at",
+            ],
+            c_rows,
+        )
+
+        execute_batch_insert(
+            pg_curr,
+            "CUSTOMER_SENSITIVE_DATA",
+            [
+                "customer_id",
                 "phone",
                 "address",
                 "city",
                 "postal_code",
                 "country",
-                "created_at",
+                "updated_at",
             ],
-            c_rows,
+            sensitive_rows,
         )
         execute_batch_insert(
             pg_curr, "USER_SYSTEM_ROLES", ["customer_id", "role_id"], usr_rows

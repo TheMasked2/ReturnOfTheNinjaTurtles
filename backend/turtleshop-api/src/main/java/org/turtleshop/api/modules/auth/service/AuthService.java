@@ -15,6 +15,7 @@ import org.turtleshop.api.modules.auth.dto.RegisterRequest;
 import org.turtleshop.api.modules.auth.model.Customer;
 import org.turtleshop.api.modules.auth.repository.CustomerAccess;
 import org.turtleshop.api.modules.auth.repository.SystemRoleAccess;
+import org.turtleshop.api.modules.auth.model.CustomerSensitiveData;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,11 +35,17 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         }
 
+        CustomerSensitiveData sensitiveData =
+                CustomerSensitiveData.builder()
+                        .phone(request.getPhone())
+                        .build();
+
         Customer customer = Customer.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
+                .sensitiveData(sensitiveData)
                 .build();
 
         UUID customerId = customerAccess.insertAndReturnId(customer);
@@ -59,6 +66,7 @@ public class AuthService {
                         .email(customer.getEmail())
                         .firstName(customer.getFirstName())
                         .lastName(customer.getLastName())
+                        .phone(sensitiveData.getPhone())
                         .roles(roles)
                         .build())
                 .build();
@@ -86,6 +94,7 @@ public class AuthService {
                         .email(customer.getEmail())
                         .firstName(customer.getFirstName())
                         .lastName(customer.getLastName())
+                        .phone(getPhone(customer))
                         .roles(roles)
                         .build())
                 .build();
@@ -103,9 +112,21 @@ public class AuthService {
                 .email(customer.getEmail())
                 .firstName(customer.getFirstName())
                 .lastName(customer.getLastName())
-                .phone(customer.getPhone())
+                .phone(
+                        customer.getSensitiveData() == null
+                                ? null
+                                : customer.getSensitiveData().getPhone()
+                )
                 .roles(roles)
                 .createdAt(customer.getCreatedAt())
                 .build();
+    }
+
+    private String getPhone(Customer customer) {
+        if (customer.getSensitiveData() == null) {
+            return null;
+        }
+
+        return customer.getSensitiveData().getPhone();
     }
 }
