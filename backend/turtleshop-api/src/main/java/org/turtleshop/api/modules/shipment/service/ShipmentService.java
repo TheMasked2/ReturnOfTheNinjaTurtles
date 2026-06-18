@@ -101,6 +101,7 @@ public class ShipmentService {
                 .orderId(shipment.getOrderId())
                 .shipmentMethod(shipment.getShipmentMethod())
                 .shippingAddress(shipment.getShippingAddress())
+                .statusLogs(getAllShipmentStatusLogsOfShipment(shipment.getShipmentId()))
                 .build();
     }
 

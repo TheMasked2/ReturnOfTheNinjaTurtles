@@ -179,7 +179,7 @@ class TransactionConfirmPaymentE2ETest extends IntegrationTestBase {
         PlaceOrderRequest request = new PlaceOrderRequest();
         request.setShippingMethod("PostNL");
         request.setShippingAddress("Roffa");
-        request.setPaymentMethod("Visa");
+        request.setPaymentMethod("Credit Card");
 
         String placeOrderJson = mockMvc.perform(post("/api/checkout/customer/{customerId}/place-order", LEONARDO_CUSTOMER_ID)
                         .with(user("leonardo@example.com").authorities(

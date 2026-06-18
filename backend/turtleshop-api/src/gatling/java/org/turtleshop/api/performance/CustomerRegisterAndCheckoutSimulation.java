@@ -123,7 +123,7 @@ public class CustomerRegisterAndCheckoutSimulation extends Simulation {
                     .body(StringBody("{"
                             + "\"shippingMethod\":\"PostNL\","
                             + "\"shippingAddress\":\"123 Sewer Lair, NYC\","
-                            + "\"paymentMethod\":\"Visa\""
+                            + "\"paymentMethod\":\"Credit Card\""
                             + "}"))
                     .check(status().is(200))
                     .check(jsonPath("$.orderId").saveAs("newOrderId"))

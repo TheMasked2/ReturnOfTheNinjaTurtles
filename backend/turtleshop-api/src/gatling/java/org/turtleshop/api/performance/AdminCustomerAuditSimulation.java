@@ -39,16 +39,25 @@ public class AdminCustomerAuditSimulation extends Simulation {
 
             .pause(1)
 
-            // 2. Fetch all customers using the extracted Token
-            .exec(http("Get All Customers API")
-                    .get("/api/customer")
+            // 2. Test the SQL view endpoint
+            .exec(http("Get Order Summary View API")
+                    .get("/api/orders/admin/summary?limit=50")
                     .header("Authorization", "Bearer #{jwtToken}")
-                    .check(status().is(200))
-                    .check(jsonPath("$[0].id").saveAs("dynamicCustomerId")))
+                    .check(status().is(200)))
 
             .pause(1)
 
-            // 3. Fetch a single specific customer using the dynamically captured ID
+            // 3. Fetch all customers using the extracted Token
+            .exec(http("Get Customer Page API")
+                    .get("/api/customer?page=0&size=20")
+                    .header("Authorization", "Bearer #{jwtToken}")
+                    .check(status().is(200))
+                    .check(jsonPath("$.content[0].id").saveAs("dynamicCustomerId")))
+
+            .exitHereIfFailed()
+
+            .pause(1)
+
             .exec(http("Get Customer By ID API")
                     .get("/api/customer/#{dynamicCustomerId}")
                     .header("Authorization", "Bearer #{jwtToken}")

@@ -23,9 +23,11 @@ public class TransactionController {
     private final TransactionService transactionService;
     private final CheckoutService checkoutService;
 
-    @PostMapping("/{transactionId}/confirm-payment")
-    @PreAuthorize("hasAuthority('PAYMENT_UPDATE_ALL')")
-    public ResponseEntity<Void> confirmPayment(@PathVariable int transactionId, @RequestParam int orderId) {
+    @PostMapping("/{transactionId}/confirm-payment/{orderId}")
+        @PreAuthorize("hasAuthority('ORDER_UPDATE_ALL') or " +
+                "(hasAuthority('ORDER_UPDATE_OWN') and @authorizationService.isOrderOwner(#orderId, authentication))")
+        public ResponseEntity<Void> confirmPayment(@PathVariable int transactionId,
+                                                @PathVariable int orderId) {
         checkoutService.confirmOrderPayment(orderId, transactionId);
         return ResponseEntity.noContent().build();
     }

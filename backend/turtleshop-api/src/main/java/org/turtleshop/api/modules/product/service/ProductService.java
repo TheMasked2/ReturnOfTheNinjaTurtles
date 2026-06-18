@@ -1,13 +1,20 @@
 package org.turtleshop.api.modules.product.service;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.turtleshop.api.modules.product.dto.CreateProductRequest;
+import org.turtleshop.api.modules.product.dto.ProductPageResponse;
+import org.turtleshop.api.modules.product.dto.ProductResponse;
 import org.turtleshop.api.modules.product.dto.UpdateProductRequest;
 import org.turtleshop.api.modules.product.model.ProductModel;
 import org.turtleshop.api.modules.product.repository.ProductAccess;
@@ -23,29 +30,81 @@ public class ProductService {
         this.productMongoAccess = productMongoAccess;
     }
 
-    public List<ProductModel> getAllProducts() {
-        List<ProductModel> sqlProducts = productAccess.findAll();
-        if (sqlProducts.isEmpty()) {
-            return Collections.emptyList();
+    public ProductPageResponse getAllProducts(
+            int page,
+            int size,
+            String search,
+            String sortBy,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            Integer categoryId) {
+    
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.max(size, 1);
+        int offset = safePage * safeSize;
+    
+        List<Integer> searchIds = null;
+        if (search != null && !search.isBlank()) {
+            searchIds = productMongoAccess.findProductIdsByName(search);
+            if (searchIds.isEmpty()) {
+                return new ProductPageResponse(Collections.emptyList(), safePage, safeSize, 0);
+            }
         }
-
+    
+        int totalElements = productAccess.countFiltered(searchIds, minPrice, maxPrice, categoryId);
+        List<ProductModel> sqlProducts = productAccess.findPageWithFilters(
+                searchIds,
+                minPrice,
+                maxPrice,
+                categoryId,
+                sortBy,
+                safeSize,
+                offset);
+    
         List<Integer> productIds = sqlProducts.stream()
                 .map(ProductModel::getProductId)
                 .collect(Collectors.toList());
-
+    
         Map<Integer, ProductModel> mongoProducts = productMongoAccess.findAllByProductIds(productIds).stream()
                 .collect(Collectors.toMap(ProductModel::getProductId, product -> product));
+    
+        List<ProductResponse> content = sqlProducts.stream()
+                .map(base -> new ProductResponse(merge(base, mongoProducts.get(base.getProductId()))))
+                .collect(Collectors.toList());
+    
+        return new ProductPageResponse(content, safePage, safeSize, totalElements);
+    }
 
-        return sqlProducts.stream()
+    public List<ProductModel> getProductsByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<ProductModel> sqlProducts = productAccess.findAllByIds(ids);
+        Map<Integer, ProductModel> mongoProducts = productMongoAccess.findAllByProductIds(ids).stream()
+                .collect(Collectors.toMap(ProductModel::getProductId, product -> product));
+
+        Map<Integer, ProductModel> sqlProductMap = sqlProducts.stream()
+                .collect(Collectors.toMap(ProductModel::getProductId, product -> product));
+
+        return ids.stream()
+                .map(sqlProductMap::get)
+                .filter(Objects::nonNull)
                 .map(base -> merge(base, mongoProducts.get(base.getProductId())))
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "frequent_products", key = "#id", unless = "#result == null")
     public Optional<ProductModel> getProductById(int id) {
-        return productAccess.findById(id)
-                .map(base -> merge(base, productMongoAccess.findByProductId(id).orElse(null)));
+        return productAccess.findAllByIds(Collections.singletonList(id)).stream()
+                .findFirst()
+                .map(base -> merge(
+                        base,
+                        productMongoAccess.findByProductId(id).orElse(null)
+                ));
     }
 
+    @CachePut(value = "frequent_products", key = "#result.productId")
     public ProductModel createProduct(CreateProductRequest request) {
         ProductModel product = buildFromRequest(request);
         int generatedId = productAccess.insert(product);
@@ -54,22 +113,23 @@ public class ProductService {
         return product;
     }
 
+    @CacheEvict(value = "frequent_products", key = "#id")
     public Optional<ProductModel> updateProduct(int id, UpdateProductRequest request) {
-        return productAccess.findById(id).map(base -> {
-            base.setBasePrice(request.getPrice());
-            productAccess.update(base);
+        Optional<ProductModel> existingOpt = productAccess.findAllByIds(List.of(id)).stream().findFirst();
+        if (existingOpt.isEmpty()) {
+            return Optional.empty();
+        }
 
-            ProductModel mongoDocument = productMongoAccess.findByProductId(id)
-                    .orElseGet(ProductModel::new);
+        ProductModel existing = existingOpt.get();
+        ProductModel mongoDocument = productMongoAccess.findByProductId(id).orElse(new ProductModel());
+        mongoDocument.setProductId(id);
+        mergeBaseAndRequest(mongoDocument, request);
 
-            mongoDocument.setProductId(id);
-            mergeBaseAndRequest(mongoDocument, request);
-
-            productMongoAccess.save(mongoDocument);
-            return merge(base, mongoDocument);
-        });
+        productMongoAccess.save(mongoDocument);
+        return Optional.of(merge(existing, mongoDocument));
     }
 
+    @CacheEvict(value = "frequent_products", key = "#id")
     public void deleteProduct(int id) {
         productAccess.deleteById(id);
         productMongoAccess.deleteByProductId(id);

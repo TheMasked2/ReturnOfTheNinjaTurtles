@@ -1,20 +1,19 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { authApi } from "../api/authApi";
-import { baseApi } from "../api/base-api";
 
 // --- 2. TYPES ---
 export interface User {
   id: string;
+  email: string;
   firstName: string;
   lastName?: string;
-  email: string;
-  phoneNumber?: string;
-}
-
-interface AuthResponse {
-  token: string;
-  type: string;
-  customer: User;
+  phone?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  roles: string[];
+  createdAt?: string;
 }
 
 interface AuthContextType {
@@ -22,7 +21,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: { email: string; password: string }) => Promise<void>;
-  register: (data: { email: string; password: string; firstName: string; lastName?: string; phoneNumber?: string }) => Promise<void>;
+  register: (data: { email: string; password: string; firstName: string; lastName?: string; phone?: string }) => Promise<void>;
   logout: () => void;
 }
 
@@ -55,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("turtleshop_user", JSON.stringify(data.customer));
   };
 
-  const register = async (data: { firstName: string; lastName?: string; password: string; email: string }) => {
+  const register = async (data: { email: string; password: string; firstName: string; lastName?: string; phone?: string }) => {
     await authApi.register(data);
   };
 

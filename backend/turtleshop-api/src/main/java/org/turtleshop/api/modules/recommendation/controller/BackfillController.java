@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.turtleshop.api.modules.recommendation.service.BackfillService;
 
 @RestController
-@RequestMapping("/api/recommendation/backfill")
+@RequestMapping("/api/recommendations/backfill")
 public class BackfillController {
 
     private final BackfillService backfillService;

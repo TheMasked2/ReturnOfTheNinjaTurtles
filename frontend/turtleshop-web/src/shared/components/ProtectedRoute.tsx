@@ -3,10 +3,14 @@ import { useAuth } from "../auth/AuthContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  role?: string;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+export function ProtectedRoute({
+  children,
+  role,
+}: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -15,6 +19,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (role && !user?.roles?.includes(role)) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

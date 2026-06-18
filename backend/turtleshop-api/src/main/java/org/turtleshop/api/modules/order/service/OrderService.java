@@ -11,9 +11,10 @@ import org.turtleshop.api.modules.order.model.Order;
 import org.turtleshop.api.modules.order.model.OrderItem;
 import org.turtleshop.api.modules.order.repository.OrderAccess;
 import org.turtleshop.api.modules.order.repository.OrderItemAccess;
+import org.turtleshop.api.modules.order.dto.OrderSummaryResponse;
+import org.turtleshop.api.modules.order.model.OrderSummary;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -32,10 +33,10 @@ public class OrderService {
     // Get all Orders for a customer
     public List<OrderResponse> getAllOrdersOfCustomer(UUID customerId) {
         List<Order> orders = orderAccess.getAllOrdersById(customerId);
-        if(orders.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "No orders exist for this customer");
+        if (orders == null) {
+            return List.of();
         }
-        return orders.stream().map(this:: mapToOrderResponse).toList();
+        return orders.stream().map(this::mapToOrderResponse).toList();
     }
 
     // Cancel Order based on OrderId
@@ -62,6 +63,16 @@ public class OrderService {
         return orderItems.stream().map(this:: mapToOrderItemResponse).toList();
     }
 
+    public List<OrderSummaryResponse> getOrderSummaries(int limit) {
+        int safeLimit = Math.min(Math.max(limit, 1), 100);
+
+        List<OrderSummary> summaries = orderAccess.getOrderSummaries(safeLimit);
+
+        return summaries.stream()
+                .map(this::mapToOrderSummaryResponse)
+                .toList();
+    }
+
     // HELPER: Maps the Model to the Response DTO
     public OrderResponse mapToOrderResponse(Order order) {
         return OrderResponse.builder()
@@ -80,6 +91,20 @@ public class OrderService {
                 .orderId(orderItem.getOrderId())
                 .productId(orderItem.getProductId())
                 .quantity(orderItem.getQuantity())
+                .build();
+    }
+
+    // HELPER: Maps the Model to the Response DTO
+    public OrderSummaryResponse mapToOrderSummaryResponse(OrderSummary orderSummary) {
+        return OrderSummaryResponse.builder()
+                .orderId(orderSummary.getOrderId())
+                .customerId(orderSummary.getCustomerId())
+                .customerEmail(orderSummary.getCustomerEmail())
+                .orderDate(orderSummary.getOrderDate())
+                .status(orderSummary.getStatus())
+                .totalAmount(orderSummary.getTotalAmount())
+                .itemLines(orderSummary.getItemLines())
+                .totalItems(orderSummary.getTotalItems())
                 .build();
     }
 }

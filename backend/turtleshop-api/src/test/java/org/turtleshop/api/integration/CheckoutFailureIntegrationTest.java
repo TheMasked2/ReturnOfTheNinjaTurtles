@@ -31,7 +31,7 @@ class CheckoutFailureIntegrationTest extends IntegrationTestBase {
         PlaceOrderRequest request = new PlaceOrderRequest();
         request.setShippingMethod("PostNL");
         request.setShippingAddress("Roffa");
-        request.setPaymentMethod("Visa");
+        request.setPaymentMethod("VISA/ Mastercard/ Amex");
 
         assertThatThrownBy(() -> checkoutService.placeOrder(customerId, request))
                 .isInstanceOf(ResponseStatusException.class)

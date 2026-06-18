@@ -2,6 +2,8 @@ package org.turtleshop.api.modules.product.repository;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.Optional;
 
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -29,6 +31,20 @@ public class ProductMongoAccess {
 
         Query query = Query.query(Criteria.where("product_id").in(productIds));
         return mongoTemplate.find(query, ProductModel.class);
+    }
+
+    public List<Integer> findProductIdsByName(String search) {
+        if (search == null || search.isBlank()) {
+            return Collections.emptyList();
+        }
+    
+        String regexPattern = ".*" + Pattern.quote(search) + ".*";
+        Query query = Query.query(Criteria.where("product_name").regex(regexPattern, "i"));
+    
+        List<ProductModel> products = mongoTemplate.find(query, ProductModel.class);
+        return products.stream()
+                .map(ProductModel::getProductId)
+                .collect(Collectors.toList());
     }
 
     public ProductModel save(ProductModel product) {

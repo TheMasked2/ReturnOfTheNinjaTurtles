@@ -1,15 +1,18 @@
 package org.turtleshop.api.modules.auth.service;
 
-import lombok.RequiredArgsConstructor;
+import java.util.UUID;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.turtleshop.api.modules.auth.repository.CustomerAccess;
 import org.turtleshop.api.modules.order.repository.OrderAccess;
 import org.turtleshop.api.modules.order.repository.OrderItemAccess;
-import org.turtleshop.api.modules.wishlist.repository.WishlistRepository;
 import org.turtleshop.api.modules.wishlist.repository.WishlistItemRepository;
+import org.turtleshop.api.modules.wishlist.repository.WishlistRepository;
+import org.turtleshop.api.modules.cart.repository.CartAccess;
+import org.turtleshop.api.modules.cart.repository.CartItemAccess;
 
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @Service("authorizationService")
 @RequiredArgsConstructor
@@ -20,6 +23,8 @@ public class AuthorizationService {
     private final OrderItemAccess orderItemAccess;
     private final WishlistRepository wishlistRepository;
     private final WishlistItemRepository wishlistItemRepository;
+    private final CartAccess cartAccess;
+    private final CartItemAccess cartItemAccess;
 
     public boolean isCurrentCustomer(UUID customerId, Authentication authentication) {
         if (customerId == null || authentication == null || authentication.getName() == null) {
@@ -85,7 +90,35 @@ public class AuthorizationService {
         }
 
         return wishlistItemRepository.getByWishlistItemId(wishlistItemId)
-                .map(item -> isWishlistOwner(item.getWishlistId(), authentication))
+                .map(wishlistItem -> isWishlistOwner(wishlistItem.getWishlistId(), authentication))
+                .orElse(false);
+    }
+
+     public boolean isCartOwner(int cartId, Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return false;
+        }
+
+        UUID currentCustomerId = customerAccess.findByEmail(authentication.getName())
+                .map(customer -> customer.getCustomerId())
+                .orElse(null);
+
+        if (currentCustomerId == null) {
+            return false;
+        }
+
+        return cartAccess.getCartById(cartId)
+                .map(cart -> cart.getCustomerId().equals(currentCustomerId))
+                .orElse(false);
+    }
+
+    public boolean isCartItemOwner(int cartItemId, Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return false;
+        }
+
+        return cartItemAccess.getCartItemById(cartItemId)
+                .map(cartItem -> isCartOwner(cartItem.getCartId(), authentication))
                 .orElse(false);
     }
 }

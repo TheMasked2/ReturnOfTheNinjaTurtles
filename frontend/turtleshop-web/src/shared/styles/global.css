@@ -181,6 +181,20 @@ button {
   gap: 0.5rem;
 }
 
+.product-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.product-card-action-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .icon-button {
   width: 2.8rem;
   height: 2.8rem;
@@ -337,6 +351,105 @@ button {
   align-items: center;
   justify-content: center;
   text-align: center;
+}
+
+.admin-management-page {
+  display: grid;
+  justify-items: center;
+  gap: 2rem;
+}
+
+.management-card {
+  width: min(1180px, 100%);
+  display: grid;
+  gap: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 32px;
+  box-shadow: var(--shadow);
+  padding: 2rem;
+}
+
+.management-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.management-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 3rem);
+}
+
+.management-list-wrapper {
+  overflow: hidden;
+  border-radius: 28px;
+}
+
+.management-table-container {
+  width: 100%;
+  max-height: 620px;
+  overflow: auto;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.management-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.management-table th,
+.management-table td {
+  padding: 1rem 1.25rem;
+  text-align: left;
+  font-size: 0.95rem;
+  vertical-align: middle;
+}
+
+.management-table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  color: var(--text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+  z-index: 1;
+}
+
+.management-table tbody tr {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.management-table tbody tr:hover {
+  background: var(--surface-soft);
+}
+
+.management-table td {
+  color: var(--text);
+}
+
+.management-table .table-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.management-description {
+  color: var(--muted);
+  max-width: 40rem;
+}
+
+@media (max-width: 720px) {
+  .management-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .section {
@@ -521,5 +634,75 @@ button:hover {
   .site-header {
     flex-wrap: wrap;
     gap: 1rem;
+  }
+}
+
+.product-layout-grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.product-filters {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.product-filters .filter-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.product-filters .filter-heading h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.product-filters .filter-row {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.product-filters label {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.product-filters input,
+.product-filters select {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.product-filters button {
+  width: 100%;
+  justify-content: center;
+}
+
+.product-filters-sidebar {
+  position: sticky;
+  top: 6rem;
+  align-self: start;
+}
+
+@media (max-width: 980px) {
+  .product-layout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-filters-sidebar {
+    position: static;
+    top: auto;
   }
 }

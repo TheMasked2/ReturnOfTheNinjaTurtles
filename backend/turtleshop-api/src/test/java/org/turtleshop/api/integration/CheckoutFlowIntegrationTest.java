@@ -31,7 +31,7 @@ class CheckoutFlowIntegrationTest extends IntegrationTestBase {
         PlaceOrderRequest request = new PlaceOrderRequest();
         request.setShippingMethod("PostNL");
         request.setShippingAddress("Roffa");
-        request.setPaymentMethod("Visa");
+        request.setPaymentMethod("Credit Card");
 
         PlaceOrderResponse response = checkoutService.placeOrder(customerId, request);
 

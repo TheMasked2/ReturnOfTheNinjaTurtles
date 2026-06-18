@@ -1,20 +1,66 @@
 import { useEffect, useState } from "react";
 import { ProductCard } from "../../components/product/ProductCard";
-import { productApi } from "../../api/productApi";
-import type { Product } from "../../api/productApi";
+import { Pagination } from "../../components/pagination/Pagination";
+import { productApi, type PaginatedResponse, type Product, type ProductCategory } from "../../api/productApi";
+import { ProductFilters, type ProductFiltersState } from "../../components/product/ProductFilters";
+
+const initialFilters: ProductFiltersState = {
+  search: "",
+  sortBy: "",
+  minPrice: "",
+  maxPrice: "",
+  categoryId: "",
+};
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [filters, setFilters] = useState<ProductFiltersState>(initialFilters);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  const pageSize = 20;
 
   useEffect(() => {
+    setCategoriesLoading(true);
     productApi
-      .getProducts()
-      .then((items) => setProducts(items))
+      .getCategories()
+      .then(setCategories)
+      .catch(() => setCategories([]))
+      .finally(() => setCategoriesLoading(false));
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+
+    const params = {
+      search: filters.search.trim() || undefined,
+      sortBy: filters.sortBy || undefined,
+      minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
+      maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
+      categoryId: filters.categoryId ? Number(filters.categoryId) : undefined,
+      page,
+      pageSize,
+    };
+
+    productApi
+      .getProducts(params)
+      .then((response: PaginatedResponse<Product[]>) => {
+        setProducts(response.content);
+        setTotalPages(response.totalPages);
+      })
       .catch((err) => setError(err.message || "Unable to load products."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [filters, page]);
+
+  const handleFilterChange = (updatedFilters: ProductFiltersState) => {
+    setFilters(updatedFilters);
+    setPage(0);
+  };
 
   return (
     <div className="page">
@@ -26,19 +72,35 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {loading ? (
-          <div className="status-message">Loading products...</div>
-        ) : error ? (
-          <div className="status-message status-error">{error}</div>
-        ) : products.length === 0 ? (
-          <div className="status-message">No products are available at the moment.</div>
-        ) : (
-          <div className="grid grid-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
+        <div className="product-layout-grid">
+          <aside className="product-filters-sidebar">
+            <ProductFilters
+              categories={categories}
+              filters={filters}
+              onChange={handleFilterChange}
+            />
+            {categoriesLoading && <div className="status-message">Loading categories...</div>}
+          </aside>
+
+          <main className="product-listing-content">
+            {loading ? (
+              <div className="status-message">Loading products...</div>
+            ) : error ? (
+              <div className="status-message status-error">{error}</div>
+            ) : products.length === 0 ? (
+              <div className="status-message">No products are available at the moment.</div>
+            ) : (
+              <>
+                <div className="grid grid-4">
+                  {products.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={loading} />
+              </>
+            )}
+          </main>
+        </div>
       </section>
     </div>
   );

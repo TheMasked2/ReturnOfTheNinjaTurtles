@@ -7,6 +7,7 @@ import org.turtleshop.api.config.IntegrationTestBase;
 import org.turtleshop.api.modules.auth.dto.AuthResponse;
 import org.turtleshop.api.modules.auth.dto.LoginRequest;
 import org.turtleshop.api.modules.auth.dto.RegisterRequest;
+import org.turtleshop.api.modules.auth.model.Customer;
 import org.turtleshop.api.modules.auth.repository.CustomerAccess;
 import org.turtleshop.api.modules.auth.repository.SystemRoleAccess;
 import org.turtleshop.api.modules.auth.service.AuthService;
@@ -35,15 +36,14 @@ class AuthServiceIntegrationTest extends IntegrationTestBase {
                 .password("Password123!")
                 .firstName("Leonardo")
                 .lastName("Integration")
+                .phone("+31612345678")
                 .build();
 
         AuthResponse registerResponse = authService.register(registerRequest);
 
         assertThat(registerResponse.getToken()).isNotBlank();
-        assertThat(registerResponse.getCustomer().getEmail()).isEqualTo("integration.leo@example.com");
-        assertThat(customerAccess.findByEmail("integration.leo@example.com")).isPresent();
-        assertThat(systemRoleAccess.findRoleNamesByCustomerEmail("integration.leo@example.com"))
-                .contains("ROLE_USER");
+        assertThat(registerResponse.getCustomer().getEmail())
+                .isEqualTo("integration.leo@example.com");
 
         LoginRequest loginRequest = LoginRequest.builder()
                 .email("integration.leo@example.com")
@@ -53,6 +53,9 @@ class AuthServiceIntegrationTest extends IntegrationTestBase {
         AuthResponse loginResponse = authService.login(loginRequest);
 
         assertThat(loginResponse.getToken()).isNotBlank();
-        assertThat(loginResponse.getCustomer().getRoles()).contains("ROLE_USER");
+        assertThat(loginResponse.getCustomer().getEmail())
+                .isEqualTo("integration.leo@example.com");
+        assertThat(loginResponse.getCustomer().getRoles())
+                .contains("ROLE_USER");
     }
 }

@@ -8,18 +8,18 @@ INSERT INTO SYSTEM_ROLES (name, description) VALUES
 ON CONFLICT (name) DO NOTHING;
 
 -- 2) Categories
-INSERT INTO CATEGORY (category_id, name, description) VALUES
-  (1, 'Comic Books', 'Collectible comics and graphic novels'),
-  (2, 'Apparel', 'T-shirts, hoodies and clothing'),
-  (3, 'Accessories', 'Hats, backpacks and wallets'),
-  (4, 'Toys', 'Action figures and playsets'),
-  (5, 'Home', 'Decor, mugs and posters'),
-  (6, 'Media', 'DVDs, games and soundtracks'),
-  (7, 'Gadgets', 'Tech accessories and small electronics'),
-  (8, 'Books', 'Novels, art books and guides'),
-  (9, 'Collectibles', 'Limited edition and display items'),
-  (10, 'Fitness', 'Workout gear and gym accessories')
-ON CONFLICT (category_id) DO NOTHING;
+-- INSERT INTO CATEGORY (category_id, name, description) VALUES
+--   (1, 'Comic Books', 'Collectible comics and graphic novels'),
+--   (2, 'Apparel', 'T-shirts, hoodies and clothing'),
+--   (3, 'Accessories', 'Hats, backpacks and wallets'),
+--   (4, 'Toys', 'Action figures and playsets'),
+--   (5, 'Home', 'Decor, mugs and posters'),
+--   (6, 'Media', 'DVDs, games and soundtracks'),
+--   (7, 'Gadgets', 'Tech accessories and small electronics'),
+--   (8, 'Books', 'Novels, art books and guides'),
+--   (9, 'Collectibles', 'Limited edition and display items'),
+--   (10, 'Fitness', 'Workout gear and gym accessories')
+-- ON CONFLICT (category_id) DO NOTHING;
 
 -- 3) Products
 INSERT INTO PRODUCT (product_id, product_name, base_price) VALUES
@@ -37,16 +37,10 @@ ON CONFLICT (product_id) DO NOTHING;
 
 -- 4) Payment methods
 INSERT INTO PAYMENT_METHOD (payment_method_id, provider, type) VALUES
-   (1, 'Visa', 'Credit Card'),
-   (2, 'Mastercard', 'Credit Card'),
-   (3, 'American Express', 'Credit Card'),
-   (4, 'PayPal', 'Online Wallet'),
-   (5, 'Apple Pay', 'Mobile Wallet'),
-   (6, 'Google Pay', 'Mobile Wallet'),
-   (7, 'Bank Transfer', 'Bank'),
-   (8, 'Cash', 'Cash'),
-   (9, 'Discover', 'Credit Card'),
-   (10, 'CryptoPay', 'Crypto')
+   (1, 'VISA/ Mastercard/ Amex', 'Credit Card'),
+   (2, 'PayPal', 'Online Wallet'),
+   (3, 'IDEAL/ Wero', 'Mobile banking')
+
 ON CONFLICT (payment_method_id) DO NOTHING;
 
 -- 5) Inventory
@@ -66,18 +60,18 @@ INSERT INTO INVENTORY (inventory_id, product_id, quantity_available, quantity_re
 ON CONFLICT (inventory_id) DO NOTHING;
 
 -- 6) Product categories
-INSERT INTO PRODUCT_CATEGORY (product_id, category_id) VALUES
-   (1, 4),
-   (2, 2),
-   (3, 7),
-   (4, 4),
-   (5, 9),
-   (6, 1),
-   (7, 2),
-   (8, 5),
-   (9, 5),
-   (10, 8)
-ON CONFLICT (product_id, category_id) DO NOTHING;
+-- INSERT INTO PRODUCT_CATEGORY (product_id, category_id) VALUES
+--    (1, 4),
+--    (2, 2),
+--    (3, 7),
+--    (4, 4),
+--    (5, 9),
+--    (6, 1),
+--    (7, 2),
+--    (8, 5),
+--    (9, 5),
+--    (10, 8)
+-- ON CONFLICT (product_id, category_id) DO NOTHING;
 
 -- 8) Assign the permissions to the user role
 INSERT INTO role_permissions (role_id, permission_id)
@@ -106,6 +100,8 @@ JOIN permissions p ON p.code IN (
     -- Own payments
     'PAYMENT_CREATE_OWN',
     'PAYMENT_READ_OWN',
+    'PAYMENT_READ_ALL', -- Allow users to see all payment methods for selection
+    'PAYMENT_UPDATE_OWN',
 
     -- Own shipments
     'SHIPMENT_READ_OWN',

@@ -1,3 +1,6 @@
+-- clean-test-data.sql
+-- Removes mutable integration-test data and resets serial sequences.
+
 TRUNCATE TABLE
     SHIPMENT_STATUS_LOG,
     SHIPMENT,
@@ -9,5 +12,6 @@ TRUNCATE TABLE
     WISHLIST,
     USER_SYSTEM_ROLES,
     ORDERS,
+    CUSTOMER_SENSITIVE_DATA,
     CUSTOMER
 RESTART IDENTITY CASCADE;

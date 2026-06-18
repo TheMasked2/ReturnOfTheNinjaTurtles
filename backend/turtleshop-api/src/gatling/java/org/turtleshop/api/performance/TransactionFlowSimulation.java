@@ -112,7 +112,7 @@ public class TransactionFlowSimulation extends Simulation {
                     .body(StringBody("{"
                             + "\"shippingMethod\":\"PostNL\","
                             + "\"shippingAddress\":\"123 Transaction Street, Amsterdam\","
-                            + "\"paymentMethod\":\"Visa\""
+                            + "\"paymentMethod\":\"Credit Card\""
                             + "}"))
                     .check(status().is(200))
                     .check(jsonPath("$.orderId").saveAs("orderId"))
@@ -142,7 +142,7 @@ public class TransactionFlowSimulation extends Simulation {
             .pause(1)
 
             .exec(http("Admin Confirms Transaction Payment")
-                    .post("/api/transactions/#{transactionId}/confirm-payment?orderId=#{orderId}")
+                    .post("/api/transactions/#{transactionId}/confirm-payment/#{orderId}")
                     .header("Authorization", "Bearer #{adminJwtToken}")
                     .check(status().is(204)))
             .exitHereIfFailed()

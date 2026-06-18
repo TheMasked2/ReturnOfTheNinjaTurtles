@@ -54,11 +54,13 @@ public class ReviewSimulation extends Simulation {
 
             // Find Product
             .exec(http("Search Products")
-                    .get("/api/products?search=Turtle")
+                    .get("/api/products?page=0&size=20")
                     .check(status().is(200))
-                    .check(jsonPath("$[?(@.id != null)].id").findRandom().saveAs("targetProductId")))
-            .exitHereIfFailed()
-            .pause(1)
+                    .check(
+                            jsonPath("$.content[*].id")
+                                    .findRandom()
+                                    .saveAs("targetProductId")
+                    ))
 
             // Create Review
             .exec(http("Create Review")

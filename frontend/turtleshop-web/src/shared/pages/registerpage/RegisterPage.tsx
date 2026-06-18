@@ -13,14 +13,25 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      await register({ firstName, lastName, email, phoneNumber, password });
-      navigate("/");
+      const payload = {
+        email: email.trim(),
+        password,
+        firstName: firstName.trim(),
+        ...(lastName.trim() ? { lastName: lastName.trim() } : {}),
+        ...(phoneNumber.trim() ? { phone: phoneNumber.trim() } : {}),
+      };
+
+      await register(payload);
+
+      navigate("/login", {
+        state: { message: "Account created successfully. Please log in." },
+      });
     } catch (err: any) {
       setError(err.message || "Unable to register account.");
     } finally {
@@ -77,6 +88,7 @@ export default function RegisterPage() {
               id="phoneNumber"
               value={phoneNumber}
               onChange={(event) => setPhoneNumber(event.target.value)}
+              pattern="^\+?[0-9]{10,15}$"
               placeholder="Enter your phone number"
             />
           </div>
@@ -89,6 +101,8 @@ export default function RegisterPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
+              minLength={8}
+              maxLength={72}
               placeholder="Choose a password"
             />
           </div>

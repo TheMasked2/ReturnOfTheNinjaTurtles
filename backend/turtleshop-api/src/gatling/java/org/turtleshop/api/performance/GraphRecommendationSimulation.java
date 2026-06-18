@@ -130,7 +130,7 @@ public class GraphRecommendationSimulation extends Simulation {
                     .body(StringBody("{"
                             + "\"shippingMethod\":\"PostNL\","
                             + "\"shippingAddress\":\"123 Graph Target Street\","
-                            + "\"paymentMethod\":\"Visa\""
+                            + "\"paymentMethod\":\"Credit Card\""
                             + "}"))
                     .check(status().is(200))
                     .check(jsonPath("$.orderId").saveAs("targetOrderId"))
@@ -198,7 +198,7 @@ public class GraphRecommendationSimulation extends Simulation {
                     .body(StringBody("{"
                             + "\"shippingMethod\":\"PostNL\","
                             + "\"shippingAddress\":\"456 Graph Similar Street\","
-                            + "\"paymentMethod\":\"Visa\""
+                            + "\"paymentMethod\":\"Credit Card\""
                             + "}"))
                     .check(status().is(200))
                     .check(jsonPath("$.orderId").saveAs("similarOrderId"))
@@ -219,14 +219,14 @@ public class GraphRecommendationSimulation extends Simulation {
             .pause(1)
 
             .exec(http("Admin Confirms Target Payment")
-                    .post("/api/transactions/#{targetTransactionId}/confirm-payment?orderId=#{targetOrderId}")
+                    .post("/api/transactions/#{targetTransactionId}/confirm-payment/#{targetOrderId}")
                     .header("Authorization", "Bearer #{adminJwtToken}")
                     .check(status().is(204)))
             .exitHereIfFailed()
             .pause(1)
 
             .exec(http("Admin Confirms Similar Payment")
-                    .post("/api/transactions/#{similarTransactionId}/confirm-payment?orderId=#{similarOrderId}")
+                    .post("/api/transactions/#{similarTransactionId}/confirm-payment/#{similarOrderId}")
                     .header("Authorization", "Bearer #{adminJwtToken}")
                     .check(status().is(204)))
             .exitHereIfFailed()
@@ -246,7 +246,7 @@ public class GraphRecommendationSimulation extends Simulation {
             .pause(1)
 
             .exec(http("Get Seasonal Graph Recommendations")
-                    .get("/api/recommendations/seasonal?customerId=#{targetCustomerId}&limit=5")
+                    .get("/api/recommendations/seasonal?customerId=#{targetCustomerId}&limit=4")
                     .header("Authorization", "Bearer #{targetJwtToken}")
                     .check(status().is(200))
                     .check(jsonPath("$[?(@.productId == " + RECOMMENDED_PRODUCT_ID + ")].productId").exists()));

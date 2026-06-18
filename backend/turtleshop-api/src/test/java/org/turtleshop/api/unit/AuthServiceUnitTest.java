@@ -54,6 +54,7 @@ class AuthServiceUnitTest {
                 .password("Password123!")
                 .firstName("Leonardo")
                 .lastName("Hamato")
+                .phone("+31612345678")
                 .build();
 
         when(customerAccess.existsByEmail("leo@example.com")).thenReturn(false);
