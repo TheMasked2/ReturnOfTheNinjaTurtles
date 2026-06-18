@@ -219,14 +219,14 @@ public class GraphRecommendationSimulation extends Simulation {
             .pause(1)
 
             .exec(http("Admin Confirms Target Payment")
-                    .post("/api/transactions/#{targetTransactionId}/confirm-payment?orderId=#{targetOrderId}")
+                    .post("/api/transactions/#{targetTransactionId}/confirm-payment/#{targetOrderId}")
                     .header("Authorization", "Bearer #{adminJwtToken}")
                     .check(status().is(204)))
             .exitHereIfFailed()
             .pause(1)
 
             .exec(http("Admin Confirms Similar Payment")
-                    .post("/api/transactions/#{similarTransactionId}/confirm-payment?orderId=#{similarOrderId}")
+                    .post("/api/transactions/#{similarTransactionId}/confirm-payment/#{similarOrderId}")
                     .header("Authorization", "Bearer #{adminJwtToken}")
                     .check(status().is(204)))
             .exitHereIfFailed()

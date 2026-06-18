@@ -47,8 +47,8 @@ DROP COLUMN phone,
     DROP COLUMN postal_code,
     DROP COLUMN country;
 
-ALTER TABLE CUSTOMER
-    RENAME COLUMN password TO password_hash;
+-- ALTER TABLE CUSTOMER
+--     RENAME COLUMN password TO password_hash;
 
 -- Re-enable FORCE RLS on CUSTOMER.
 ALTER TABLE CUSTOMER FORCE ROW LEVEL SECURITY;

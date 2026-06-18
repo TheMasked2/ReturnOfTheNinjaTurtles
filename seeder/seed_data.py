@@ -122,10 +122,9 @@ def main():
     pm_rows = pg_curr.fetchall()
     if not pm_rows:
         pm_data = [
-            ("Visa", "Credit Card"),
-            ("Mastercard", "Credit Card"),
-            ("PayPal", "Digital Wallet"),
-            ("Stripe", "Direct Debit"),
+            ('VISA/ Mastercard/ Amex', 'Credit Card'),
+            ('PayPal', 'Online Wallet'),
+            ('IDEAL/ Wero', 'Mobile banking')
         ]
         pm_ids = execute_batch_insert_returning(
             pg_curr,
@@ -579,7 +578,7 @@ def main():
             [
                 "customer_id",
                 "email",
-                "password_hash",
+                "password",
                 "first_name",
                 "last_name",
                 "created_at",

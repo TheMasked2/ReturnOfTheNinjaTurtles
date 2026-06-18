@@ -85,15 +85,30 @@ public class CustomerService {
                 .customerId(existingCustomer.getCustomerId())
                 .email(email)
                 .password(encodedPassword)
-                .firstName(StringUtils.hasText(request.getFirstName()) ? request.getFirstName().trim() : existingCustomer.getFirstName())
-                .lastName(StringUtils.hasText(request.getLastName()) ? request.getLastName().trim() : existingCustomer.getLastName())
-                .phone(StringUtils.hasText(request.getPhone()) ? request.getPhone().trim() : existingCustomer.getPhone())
-                .address(StringUtils.hasText(request.getAddress()) ? request.getAddress().trim() : existingCustomer.getAddress())
-                .city(StringUtils.hasText(request.getCity()) ? request.getCity().trim() : existingCustomer.getCity())
-                .postalCode(StringUtils.hasText(request.getPostalCode()) ? request.getPostalCode().trim() : existingCustomer.getPostalCode())
-                .country(StringUtils.hasText(request.getCountry()) ? request.getCountry().trim() : existingCustomer.getCountry())
+                .firstName(StringUtils.hasText(request.getFirstName())
+                        ? request.getFirstName().trim()
+                        : existingCustomer.getFirstName())
+                .lastName(StringUtils.hasText(request.getLastName())
+                        ? request.getLastName().trim()
+                        : existingCustomer.getLastName())
+                .phone(StringUtils.hasText(request.getPhone())
+                        ? request.getPhone().trim()
+                        : existingCustomer.getPhone())
+                .address(request.getAddress() != null
+                        ? request.getAddress().trim()
+                        : existingCustomer.getAddress())
+                .city(request.getCity() != null
+                        ? request.getCity().trim()
+                        : existingCustomer.getCity())
+                .postalCode(request.getPostalCode() != null
+                        ? request.getPostalCode().trim()
+                        : existingCustomer.getPostalCode())
+                .country(request.getCountry() != null
+                        ? request.getCountry().trim()
+                        : existingCustomer.getCountry())
                 .createdAt(existingCustomer.getCreatedAt())
                 .roles(existingCustomer.getRoles())
+                .sensitiveData(existingCustomer.getSensitiveData())
                 .build();
     
         customerAccess.updateCustomer(id, updatedCustomer);
