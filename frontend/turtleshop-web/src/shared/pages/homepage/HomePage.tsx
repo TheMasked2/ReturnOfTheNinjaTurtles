@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ProductCard } from "../../components/product/ProductCard";
 import { productApi, type Product } from "../../api/productApi";
-import { recommendationApi, type RecommendedProduct } from "../../api/recommendationApi";
+import { recommendationApi } from "../../api/recommendationApi";
 
 export default function HomePage() {
   const [heroProducts, setHeroProducts] = useState<Product[]>([]);

@@ -8,9 +8,12 @@ export default function CartPage() {
 
   useEffect(() => {
     cartApi
-      .getItems()
-      .then(setItems)
-      .catch((err) => setError(err.message || "Unable to load cart."))
+      .getActiveCart("")
+      .then((cart) => setItems(cart.items ?? []))
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : "Unable to load cart.";
+        setError(message);
+      })
       .finally(() => setLoading(false));
   }, []);
 

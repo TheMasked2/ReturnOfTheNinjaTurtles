@@ -3,12 +3,12 @@ import { useAuth } from "../auth/AuthContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: string;
+  role?: string;
 }
 
 export function ProtectedRoute({
   children,
-  requiredRole,
+  role,
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
@@ -21,7 +21,7 @@ export function ProtectedRoute({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (requiredRole && !user?.roles?.includes(requiredRole)) {
+  if (role && !user?.roles?.includes(role)) {
     return <Navigate to="/" replace />;
   }
 

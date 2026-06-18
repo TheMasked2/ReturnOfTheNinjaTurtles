@@ -4,6 +4,8 @@ import type { User } from '../../../../shared/auth/AuthContext';
 
 type UserFormData = Partial<User> & { password?: string };
 
+const roleOptions = ['ROLE_USER', 'ROLE_ADMIN'] as const;
+
 interface UserFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -39,8 +41,15 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ isOpen, onClose, onSubmit
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+
+    if (name === 'roles') {
+      setFormData({ ...formData, roles: [value] });
+      return;
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
 
   return (
@@ -103,17 +112,22 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ isOpen, onClose, onSubmit
             </div>
         )}
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="role">
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="roles">
             Role
           </label>
-          <input
-            type="text"
-            name="role"
-            id="role"
-            value={formData.role || ''}
+          <select
+            name="roles"
+            id="roles"
+            value={formData.roles?.[0] ?? 'ROLE_USER'}
             onChange={handleChange}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          />
+          >
+            {roleOptions.map((role) => (
+              <option key={role} value={role}>
+                {role}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex items-center justify-between">
           <button

@@ -31,12 +31,12 @@ const InventoryFormModal: React.FC<InventoryFormModalProps> = ({
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.product) {
-      newErrors.product = 'Product is required';
+    if (!formData.productId) {
+      newErrors.productId = 'Product is required';
     }
 
-    if (formData.stock === undefined || formData.stock < 0) {
-      newErrors.stock = 'Stock must be a non-negative number';
+    if (formData.quantityAvailable === undefined || formData.quantityAvailable < 0) {
+      newErrors.quantityAvailable = 'Quantity available must be a non-negative number';
     }
 
     setErrors(newErrors);
@@ -56,24 +56,21 @@ const InventoryFormModal: React.FC<InventoryFormModalProps> = ({
   ) => {
     const { name, value } = e.target;
 
-    if (name === 'product') {
-      const selectedProduct = products.find(
-        (p: Product) => p.id === value
-      );
-
+    if (name === 'productId') {
       setFormData({
         ...formData,
-        product: selectedProduct,
+        productId: value ? parseInt(value, 10) : undefined,
       });
-    } else {
-      const parsedValue =
-        name === 'stock' ? parseInt(value, 10) : value;
-
-      setFormData({
-        ...formData,
-        [name]: parsedValue,
-      });
+      return;
     }
+
+    const parsedValue =
+      name === 'quantityAvailable' ? parseInt(value, 10) : value;
+
+    setFormData({
+      ...formData,
+      [name]: parsedValue,
+    });
   };
 
   return (
@@ -86,18 +83,18 @@ const InventoryFormModal: React.FC<InventoryFormModalProps> = ({
         <div className="mb-4">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
-            htmlFor="product"
+            htmlFor="productId"
           >
             Product
           </label>
 
           <select
-            name="product"
-            id="product"
-            value={formData.product?.id || ''}
+            name="productId"
+            id="productId"
+            value={formData.productId ?? ''}
             onChange={handleChange}
             className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-              errors.product ? 'border-red-500' : ''
+              errors.productId ? 'border-red-500' : ''
             }`}
           >
             <option value="">Select a product</option>
@@ -109,9 +106,9 @@ const InventoryFormModal: React.FC<InventoryFormModalProps> = ({
             ))}
           </select>
 
-          {errors.product && (
+          {errors.productId && (
             <p className="text-red-500 text-xs italic">
-              {errors.product}
+              {errors.productId}
             </p>
           )}
         </div>
@@ -126,12 +123,12 @@ const InventoryFormModal: React.FC<InventoryFormModalProps> = ({
 
           <input
             type="number"
-            name="stock"
-            id="stock"
-            value={formData.stock || ''}
+            name="quantityAvailable"
+            id="quantityAvailable"
+            value={formData.quantityAvailable ?? ''}
             onChange={handleChange}
             className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-              errors.stock ? 'border-red-500' : ''
+              errors.quantityAvailable ? 'border-red-500' : ''
             }`}
           />
 
@@ -145,16 +142,16 @@ const InventoryFormModal: React.FC<InventoryFormModalProps> = ({
         <div className="mb-4">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
-            htmlFor="location"
+            htmlFor="version"
           >
-            Location
+            Version
           </label>
 
           <input
             type="text"
-            name="location"
-            id="location"
-            value={formData.location || ''}
+            name="version"
+            id="version"
+            value={formData.version || ''}
             onChange={handleChange}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           />

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { cartApi } from "../../api/cartApi";
-import { customerApi, type Customer } from "../../api/customerApi";
+import { customerApi } from "../../api/customerApi";
 import { paymentApi, type PaymentMethod } from "../../api/paymentApi";
 import { productApi, type Product } from "../../api/productApi";
 import { checkoutApi } from "../../api/checkoutApi";
@@ -33,7 +33,6 @@ export default function CheckoutPage() {
   const [stepAttempted, setStepAttempted] = useState<Record<number, boolean>>({});
 
   const [cartItems, setCartItems] = useState<CartSummaryItem[]>([]);
-  const [customer, setCustomer] = useState<Customer | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<number | null>(null);
   const [selectedShippingOption, setSelectedShippingOption] = useState(SHIPPING_OPTIONS[0].id);
@@ -67,7 +66,6 @@ export default function CheckoutPage() {
           paymentApi.listPaymentMethods(),
         ]);
 
-        setCustomer(customerResponse);
         setPaymentMethods(methods);
         setSelectedPaymentMethodId(methods[0]?.paymentMethodId ?? null);
 

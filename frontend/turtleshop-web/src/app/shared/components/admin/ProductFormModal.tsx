@@ -38,7 +38,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, on
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    const parsedValue = name === 'price' || name === 'stock' ? parseFloat(value) : value;
+    const parsedValue = name === 'price' ? parseFloat(value) : value;
     setFormData({ ...formData, [name]: parsedValue });
   };
 
@@ -86,28 +86,26 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, on
           {errors.price && <p className="text-red-500 text-xs italic">{errors.price}</p>}
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="stock">
-            Stock
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="specs">
+            Specs
           </label>
-          <input
-            type="number"
-            name="stock"
-            id="stock"
-            value={formData.stock || ''}
+          <textarea
+            name="specs"
+            id="specs"
+            value={formData.specs || ''}
             onChange={handleChange}
-            className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${errors.stock ? 'border-red-500' : ''}`}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           />
-          {errors.stock && <p className="text-red-500 text-xs italic">{errors.stock}</p>}
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="imageUrl">
-            Image URL
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="availableSince">
+            Available Since
           </label>
           <input
-            type="text"
-            name="imageUrl"
-            id="imageUrl"
-            value={formData.imageUrl || ''}
+            type="date"
+            name="availableSince"
+            id="availableSince"
+            value={formData.availableSince || ''}
             onChange={handleChange}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           />

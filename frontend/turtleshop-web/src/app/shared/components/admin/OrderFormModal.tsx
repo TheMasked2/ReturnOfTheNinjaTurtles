@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../../../../shared/components/modal/Modal';
-import type { Order } from '../../api/adminApi';
+import type { OrderSummary } from '../../api/adminApi';
 import { useGetUsersQuery } from '../../api/adminApi';
 import type { User } from '../../../../shared/auth/AuthContext';
 
 interface OrderFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (order: Partial<Order>) => void;
-  order: Partial<Order> | null;
+  onSubmit: (order: Partial<OrderSummary>) => void;
+  order: Partial<OrderSummary> | null;
 }
 
 const OrderFormModal: React.FC<OrderFormModalProps> = ({
@@ -17,7 +17,7 @@ const OrderFormModal: React.FC<OrderFormModalProps> = ({
   onSubmit,
   order,
 }) => {
-  const [formData, setFormData] = useState<Partial<Order>>({});
+  const [formData, setFormData] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { data: users = [] } = useGetUsersQuery();
 
@@ -70,14 +70,15 @@ const OrderFormModal: React.FC<OrderFormModalProps> = ({
         ...formData,
         customer: selectedUser,
       });
-    } else {
-      const parsedValue = name === 'total' ? parseFloat(value) : value;
-
-      setFormData({
-        ...formData,
-        [name]: parsedValue,
-      });
+      return;
     }
+
+    const parsedValue = name === 'total' ? parseFloat(value) : value;
+
+    setFormData({
+      ...formData,
+      [name]: parsedValue,
+    });
   };
 
   return (
