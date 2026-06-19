@@ -17,11 +17,11 @@ public class TimeTreeInitializer {
     @PostConstruct
     public void buildTemporalBackbone() {
         try (Session session = this.driver.session()) {
-            // 1. Establish the static Season nodes
+            // static season nodes
             session.run("UNWIND ['Winter', 'Spring', 'Summer', 'Autumn'] AS seasonName " +
                         "MERGE (s:Season {id: seasonName})");
 
-            // 2. Generate Month nodes for 2024-2026 and link them to Seasons
+            // month nodes for 2024-2026 and link them to Seasons
             session.run("UNWIND range(2024, 2026) AS year " +
                         "UNWIND range(1, 12) AS month " +
                         "WITH year, month, " +

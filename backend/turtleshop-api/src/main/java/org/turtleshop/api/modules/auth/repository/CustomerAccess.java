@@ -23,13 +23,6 @@ public class CustomerAccess {
 
     private final NamedParameterJdbcTemplate jdbc;
 
-    /*
-     * The repository returns one Customer object even though the database
-     * information is stored in two tables.
-     *
-     * This prevents controllers and the frontend from needing to know about
-     * the database split.
-     */
     private static final String CUSTOMER_SELECT = """
     SELECT
         c.customer_id,

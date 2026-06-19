@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 import org.turtleshop.api.modules.shipment.enums.ShipmentStatus;
 import org.turtleshop.api.modules.shipment.model.ShipmentStatusLog;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 

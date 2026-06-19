@@ -17,7 +17,6 @@ public class JwtService {
     private final SecretKey key;
 
     public JwtService(@Value("${app.auth.jwt-secret}") String secret) {
-        // Ensure your secret in application.properties is at least 32 characters!
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import org.turtleshop.api.modules.auth.model.Customer;
 import org.turtleshop.api.modules.cart.dto.AddCartItemRequest;
 import org.turtleshop.api.modules.cart.dto.CartItemResponse;
 import org.turtleshop.api.modules.cart.dto.CartResponse;
