@@ -43,13 +43,7 @@ public class AuthController {
         return ResponseEntity.ok("Logged out successfully");
     }
 
-    // @PostMapping("/refresh")
-    // @PreAuthorize("isAuthenticated()")
-    // public ResponseEntity<AuthResponse> refreshToken() {
-    //     return ResponseEntity.ok(authService.refreshToken());
-    // }
-
-     // Get current user info
+    // Get current user info
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public CustomerResponse getCurrentUser(Authentication authentication) {

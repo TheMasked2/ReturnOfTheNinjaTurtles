@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 public class WishlistItemService {
     private final WishlistItemRepository repository;
     private final WishlistRepository wishlistRepository;
-    // private final ProductRepository productRepository;
 
     public List<WishlistItem> getAll() {
         List<WishlistItem> result = repository.getAll();
@@ -41,7 +40,6 @@ public class WishlistItemService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "WishlistItem not found"));
     }
 
-    // Should be a list tbh? 
     public WishlistItem getByProductId(Integer productId) {
         if (productId == null) {
             throw new IllegalArgumentException("productId is required");
@@ -55,13 +53,6 @@ public class WishlistItemService {
         if (productId == null || wishlistId == null) {
             throw new IllegalArgumentException("productId and/or wishlistId is required");
         }
-
-
-        // should probably look if wishlist and product even exist by id before creating
-        // Product product = productRepository.getById(productId);
-        // if (product.isEmpty()) {
-        //     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found");
-        // }
 
         if (wishlistRepository.getByWishlistId(wishlistId).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Wishlist not found");
@@ -79,13 +70,6 @@ public class WishlistItemService {
             throw new IllegalArgumentException("productId and/or wishlistId is required");
         }
 
-
-        // should probably look if wishlist and product even exist by id before creating
-        // Product product = productRepository.getById(productId);
-        // if (product.isEmpty()) {
-        //     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found");
-        // }
-
         if (wishlistRepository.getByWishlistId(wishlistId).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Wishlist not found");
         }
@@ -97,7 +81,6 @@ public class WishlistItemService {
         return repository.insertAndReturnId(wishlistId, productId);
     }
 
-    // Should probably be a DTO in future.
     public void updateWishlistItem(WishlistItem wishlistItem) {
         if (wishlistItem == null) {
             throw new IllegalArgumentException("WishlistItem is required");

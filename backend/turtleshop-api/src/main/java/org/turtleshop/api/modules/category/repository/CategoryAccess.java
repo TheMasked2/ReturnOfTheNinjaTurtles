@@ -1,7 +1,6 @@
 package org.turtleshop.api.modules.category.repository;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.jdbc.core.RowMapper;

@@ -15,19 +15,9 @@ public class Customer {
 
     private UUID customerId;
     private String email;
-
-    /*
-     * The Java field can stay named password to keep changes small.
-     * It contains the encoded hash and maps to password_hash in PostgreSQL.
-     */
     private String password;
-
     private String firstName;
     private String lastName;
-
-    /*
-     * Sensitive customer information is stored separately.
-     */
     private CustomerSensitiveData sensitiveData;
     private String phone;
     private String address;

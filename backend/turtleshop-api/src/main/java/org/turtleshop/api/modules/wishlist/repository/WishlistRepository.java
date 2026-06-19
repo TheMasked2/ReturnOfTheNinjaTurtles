@@ -1,8 +1,6 @@
 package org.turtleshop.api.modules.wishlist.repository;
 
 import org.turtleshop.api.modules.wishlist.model.Wishlist;
-// import org.Turtleshop.api.modules.wishlist.model.WishListItem;
-// import org.turtleshop.api.modules.auth.model.Customer;
 
 import java.util.List;
 import java.util.Optional;
